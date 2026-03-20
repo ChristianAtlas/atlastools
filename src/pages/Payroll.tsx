@@ -15,6 +15,7 @@ function stepIndex(status: string) {
 }
 
 export default function Payroll() {
+  const navigate = useNavigate();
   return (
     <div className="space-y-5">
       <PageHeader
