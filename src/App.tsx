@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AppLayout } from "@/components/AppLayout";
 import Dashboard from "@/pages/Dashboard";
 import Companies from "@/pages/Companies";
+import CompanyDetail from "@/pages/CompanyDetail";
 import Employees from "@/pages/Employees";
 import EmployeeDetail from "@/pages/EmployeeDetail";
 import Payroll from "@/pages/Payroll";
