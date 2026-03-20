@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Search, Plus, Filter } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
 import { StatusBadge } from '@/components/StatusBadge';
@@ -11,6 +12,7 @@ const formatCurrency = (n: number, type: string) =>
     : new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(n);
 
 export default function Employees() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const filtered = employees.filter(e =>
     `${e.firstName} ${e.lastName} ${e.email} ${e.companyName}`.toLowerCase().includes(search.toLowerCase())
