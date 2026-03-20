@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '@/components/PageHeader';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Button } from '@/components/ui/button';
@@ -14,6 +15,7 @@ function stepIndex(status: string) {
 }
 
 export default function Payroll() {
+  const navigate = useNavigate();
   return (
     <div className="space-y-5">
       <PageHeader
@@ -32,7 +34,7 @@ export default function Payroll() {
         {payrollRuns.map(run => {
           const currentStep = stepIndex(run.status);
           return (
-            <div key={run.id} className="rounded-lg border bg-card p-5 shadow-sm hover:shadow-md transition-shadow cursor-pointer">
+            <div key={run.id} onClick={() => navigate(`/payroll/${run.id}`)} className="rounded-lg border bg-card p-5 shadow-sm hover:shadow-md transition-shadow cursor-pointer">
               <div className="flex items-start justify-between">
                 <div>
                   <h3 className="font-semibold">{run.companyName}</h3>
