@@ -4,13 +4,14 @@ import { currentUser } from '@/lib/mock-data';
 import {
   LayoutDashboard, Users, Building2, CreditCard, FileText,
   ClipboardCheck, ScrollText, BarChart3, Settings, DollarSign,
-  CalendarDays
+  CalendarDays, UserPlus
 } from 'lucide-react';
 
 const navItems = [
   { label: 'Dashboard', to: '/', icon: LayoutDashboard },
   { label: 'Companies', to: '/companies', icon: Building2 },
   { label: 'Employees', to: '/employees', icon: Users },
+  { label: 'Onboarding', to: '/onboarding', icon: UserPlus },
   { label: 'Payroll', to: '/payroll', icon: DollarSign },
   { label: 'PTO', to: '/pto', icon: CalendarDays },
   { label: 'Invoices', to: '/invoices', icon: CreditCard },
