@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { companies } from '@/lib/mock-data';
 
 export default function Companies() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const filtered = companies.filter(c => c.name.toLowerCase().includes(search.toLowerCase()));
 
