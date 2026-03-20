@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Search, Plus } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
 import { StatusBadge } from '@/components/StatusBadge';
@@ -6,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { companies } from '@/lib/mock-data';
 
 export default function Companies() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const filtered = companies.filter(c => c.name.toLowerCase().includes(search.toLowerCase()));
 
@@ -32,7 +34,7 @@ export default function Companies() {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 animate-in-up stagger-2">
         {filtered.map(company => (
-          <div key={company.id} className="rounded-lg border bg-card p-5 shadow-sm hover:shadow-md transition-shadow cursor-pointer">
+          <div key={company.id} className="rounded-lg border bg-card p-5 shadow-sm hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate(`/companies/${company.id}`)}>
             <div className="flex items-start justify-between">
               <div>
                 <h3 className="font-semibold">{company.name}</h3>
