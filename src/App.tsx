@@ -9,6 +9,7 @@ import Companies from "@/pages/Companies";
 import Employees from "@/pages/Employees";
 import EmployeeDetail from "@/pages/EmployeeDetail";
 import Payroll from "@/pages/Payroll";
+import PayrollDetail from "@/pages/PayrollDetail";
 import PTO from "@/pages/PTO";
 import Invoices from "@/pages/Invoices";
 import Documents from "@/pages/Documents";
