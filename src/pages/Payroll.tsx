@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '@/components/PageHeader';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Button } from '@/components/ui/button';
