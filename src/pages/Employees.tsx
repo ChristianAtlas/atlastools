@@ -51,7 +51,7 @@ export default function Employees() {
           </thead>
           <tbody className="divide-y">
             {filtered.map(emp => (
-              <tr key={emp.id} className="hover:bg-muted/30 transition-colors cursor-pointer">
+              <tr key={emp.id} className="hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => navigate(`/employees/${emp.id}`)}>
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2.5">
                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
