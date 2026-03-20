@@ -7,6 +7,7 @@ import { AppLayout } from "@/components/AppLayout";
 import Dashboard from "@/pages/Dashboard";
 import Companies from "@/pages/Companies";
 import Employees from "@/pages/Employees";
+import EmployeeDetail from "@/pages/EmployeeDetail";
 import Payroll from "@/pages/Payroll";
 import PTO from "@/pages/PTO";
 import Invoices from "@/pages/Invoices";
@@ -30,6 +31,7 @@ const App = () => (
             <Route path="/" element={<Dashboard />} />
             <Route path="/companies" element={<Companies />} />
             <Route path="/employees" element={<Employees />} />
+            <Route path="/employees/:id" element={<EmployeeDetail />} />
             <Route path="/payroll" element={<Payroll />} />
             <Route path="/pto" element={<PTO />} />
             <Route path="/invoices" element={<Invoices />} />

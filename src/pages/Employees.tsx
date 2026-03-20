@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Search, Plus, Filter } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
 import { StatusBadge } from '@/components/StatusBadge';
@@ -11,6 +12,7 @@ const formatCurrency = (n: number, type: string) =>
     : new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(n);
 
 export default function Employees() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const filtered = employees.filter(e =>
     `${e.firstName} ${e.lastName} ${e.email} ${e.companyName}`.toLowerCase().includes(search.toLowerCase())
@@ -51,7 +53,7 @@ export default function Employees() {
           </thead>
           <tbody className="divide-y">
             {filtered.map(emp => (
-              <tr key={emp.id} className="hover:bg-muted/30 transition-colors cursor-pointer">
+              <tr key={emp.id} className="hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => navigate(`/employees/${emp.id}`)}>
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2.5">
                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
