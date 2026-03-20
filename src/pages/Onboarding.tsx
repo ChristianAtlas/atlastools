@@ -85,10 +85,10 @@ export default function Onboarding() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 animate-in-up stagger-1">
-        <StatCard title="Total Sessions" value={stats.total} icon={Users} />
-        <StatCard title="In Progress" value={stats.inProgress} icon={Clock} trend="up" />
-        <StatCard title="Completed" value={stats.completed} icon={CheckCircle2} />
-        <StatCard title="Not Started" value={stats.notStarted} icon={AlertCircle} />
+        <StatCard title="Total Sessions" value={String(stats.total)} icon={Users} />
+        <StatCard title="In Progress" value={String(stats.inProgress)} icon={Clock} changeType="positive" />
+        <StatCard title="Completed" value={String(stats.completed)} icon={CheckCircle2} />
+        <StatCard title="Not Started" value={String(stats.notStarted)} icon={AlertCircle} />
       </div>
 
       {/* Active onboarding employees from mock data */}
