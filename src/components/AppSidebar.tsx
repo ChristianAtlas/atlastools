@@ -4,7 +4,7 @@ import { currentUser } from '@/lib/mock-data';
 import {
   LayoutDashboard, Users, Building2, CreditCard, FileText,
   ClipboardCheck, ScrollText, BarChart3, Settings, DollarSign,
-  CalendarDays
+  CalendarDays, UserPlus
 } from 'lucide-react';
 
 const navItems = [
