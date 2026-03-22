@@ -13,8 +13,12 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [demoLoading, setDemoLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  const DEMO_EMAIL = 'demo@atlasone.hr';
+  const DEMO_PASSWORD = 'demo-password-2024';
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,6 +27,42 @@ export default function Login() {
     setLoading(false);
     if (error) {
       toast({ title: 'Login failed', description: error.message, variant: 'destructive' });
+    } else {
+      navigate('/');
+    }
+  };
+
+  const handleDemoLogin = async () => {
+    setDemoLoading(true);
+    // Try sign in first
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: DEMO_EMAIL,
+      password: DEMO_PASSWORD,
+    });
+    if (!signInError) {
+      setDemoLoading(false);
+      navigate('/');
+      return;
+    }
+    // If user doesn't exist, sign up
+    const { error: signUpError } = await supabase.auth.signUp({
+      email: DEMO_EMAIL,
+      password: DEMO_PASSWORD,
+      options: { data: { full_name: 'Demo User' } },
+    });
+    if (signUpError) {
+      setDemoLoading(false);
+      toast({ title: 'Demo login failed', description: signUpError.message, variant: 'destructive' });
+      return;
+    }
+    // Auto-confirm is enabled, so sign in immediately
+    const { error: finalError } = await supabase.auth.signInWithPassword({
+      email: DEMO_EMAIL,
+      password: DEMO_PASSWORD,
+    });
+    setDemoLoading(false);
+    if (finalError) {
+      toast({ title: 'Demo login failed', description: finalError.message, variant: 'destructive' });
     } else {
       navigate('/');
     }
