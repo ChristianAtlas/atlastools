@@ -1,7 +1,7 @@
 import { NavLink, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import {
-  LayoutDashboard, Users, Building2, CreditCard, FileText,
+  LayoutDashboard, Users, Building2, CreditCard, FileText, Workflow,
   ClipboardCheck, ScrollText, BarChart3, Settings, DollarSign,
   CalendarDays, UserPlus
 } from 'lucide-react';
