@@ -1,29 +1,45 @@
 import { NavLink, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { currentUser } from '@/lib/mock-data';
 import {
   LayoutDashboard, Users, Building2, CreditCard, FileText,
   ClipboardCheck, ScrollText, BarChart3, Settings, DollarSign,
   CalendarDays, UserPlus
 } from 'lucide-react';
+import type { AppRole } from '@/contexts/AuthContext';
 
-const navItems = [
+interface NavItem {
+  label: string;
+  to: string;
+  icon: React.ElementType;
+  roles?: AppRole[]; // if undefined, visible to all
+}
+
+const navItems: NavItem[] = [
   { label: 'Dashboard', to: '/', icon: LayoutDashboard },
-  { label: 'Companies', to: '/companies', icon: Building2 },
-  { label: 'Employees', to: '/employees', icon: Users },
-  { label: 'Onboarding', to: '/onboarding', icon: UserPlus },
-  { label: 'Payroll', to: '/payroll', icon: DollarSign },
+  { label: 'Companies', to: '/companies', icon: Building2, roles: ['super_admin'] },
+  { label: 'Employees', to: '/employees', icon: Users, roles: ['super_admin', 'client_admin'] },
+  { label: 'Onboarding', to: '/onboarding', icon: UserPlus, roles: ['super_admin', 'client_admin'] },
+  { label: 'Payroll', to: '/payroll', icon: DollarSign, roles: ['super_admin', 'client_admin'] },
   { label: 'PTO', to: '/pto', icon: CalendarDays },
-  { label: 'Invoices', to: '/invoices', icon: CreditCard },
+  { label: 'Invoices', to: '/invoices', icon: CreditCard, roles: ['super_admin', 'client_admin'] },
   { label: 'Documents', to: '/documents', icon: FileText },
-  { label: 'Compliance', to: '/compliance', icon: ClipboardCheck },
-  { label: 'Audit Log', to: '/audit-log', icon: ScrollText },
-  { label: 'Reports', to: '/reports', icon: BarChart3 },
-  { label: 'Settings', to: '/settings', icon: Settings },
+  { label: 'Compliance', to: '/compliance', icon: ClipboardCheck, roles: ['super_admin'] },
+  { label: 'Audit Log', to: '/audit-log', icon: ScrollText, roles: ['super_admin'] },
+  { label: 'Reports', to: '/reports', icon: BarChart3, roles: ['super_admin', 'client_admin'] },
+  { label: 'Settings', to: '/settings', icon: Settings, roles: ['super_admin'] },
 ];
 
-export function AppSidebar() {
+interface AppSidebarProps {
+  userName: string;
+  userInitials: string;
+  roleLabel: string;
+  role: AppRole | null;
+}
+
+export function AppSidebar({ userName, userInitials, roleLabel, role }: AppSidebarProps) {
   const location = useLocation();
+
+  const visibleItems = navItems.filter(item => !item.roles || (role && item.roles.includes(role)));
 
   return (
     <aside className="fixed inset-y-0 left-0 z-30 flex w-60 flex-col bg-sidebar border-r border-sidebar-border">
@@ -38,7 +54,7 @@ export function AppSidebar() {
       {/* Nav */}
       <nav className="flex-1 overflow-y-auto py-3 px-3 scrollbar-thin">
         <ul className="space-y-0.5">
-          {navItems.map((item) => {
+          {visibleItems.map((item) => {
             const isActive = item.to === '/' ? location.pathname === '/' : location.pathname.startsWith(item.to);
             return (
               <li key={item.to}>
@@ -64,11 +80,11 @@ export function AppSidebar() {
       <div className="border-t border-sidebar-border p-3">
         <div className="flex items-center gap-2.5 rounded-md px-2.5 py-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-sidebar-primary text-xs font-semibold text-sidebar-primary-foreground">
-            {currentUser.avatarInitials}
+            {userInitials}
           </div>
           <div className="min-w-0">
-            <p className="truncate text-[13px] font-medium text-sidebar-accent-foreground">{currentUser.name}</p>
-            <p className="truncate text-[11px] text-sidebar-muted">Super Admin</p>
+            <p className="truncate text-[13px] font-medium text-sidebar-accent-foreground">{userName}</p>
+            <p className="truncate text-[11px] text-sidebar-muted">{roleLabel}</p>
           </div>
         </div>
       </div>
