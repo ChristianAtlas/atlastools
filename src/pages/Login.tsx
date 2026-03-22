@@ -94,6 +94,11 @@ export default function Login() {
               <LogIn className="h-4 w-4" />
               {loading ? 'Signing in…' : 'Sign In'}
             </Button>
+            <Separator className="my-1" />
+            <Button type="button" variant="outline" className="w-full gap-2" disabled={demoLoading} onClick={handleDemoLogin}>
+              <Zap className="h-4 w-4" />
+              {demoLoading ? 'Signing in…' : 'Demo Login'}
+            </Button>
             <p className="text-sm text-muted-foreground">
               Don't have an account?{' '}
               <Link to="/signup" className="text-primary font-medium hover:underline">Sign up</Link>
