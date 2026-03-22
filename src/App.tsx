@@ -24,6 +24,7 @@ import Reports from "@/pages/Reports";
 import SettingsPage from "@/pages/SettingsPage";
 import Login from "@/pages/Login";
 import Signup from "@/pages/Signup";
+import WorkflowDemo from "@/pages/WorkflowDemo";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
