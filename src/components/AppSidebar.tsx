@@ -27,6 +27,7 @@ const navItems: NavItem[] = [
   { label: 'Audit Log', to: '/audit-log', icon: ScrollText, roles: ['super_admin'] },
   { label: 'Reports', to: '/reports', icon: BarChart3, roles: ['super_admin', 'client_admin'] },
   { label: 'Settings', to: '/settings', icon: Settings, roles: ['super_admin'] },
+  { label: 'Workflow Demo', to: '/workflow-demo', icon: Workflow, roles: ['super_admin'] },
 ];
 
 interface AppSidebarProps {
