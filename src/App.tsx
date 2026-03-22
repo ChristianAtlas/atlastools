@@ -24,6 +24,7 @@ import Reports from "@/pages/Reports";
 import SettingsPage from "@/pages/SettingsPage";
 import Login from "@/pages/Login";
 import Signup from "@/pages/Signup";
+import WorkflowDemo from "@/pages/WorkflowDemo";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -58,6 +59,7 @@ const App = () => (
               <Route path="/audit-log" element={<AuditLog />} />
               <Route path="/reports" element={<Reports />} />
               <Route path="/settings" element={<SettingsPage />} />
+              <Route path="/workflow-demo" element={<WorkflowDemo />} />
             </Route>
 
             <Route path="*" element={<NotFound />} />
