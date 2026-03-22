@@ -12,6 +12,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
+import { ApprovalPanel } from '@/components/workflow/ApprovalPanel';
+import { DeadlineCountdown } from '@/components/workflow/DeadlineCountdown';
+import { InternalNotes, type InternalNote } from '@/components/workflow/InternalNotes';
+import { AuditTimeline, type AuditEntry } from '@/components/workflow/AuditTimeline';
+import { RoleGate } from '@/components/RoleGate';
 import type { PayrollStatus } from '@/lib/types';
 
 const formatCurrency = (n: number) =>
@@ -34,11 +39,28 @@ function statusToStep(status: PayrollStatus): number {
   return map[status] ?? 0;
 }
 
-function isCutoffPassed(): boolean {
+/** Compute next Tuesday 6 PM EST from now */
+function getNextPayrollDeadline(): string {
   const now = new Date();
-  const day = now.getUTCDay();
-  const hour = now.getUTCHours() + (now.getTimezoneOffset() / 60) + 5; // rough EST
-  return day === 2 && hour >= 18;
+  // Convert to EST (UTC-5)
+  const estOffset = -5 * 60;
+  const utc = now.getTime() + now.getTimezoneOffset() * 60000;
+  const est = new Date(utc + estOffset * 60000);
+
+  const dayOfWeek = est.getDay(); // 0=Sun
+  let daysUntilTuesday = (2 - dayOfWeek + 7) % 7;
+  if (daysUntilTuesday === 0) {
+    // It's Tuesday — check if past 6 PM
+    if (est.getHours() >= 18) daysUntilTuesday = 7;
+  }
+
+  const deadline = new Date(est);
+  deadline.setDate(deadline.getDate() + daysUntilTuesday);
+  deadline.setHours(18, 0, 0, 0);
+
+  // Convert back to UTC for ISO string
+  const deadlineUtc = new Date(deadline.getTime() - estOffset * 60000);
+  return deadlineUtc.toISOString();
 }
 
 // --- Step content components ---
@@ -93,7 +115,7 @@ function TimeReviewStep({ companyEmployees }: { companyEmployees: typeof employe
                 </td>
                 <td className="px-4 py-3">
                   {reviewed.has(emp.id)
-                    ? <Badge variant="secondary" className="text-xs bg-[hsl(var(--success))]/10 text-[hsl(var(--success))]">Reviewed</Badge>
+                    ? <Badge variant="secondary" className="text-xs bg-success/10 text-success">Reviewed</Badge>
                     : <Badge variant="secondary" className="text-xs">Pending</Badge>}
                 </td>
               </tr>
@@ -131,7 +153,7 @@ function PayrollEditStep({ companyEmployees }: { companyEmployees: typeof employ
                   <td className="px-4 py-3 text-right tabular-nums">{formatCurrency(gross)}</td>
                   <td className="px-4 py-3 text-right tabular-nums">
                     {bonus > 0
-                      ? <span className="text-[hsl(var(--success))]">{formatCurrency(bonus)}</span>
+                      ? <span className="text-success">{formatCurrency(bonus)}</span>
                       : <span className="text-muted-foreground">—</span>}
                   </td>
                   <td className="px-4 py-3 text-right tabular-nums text-muted-foreground">{formatCurrency(deductions)}</td>
@@ -202,44 +224,6 @@ function PreviewStep({ run }: { run: typeof payrollRuns[0] }) {
   );
 }
 
-function ApprovalStep({ title, description, approver }: { title: string; description: string; approver: string }) {
-  const [approved, setApproved] = useState(false);
-  return (
-    <div className="space-y-5">
-      <Card className="max-w-lg">
-        <CardHeader>
-          <CardTitle className="text-base">{title}</CardTitle>
-          <CardDescription>{description}</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {approved ? (
-            <div className="flex items-center gap-3 rounded-lg border border-[hsl(var(--success))]/30 bg-[hsl(var(--success))]/5 px-4 py-3">
-              <CheckCircle2 className="h-5 w-5 text-[hsl(var(--success))]" />
-              <div>
-                <p className="text-sm font-medium">Approved</p>
-                <p className="text-xs text-muted-foreground">by {approver} · just now</p>
-              </div>
-            </div>
-          ) : (
-            <>
-              <div className="flex items-start gap-2 rounded-lg border border-[hsl(var(--warning))]/30 bg-[hsl(var(--warning))]/5 px-4 py-3">
-                <AlertTriangle className="h-4 w-4 text-[hsl(var(--warning))] mt-0.5 shrink-0" />
-                <p className="text-sm">Please review all payroll details carefully before approving. This action will be recorded in the audit log.</p>
-              </div>
-              <div className="flex gap-2">
-                <Button onClick={() => setApproved(true)} size="sm">
-                  <Check className="h-4 w-4 mr-1" />Approve Payroll
-                </Button>
-                <Button variant="outline" size="sm">Request Changes</Button>
-              </div>
-            </>
-          )}
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
-
 function FundingStep({ run }: { run: typeof payrollRuns[0] }) {
   const [verified, setVerified] = useState(false);
   const total = run.grossPay * 1.12;
@@ -256,7 +240,7 @@ function FundingStep({ run }: { run: typeof payrollRuns[0] }) {
         <Card>
           <CardContent className="pt-5 pb-4 px-4">
             <p className="text-xs text-muted-foreground mb-1">Account Balance</p>
-            <p className="text-xl font-semibold tabular-nums text-[hsl(var(--success))]">{formatCurrency(total + 15000)}</p>
+            <p className="text-xl font-semibold tabular-nums text-success">{formatCurrency(total + 15000)}</p>
           </CardContent>
         </Card>
       </div>
@@ -268,7 +252,7 @@ function FundingStep({ run }: { run: typeof payrollRuns[0] }) {
             <span className="font-medium">Chase Business •••4821</span>
           </div>
           {verified ? (
-            <div className="flex items-center gap-2 text-sm text-[hsl(var(--success))]">
+            <div className="flex items-center gap-2 text-sm text-success">
               <CheckCircle2 className="h-4 w-4" />
               <span className="font-medium">Funding verified</span>
             </div>
@@ -285,16 +269,9 @@ function FundingStep({ run }: { run: typeof payrollRuns[0] }) {
 
 function SubmissionStep({ run }: { run: typeof payrollRuns[0] }) {
   const [submitted, setSubmitted] = useState(false);
-  const cutoff = isCutoffPassed();
   return (
     <div className="space-y-5">
       <p className="text-sm text-muted-foreground">Submit payroll to the external provider for processing.</p>
-      {cutoff && (
-        <div className="flex items-start gap-2 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 max-w-lg">
-          <AlertTriangle className="h-4 w-4 text-destructive mt-0.5 shrink-0" />
-          <p className="text-sm">Payroll cutoff has passed (Tuesday 6:00 PM EST). This submission will be processed in the next pay period.</p>
-        </div>
-      )}
       <Card className="max-w-lg">
         <CardHeader>
           <CardTitle className="text-base">Submission Summary</CardTitle>
@@ -317,8 +294,8 @@ function SubmissionStep({ run }: { run: typeof payrollRuns[0] }) {
           </div>
           <Separator />
           {submitted ? (
-            <div className="flex items-center gap-3 rounded-lg border border-[hsl(var(--success))]/30 bg-[hsl(var(--success))]/5 px-4 py-3">
-              <CheckCircle2 className="h-5 w-5 text-[hsl(var(--success))]" />
+            <div className="flex items-center gap-3 rounded-lg border border-success/30 bg-success/5 px-4 py-3">
+              <CheckCircle2 className="h-5 w-5 text-success" />
               <div>
                 <p className="text-sm font-medium">Submitted Successfully</p>
                 <p className="text-xs text-muted-foreground">Provider confirmation ID: EVR-{run.id.toUpperCase()}-2025</p>
@@ -345,6 +322,29 @@ export default function PayrollDetail() {
   const initialStep = run ? statusToStep(run.status) : 0;
   const [activeStep, setActiveStep] = useState(initialStep);
 
+  // Approval states
+  const [clientApprovalStatus, setClientApprovalStatus] = useState<'pending' | 'approved' | 'rejected' | 'escalated' | 'changes_requested'>('pending');
+  const [adminApprovalStatus, setAdminApprovalStatus] = useState<'pending' | 'approved' | 'rejected' | 'escalated' | 'changes_requested'>('pending');
+
+  // Internal notes (Super Admin only)
+  const [notes, setNotes] = useState<InternalNote[]>([
+    { id: 'pn1', author: 'Sarah Chen', authorRole: 'Super Admin', content: 'Client confirmed all overtime hours are accurate. Proceeding with standard processing.', jiraRef: 'ATLAS-2041', createdAt: new Date(Date.now() - 7200000).toISOString() },
+  ]);
+
+  // Audit trail
+  const auditEntries: AuditEntry[] = useMemo(() => {
+    if (!run) return [];
+    return [
+      { id: 'pa1', action: 'created', actor: run.createdBy, actorRole: 'Super Admin', entity: `Payroll Run`, details: `Created for ${run.companyName}, period ${run.payPeriodStart} – ${run.payPeriodEnd}`, timestamp: new Date(Date.now() - 86400000).toISOString() },
+      { id: 'pa2', action: 'updated', actor: run.createdBy, actorRole: 'Super Admin', entity: 'Payroll Run', details: 'Timesheets reviewed and marked complete', timestamp: new Date(Date.now() - 72000000).toISOString() },
+      { id: 'pa3', action: 'submitted', actor: run.createdBy, actorRole: 'Super Admin', entity: 'Payroll Run', details: 'Submitted for client approval', timestamp: new Date(Date.now() - 43200000).toISOString() },
+      ...(clientApprovalStatus === 'approved' ? [{ id: 'pa4', action: 'approved', actor: 'James Wilson', actorRole: 'Client Admin', entity: 'Payroll Run', details: 'Client approval granted', timestamp: new Date(Date.now() - 3600000).toISOString() }] : []),
+      ...(adminApprovalStatus === 'approved' ? [{ id: 'pa5', action: 'approved', actor: 'Sarah Chen', actorRole: 'Super Admin', entity: 'Payroll Run', details: 'Admin final approval granted', timestamp: new Date(Date.now() - 1800000).toISOString() }] : []),
+    ];
+  }, [run, clientApprovalStatus, adminApprovalStatus]);
+
+  const payrollDeadline = useMemo(() => getNextPayrollDeadline(), []);
+
   const companyEmployees = useMemo(
     () => (run ? employees.filter(e => e.companyId === run.companyId && e.status !== 'terminated') : []),
     [run]
@@ -368,9 +368,43 @@ export default function PayrollDetail() {
       case 0: return <TimeReviewStep companyEmployees={companyEmployees} />;
       case 1: return <PayrollEditStep companyEmployees={companyEmployees} />;
       case 2: return <PreviewStep run={run!} />;
-      case 3: return <ApprovalStep title="Client Approval" description="The client admin must review and approve this payroll run." approver={run!.createdBy} />;
+      case 3:
+        return (
+          <ApprovalPanel
+            title="Client Payroll Approval"
+            description={`${run!.companyName} — Gross pay: ${formatCurrency(run!.grossPay)} · ${run!.employeeCount} employees · Pay date: ${run!.payDate}`}
+            status={clientApprovalStatus}
+            approver={clientApprovalStatus !== 'pending' ? 'James Wilson' : undefined}
+            approvedAt={clientApprovalStatus !== 'pending' ? new Date().toISOString() : undefined}
+            deadline={`Tuesday 6:00 PM EST`}
+            onAction={(actionId) => {
+              if (actionId === 'approve') setClientApprovalStatus('approved');
+              else if (actionId === 'reject') setClientApprovalStatus('rejected');
+              else if (actionId === 'request_changes') setClientApprovalStatus('changes_requested');
+            }}
+          />
+        );
       case 4: return <FundingStep run={run!} />;
-      case 5: return <ApprovalStep title="Super Admin Approval" description="Final review and approval by AtlasOne admin before provider submission." approver="Sarah Chen" />;
+      case 5:
+        return (
+          <ApprovalPanel
+            title="Super Admin Final Approval"
+            description="Final review before submission to payroll provider. This action is irreversible."
+            status={adminApprovalStatus}
+            approver={adminApprovalStatus !== 'pending' ? 'Sarah Chen' : undefined}
+            approvedAt={adminApprovalStatus !== 'pending' ? new Date().toISOString() : undefined}
+            actions={[
+              { id: 'approve', label: 'Approve & Submit', variant: 'approve', icon: Check },
+              { id: 'escalate', label: 'Escalate', variant: 'escalate', icon: ShieldCheck },
+              { id: 'reject', label: 'Reject', variant: 'reject', icon: AlertTriangle, requiresComment: true },
+            ]}
+            onAction={(actionId) => {
+              if (actionId === 'approve') setAdminApprovalStatus('approved');
+              else if (actionId === 'reject') setAdminApprovalStatus('rejected');
+              else if (actionId === 'escalate') setAdminApprovalStatus('escalated');
+            }}
+          />
+        );
       case 6: return <SubmissionStep run={run!} />;
       default: return null;
     }
@@ -392,6 +426,12 @@ export default function PayrollDetail() {
             {run.payPeriodStart} — {run.payPeriodEnd} · Pay date: {run.payDate} · {run.employeeCount} employees
           </p>
         </div>
+        <DeadlineCountdown
+          deadline={payrollDeadline}
+          label="Payroll Cutoff"
+          warningHours={48}
+          criticalHours={6}
+        />
         <div className="flex items-center gap-4 text-sm">
           <div className="text-right">
             <p className="text-xs text-muted-foreground">Gross Pay</p>
@@ -424,8 +464,8 @@ export default function PayrollDetail() {
               >
                 <div className="flex items-center gap-2 mb-1">
                   {isCompleted ? (
-                    <div className="flex h-5 w-5 items-center justify-center rounded-full bg-[hsl(var(--success))]">
-                      <Check className="h-3 w-3 text-[hsl(var(--success-foreground))]" />
+                    <div className="flex h-5 w-5 items-center justify-center rounded-full bg-success">
+                      <Check className="h-3 w-3 text-success-foreground" />
                     </div>
                   ) : (
                     <StepIcon className={`h-4 w-4 ${isCurrent ? 'text-primary' : 'text-muted-foreground'}`} />
@@ -434,20 +474,51 @@ export default function PayrollDetail() {
                     {step.label}
                   </span>
                 </div>
-                <div className={`h-1 rounded-full mt-1 ${isCompleted ? 'bg-[hsl(var(--success))]' : isCurrent ? 'bg-primary' : 'bg-border'}`} />
+                <div className={`h-1 rounded-full mt-1 ${isCompleted ? 'bg-success' : isCurrent ? 'bg-primary' : 'bg-border'}`} />
               </button>
             );
           })}
         </div>
       </div>
 
-      {/* Step content */}
-      <div className="animate-in-up stagger-2">
-        <div className="flex items-center gap-2 mb-4">
-          <h2 className="text-lg font-semibold">{WORKFLOW_STEPS[activeStep].label}</h2>
-          <span className="text-sm text-muted-foreground">— {WORKFLOW_STEPS[activeStep].description}</span>
+      {/* Step content + sidebar */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in-up stagger-2">
+        {/* Main content */}
+        <div className="lg:col-span-2">
+          <div className="flex items-center gap-2 mb-4">
+            <h2 className="text-lg font-semibold">{WORKFLOW_STEPS[activeStep].label}</h2>
+            <span className="text-sm text-muted-foreground">— {WORKFLOW_STEPS[activeStep].description}</span>
+          </div>
+          {renderStepContent()}
         </div>
-        {renderStepContent()}
+
+        {/* Right sidebar: Audit + Internal Notes */}
+        <div className="space-y-4">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm">Activity</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <AuditTimeline entries={auditEntries} maxItems={5} />
+            </CardContent>
+          </Card>
+
+          <RoleGate allowedRoles={['super_admin']}>
+            <InternalNotes
+              notes={notes}
+              onAddNote={(content, jiraRef) => {
+                setNotes(prev => [...prev, {
+                  id: `pn-${Date.now()}`,
+                  author: 'You',
+                  authorRole: 'Super Admin',
+                  content,
+                  jiraRef,
+                  createdAt: new Date().toISOString(),
+                }]);
+              }}
+            />
+          </RoleGate>
+        </div>
       </div>
 
       {/* Navigation */}
