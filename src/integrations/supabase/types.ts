@@ -485,6 +485,42 @@ export type Database = {
           },
         ]
       }
+      internal_notes: {
+        Row: {
+          author_id: string
+          author_name: string
+          author_role: string
+          content: string
+          created_at: string
+          id: string
+          jira_ref: string | null
+          record_id: string
+          record_type: string
+        }
+        Insert: {
+          author_id: string
+          author_name: string
+          author_role: string
+          content: string
+          created_at?: string
+          id?: string
+          jira_ref?: string | null
+          record_id: string
+          record_type: string
+        }
+        Update: {
+          author_id?: string
+          author_name?: string
+          author_role?: string
+          content?: string
+          created_at?: string
+          id?: string
+          jira_ref?: string | null
+          record_id?: string
+          record_type?: string
+        }
+        Relationships: []
+      }
       invoice_line_items: {
         Row: {
           created_at: string

@@ -14,7 +14,8 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ApprovalPanel } from '@/components/workflow/ApprovalPanel';
 import { DeadlineCountdown } from '@/components/workflow/DeadlineCountdown';
-import { InternalNotes, type InternalNote } from '@/components/workflow/InternalNotes';
+import { InternalNotes } from '@/components/workflow/InternalNotes';
+import { useInternalNotes, useAddInternalNote } from '@/hooks/useInternalNotes';
 import { AuditTimeline, type AuditEntry } from '@/components/workflow/AuditTimeline';
 import { RoleGate } from '@/components/RoleGate';
 import { useAuth } from '@/contexts/AuthContext';
@@ -231,7 +232,7 @@ function PayrollBreakdown({ run }: { run: PayrollRunRow }) {
 export default function PayrollDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, profile, role } = useAuth();
   const { toast } = useToast();
 
   const { data: run, isLoading, error } = usePayrollRun(id);
@@ -240,7 +241,8 @@ export default function PayrollDetail() {
   const updateStatus = useUpdatePayrollRunStatus();
 
   const [activeStep, setActiveStep] = useState<number | null>(null);
-  const [notes, setNotes] = useState<InternalNote[]>([]);
+  const { data: internalNotes = [] } = useInternalNotes('payroll_run', id);
+  const addNoteMutation = useAddInternalNote();
 
   const payrollDeadline = useMemo(() => getNextPayrollDeadline(), []);
 
@@ -569,16 +571,25 @@ export default function PayrollDetail() {
           {/* Internal notes (Super Admin) */}
           <RoleGate allowedRoles={['super_admin']}>
             <InternalNotes
-              notes={notes}
+              notes={internalNotes.map(n => ({
+                id: n.id,
+                author: n.author_name,
+                authorRole: n.author_role,
+                content: n.content,
+                jiraRef: n.jira_ref ?? undefined,
+                createdAt: n.created_at,
+              }))}
               onAddNote={(content, jiraRef) => {
-                setNotes(prev => [...prev, {
-                  id: `pn-${Date.now()}`,
-                  author: 'You',
-                  authorRole: 'Super Admin',
+                if (!user) return;
+                addNoteMutation.mutate({
+                  record_type: 'payroll_run',
+                  record_id: id!,
+                  author_id: user.id,
+                  author_name: profile?.full_name || user.email || 'Unknown',
+                  author_role: role || 'super_admin',
                   content,
-                  jiraRef,
-                  createdAt: new Date().toISOString(),
-                }]);
+                  jira_ref: jiraRef,
+                });
               }}
             />
           </RoleGate>
