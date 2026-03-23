@@ -1209,6 +1209,202 @@ export type Database = {
         }
         Relationships: []
       }
+      pto_balance_ledger: {
+        Row: {
+          balance_after: number
+          company_id: string
+          created_at: string
+          created_by: string | null
+          effective_date: string
+          employee_id: string
+          entry_type: Database["public"]["Enums"]["pto_ledger_type"]
+          hours: number
+          id: string
+          notes: string | null
+          policy_id: string
+          reference_id: string | null
+        }
+        Insert: {
+          balance_after: number
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          effective_date?: string
+          employee_id: string
+          entry_type: Database["public"]["Enums"]["pto_ledger_type"]
+          hours: number
+          id?: string
+          notes?: string | null
+          policy_id: string
+          reference_id?: string | null
+        }
+        Update: {
+          balance_after?: number
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          effective_date?: string
+          employee_id?: string
+          entry_type?: Database["public"]["Enums"]["pto_ledger_type"]
+          hours?: number
+          id?: string
+          notes?: string | null
+          policy_id?: string
+          reference_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pto_balance_ledger_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pto_balance_ledger_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pto_balance_ledger_policy_id_fkey"
+            columns: ["policy_id"]
+            isOneToOne: false
+            referencedRelation: "pto_policies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pto_policies: {
+        Row: {
+          accrual_frequency: Database["public"]["Enums"]["pto_accrual_frequency"]
+          accrual_rate: number
+          company_id: string
+          created_at: string
+          id: string
+          is_active: boolean
+          max_accrual_hours: number
+          max_carryover_hours: number
+          name: string
+          pto_type: Database["public"]["Enums"]["pto_type"]
+          updated_at: string
+          waiting_period_days: number
+        }
+        Insert: {
+          accrual_frequency?: Database["public"]["Enums"]["pto_accrual_frequency"]
+          accrual_rate?: number
+          company_id: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          max_accrual_hours?: number
+          max_carryover_hours?: number
+          name: string
+          pto_type?: Database["public"]["Enums"]["pto_type"]
+          updated_at?: string
+          waiting_period_days?: number
+        }
+        Update: {
+          accrual_frequency?: Database["public"]["Enums"]["pto_accrual_frequency"]
+          accrual_rate?: number
+          company_id?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          max_accrual_hours?: number
+          max_carryover_hours?: number
+          name?: string
+          pto_type?: Database["public"]["Enums"]["pto_type"]
+          updated_at?: string
+          waiting_period_days?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pto_policies_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pto_requests: {
+        Row: {
+          cancelled_at: string | null
+          company_id: string
+          created_at: string
+          employee_id: string
+          end_date: string
+          hours: number
+          id: string
+          policy_id: string
+          reason: string | null
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          start_date: string
+          status: Database["public"]["Enums"]["pto_request_status"]
+          updated_at: string
+        }
+        Insert: {
+          cancelled_at?: string | null
+          company_id: string
+          created_at?: string
+          employee_id: string
+          end_date: string
+          hours: number
+          id?: string
+          policy_id: string
+          reason?: string | null
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          start_date: string
+          status?: Database["public"]["Enums"]["pto_request_status"]
+          updated_at?: string
+        }
+        Update: {
+          cancelled_at?: string | null
+          company_id?: string
+          created_at?: string
+          employee_id?: string
+          end_date?: string
+          hours?: number
+          id?: string
+          policy_id?: string
+          reason?: string | null
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          start_date?: string
+          status?: Database["public"]["Enums"]["pto_request_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pto_requests_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pto_requests_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pto_requests_policy_id_fkey"
+            columns: ["policy_id"]
+            isOneToOne: false
+            referencedRelation: "pto_policies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           id: string
@@ -1302,6 +1498,31 @@ export type Database = {
         | "commission"
         | "reimbursement"
         | "correction"
+      pto_accrual_frequency:
+        | "per_pay_period"
+        | "monthly"
+        | "annually"
+        | "upfront"
+      pto_ledger_type:
+        | "accrual"
+        | "used"
+        | "adjustment"
+        | "carryover"
+        | "forfeited"
+        | "payout"
+      pto_request_status:
+        | "pending"
+        | "approved"
+        | "denied"
+        | "cancelled"
+        | "taken"
+      pto_type:
+        | "vacation"
+        | "sick"
+        | "personal"
+        | "bereavement"
+        | "jury_duty"
+        | "holiday"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1493,6 +1714,35 @@ export const Constants = {
         "commission",
         "reimbursement",
         "correction",
+      ],
+      pto_accrual_frequency: [
+        "per_pay_period",
+        "monthly",
+        "annually",
+        "upfront",
+      ],
+      pto_ledger_type: [
+        "accrual",
+        "used",
+        "adjustment",
+        "carryover",
+        "forfeited",
+        "payout",
+      ],
+      pto_request_status: [
+        "pending",
+        "approved",
+        "denied",
+        "cancelled",
+        "taken",
+      ],
+      pto_type: [
+        "vacation",
+        "sick",
+        "personal",
+        "bereavement",
+        "jury_duty",
+        "holiday",
       ],
     },
   },
