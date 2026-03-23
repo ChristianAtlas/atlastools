@@ -14,6 +14,7 @@ import {
   empCentsToUSD, getInitials,
   type EmployeeRow, type CompensationRecordRow,
 } from '@/hooks/useEmployees';
+import { EditEmployeeDialog } from '@/components/employees/EditEmployeeDialog';
 
 function InfoRow({ label, value, icon: Icon }: { label: string; value: string; icon?: React.ElementType }) {
   return (
