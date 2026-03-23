@@ -1,6 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Mail, Phone, MapPin, Calendar, Building2, Clock, FileText, Upload, ShieldCheck, CreditCard, PalmtreeIcon } from 'lucide-react';
-import { employees } from '@/lib/mock-data';
+import { ArrowLeft, Mail, Phone, MapPin, Calendar, Building2, Clock, FileText, Upload, ShieldCheck, CreditCard, PalmtreeIcon, Loader2 } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Button } from '@/components/ui/button';
@@ -9,11 +8,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-
-const formatCurrency = (n: number, type: string) =>
-  type === 'hourly'
-    ? `$${n.toFixed(2)}/hr`
-    : new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(n);
+import {
+  useEmployee, useCompensationRecords,
+  empCentsToUSD, getInitials,
+  type EmployeeRow, type CompensationRecordRow,
+} from '@/hooks/useEmployees';
 
 function InfoRow({ label, value, icon: Icon }: { label: string; value: string; icon?: React.ElementType }) {
   return (
@@ -27,7 +26,7 @@ function InfoRow({ label, value, icon: Icon }: { label: string; value: string; i
   );
 }
 
-function ProfileTab({ emp }: { emp: typeof employees[0] }) {
+function ProfileTab({ emp }: { emp: EmployeeRow }) {
   return (
     <div className="grid gap-5 md:grid-cols-2 animate-in-up">
       <Card>
@@ -36,9 +35,13 @@ function ProfileTab({ emp }: { emp: typeof employees[0] }) {
         </CardHeader>
         <CardContent className="space-y-1">
           <InfoRow icon={Mail} label="Email" value={emp.email} />
-          <InfoRow icon={Phone} label="Phone" value="(555) 412-8837" />
-          <InfoRow icon={MapPin} label="Address" value="1428 Elm St, Austin, TX 78701" />
-          <InfoRow icon={Calendar} label="Date of Birth" value="March 14, 1991" />
+          <InfoRow icon={Phone} label="Phone" value={emp.phone || '—'} />
+          <InfoRow icon={MapPin} label="Address" value={
+            [emp.address_line1, emp.city, emp.state, emp.zip].filter(Boolean).join(', ') || '—'
+          } />
+          <InfoRow icon={Calendar} label="Date of Birth" value={
+            emp.date_of_birth ? new Date(emp.date_of_birth).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : '—'
+          } />
         </CardContent>
       </Card>
       <Card>
@@ -46,11 +49,13 @@ function ProfileTab({ emp }: { emp: typeof employees[0] }) {
           <CardTitle className="text-base">Employment Details</CardTitle>
         </CardHeader>
         <CardContent className="space-y-1">
-          <InfoRow icon={Building2} label="Company" value={emp.companyName} />
-          <InfoRow icon={ShieldCheck} label="Department" value={emp.department} />
-          <InfoRow label="Title" value={emp.title} />
-          <InfoRow icon={Calendar} label="Start Date" value={new Date(emp.startDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })} />
-          <InfoRow label="Employee ID" value={emp.id.toUpperCase()} />
+          <InfoRow icon={Building2} label="Company" value={emp.companies?.name ?? '—'} />
+          <InfoRow icon={ShieldCheck} label="Department" value={emp.department ?? '—'} />
+          <InfoRow label="Title" value={emp.title ?? '—'} />
+          <InfoRow icon={Calendar} label="Start Date" value={
+            new Date(emp.start_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+          } />
+          <InfoRow label="Employee ID" value={emp.id.substring(0, 8).toUpperCase()} />
         </CardContent>
       </Card>
       <Card className="md:col-span-2">
@@ -61,15 +66,15 @@ function ProfileTab({ emp }: { emp: typeof employees[0] }) {
           <div className="grid gap-4 sm:grid-cols-3">
             <div>
               <p className="text-xs text-muted-foreground">Name</p>
-              <p className="text-sm font-medium mt-0.5">Maria Ramirez</p>
+              <p className="text-sm font-medium mt-0.5">{emp.emergency_contact_name || '—'}</p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Relationship</p>
-              <p className="text-sm font-medium mt-0.5">Spouse</p>
+              <p className="text-sm font-medium mt-0.5">{emp.emergency_contact_relationship || '—'}</p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Phone</p>
-              <p className="text-sm font-medium mt-0.5">(555) 412-9921</p>
+              <p className="text-sm font-medium mt-0.5">{emp.emergency_contact_phone || '—'}</p>
             </div>
           </div>
         </CardContent>
@@ -78,11 +83,10 @@ function ProfileTab({ emp }: { emp: typeof employees[0] }) {
   );
 }
 
-function CompensationTab({ emp }: { emp: typeof employees[0] }) {
-  const history = [
-    { date: 'Mar 2025', amount: emp.salary, reason: 'Annual Review' },
-    { date: 'Sep 2024', amount: emp.payType === 'hourly' ? emp.salary - 1.5 : emp.salary - 4000, reason: 'Starting Salary' },
-  ];
+function CompensationTab({ emp, history }: { emp: EmployeeRow; history: CompensationRecordRow[] }) {
+  const currentPay = emp.pay_type === 'hourly'
+    ? empCentsToUSD(emp.hourly_rate_cents, 'hourly')
+    : empCentsToUSD(emp.annual_salary_cents, 'salary');
 
   return (
     <div className="grid gap-5 md:grid-cols-2 animate-in-up">
@@ -93,13 +97,15 @@ function CompensationTab({ emp }: { emp: typeof employees[0] }) {
         <CardContent className="space-y-3">
           <div className="flex items-baseline justify-between">
             <p className="text-sm text-muted-foreground">Base Pay</p>
-            <p className="text-2xl font-semibold tabular-nums">{formatCurrency(emp.salary, emp.payType)}</p>
+            <p className="text-2xl font-semibold tabular-nums">{currentPay}</p>
           </div>
           <Separator />
           <div className="space-y-1.5">
-            <InfoRow label="Pay Type" value={emp.payType === 'salary' ? 'Salaried' : 'Hourly'} />
-            <InfoRow label="Pay Frequency" value="Bi-weekly" />
-            <InfoRow label="FLSA Status" value={emp.payType === 'salary' && emp.salary >= 58600 ? 'Exempt' : 'Non-Exempt'} />
+            <InfoRow label="Pay Type" value={emp.pay_type === 'salary' ? 'Salaried' : 'Hourly'} />
+            <InfoRow label="Pay Frequency" value={emp.pay_frequency === 'biweekly' ? 'Bi-weekly' : emp.pay_frequency} />
+            <InfoRow label="FLSA Status" value={
+              emp.pay_type === 'salary' && (emp.annual_salary_cents ?? 0) >= 5860000 ? 'Exempt' : 'Non-Exempt'
+            } />
           </div>
         </CardContent>
       </Card>
@@ -109,13 +115,22 @@ function CompensationTab({ emp }: { emp: typeof employees[0] }) {
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {history.map((h, i) => (
-              <div key={i} className="flex items-center justify-between py-1.5">
+            {history.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No history available</p>
+            ) : history.map(h => (
+              <div key={h.id} className="flex items-center justify-between py-1.5">
                 <div>
-                  <p className="text-sm font-medium">{h.reason}</p>
-                  <p className="text-xs text-muted-foreground">{h.date}</p>
+                  <p className="text-sm font-medium capitalize">{h.reason.replace('_', ' ')}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {new Date(h.effective_date).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+                    {h.change_percentage ? ` · +${h.change_percentage}%` : ''}
+                  </p>
                 </div>
-                <p className="text-sm font-medium tabular-nums">{formatCurrency(h.amount, emp.payType)}</p>
+                <p className="text-sm font-medium tabular-nums">
+                  {h.pay_type === 'hourly'
+                    ? empCentsToUSD(h.hourly_rate_cents, 'hourly')
+                    : empCentsToUSD(h.annual_salary_cents, 'salary')}
+                </p>
               </div>
             ))}
           </div>
@@ -372,9 +387,18 @@ function PTOTab() {
 export default function EmployeeDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const emp = employees.find(e => e.id === id);
+  const { data: emp, isLoading, error } = useEmployee(id);
+  const { data: compHistory = [] } = useCompensationRecords(id);
 
-  if (!emp) {
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (!emp || error) {
     return (
       <div className="flex flex-col items-center justify-center py-20 space-y-3">
         <p className="text-muted-foreground">Employee not found</p>
@@ -385,6 +409,8 @@ export default function EmployeeDetail() {
     );
   }
 
+  const initials = getInitials(emp.first_name, emp.last_name);
+
   return (
     <div className="space-y-5">
       <div className="flex items-center gap-3 animate-in-up">
@@ -393,47 +419,35 @@ export default function EmployeeDetail() {
         </Button>
         <div className="flex items-center gap-3 flex-1">
           <div className="flex h-11 w-11 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
-            {emp.avatarInitials}
+            {initials}
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-xl font-semibold">{emp.firstName} {emp.lastName}</h1>
+              <h1 className="text-xl font-semibold">{emp.first_name} {emp.last_name}</h1>
               <StatusBadge status={emp.status} />
             </div>
-            <p className="text-sm text-muted-foreground">{emp.title} · {emp.companyName}</p>
+            <p className="text-sm text-muted-foreground">{emp.title} · {emp.companies?.name}</p>
           </div>
         </div>
         <Button variant="outline" size="sm">Edit Employee</Button>
       </div>
 
       <Tabs defaultValue="profile" className="animate-in-up stagger-1">
-        <TabsList className="w-full justify-start bg-transparent border-b rounded-none h-auto p-0 gap-0">
-          {[
-            { value: 'profile', label: 'Profile' },
-            { value: 'compensation', label: 'Compensation' },
-            { value: 'tax', label: 'Tax Info' },
-            { value: 'deposit', label: 'Direct Deposit' },
-            { value: 'documents', label: 'Documents' },
-            { value: 'pto', label: 'PTO' },
-          ].map(tab => (
-            <TabsTrigger
-              key={tab.value}
-              value={tab.value}
-              className="rounded-none border-b-2 border-transparent px-4 pb-2.5 pt-2 text-sm data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none"
-            >
-              {tab.label}
-            </TabsTrigger>
-          ))}
+        <TabsList className="w-full justify-start overflow-x-auto">
+          <TabsTrigger value="profile" className="gap-1.5"><Building2 className="h-3.5 w-3.5" />Profile</TabsTrigger>
+          <TabsTrigger value="compensation" className="gap-1.5"><CreditCard className="h-3.5 w-3.5" />Compensation</TabsTrigger>
+          <TabsTrigger value="tax" className="gap-1.5"><FileText className="h-3.5 w-3.5" />Tax Info</TabsTrigger>
+          <TabsTrigger value="deposit" className="gap-1.5"><CreditCard className="h-3.5 w-3.5" />Direct Deposit</TabsTrigger>
+          <TabsTrigger value="documents" className="gap-1.5"><FileText className="h-3.5 w-3.5" />Documents</TabsTrigger>
+          <TabsTrigger value="pto" className="gap-1.5"><PalmtreeIcon className="h-3.5 w-3.5" />PTO</TabsTrigger>
         </TabsList>
 
-        <div className="mt-5">
-          <TabsContent value="profile"><ProfileTab emp={emp} /></TabsContent>
-          <TabsContent value="compensation"><CompensationTab emp={emp} /></TabsContent>
-          <TabsContent value="tax"><TaxInfoTab /></TabsContent>
-          <TabsContent value="deposit"><DirectDepositTab /></TabsContent>
-          <TabsContent value="documents"><DocumentsTab /></TabsContent>
-          <TabsContent value="pto"><PTOTab /></TabsContent>
-        </div>
+        <TabsContent value="profile"><ProfileTab emp={emp} /></TabsContent>
+        <TabsContent value="compensation"><CompensationTab emp={emp} history={compHistory} /></TabsContent>
+        <TabsContent value="tax"><TaxInfoTab /></TabsContent>
+        <TabsContent value="deposit"><DirectDepositTab /></TabsContent>
+        <TabsContent value="documents"><DocumentsTab /></TabsContent>
+        <TabsContent value="pto"><PTOTab /></TabsContent>
       </Tabs>
     </div>
   );
