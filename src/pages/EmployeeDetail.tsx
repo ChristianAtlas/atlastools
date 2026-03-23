@@ -15,6 +15,7 @@ import {
   type EmployeeRow, type CompensationRecordRow,
 } from '@/hooks/useEmployees';
 import { EditEmployeeDialog } from '@/components/employees/EditEmployeeDialog';
+import { usePTOBalances, usePTORequests, hoursToDays, type PTOBalance, type PTORequest } from '@/hooks/usePTO';
 
 function InfoRow({ label, value, icon: Icon }: { label: string; value: string; icon?: React.ElementType }) {
   return (
