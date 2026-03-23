@@ -93,7 +93,7 @@ export default function Payroll() {
                       {run.pay_period_start} — {run.pay_period_end} · Pay date: {run.pay_date}
                     </p>
                   </div>
-                  <StatusBadge status={badgeStatus(run.status)} />
+                  <StatusBadge status={badgeStatus(run.status) as any} />
                 </div>
 
                 {showStepper && (
