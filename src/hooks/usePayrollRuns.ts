@@ -131,12 +131,11 @@ export function usePayrollRunEmployees(runId: string | undefined) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('payroll_run_employees')
-        .select('*')
+        .select('*, employees(first_name, last_name, pay_type, title)')
         .eq('payroll_run_id', runId!)
         .order('employee_id');
-      const { data: d, error: e } = { data, error };
-      if (e) throw e;
-      return (d ?? []) as unknown as PayrollRunEmployeeRow[];
+      if (error) throw error;
+      return (data ?? []) as unknown as PayrollRunEmployeeRow[];
     },
     enabled: !!runId,
   });
