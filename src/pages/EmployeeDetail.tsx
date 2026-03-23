@@ -412,6 +412,7 @@ export default function EmployeeDetail() {
   }
 
   const initials = getInitials(emp.first_name, emp.last_name);
+  const [editOpen, setEditOpen] = useState(false);
 
   return (
     <div className="space-y-5">
