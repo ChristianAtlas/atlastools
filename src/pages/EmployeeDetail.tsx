@@ -391,7 +391,7 @@ function PTOTab({ employeeId, companyId }: { employeeId: string; companyId: stri
                       </p>
                     </div>
                   </div>
-                  <StatusBadge status={r.status === 'taken' ? 'completed' : r.status === 'pending' ? 'pending_approval' : r.status} />
+                  <StatusBadge status={r.status === 'taken' ? 'completed' : r.status === 'pending' ? 'pending_approval' : r.status === 'denied' ? 'failed' : r.status as any} />
                 </div>
               ))}
             </div>
