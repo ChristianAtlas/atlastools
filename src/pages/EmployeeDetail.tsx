@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Mail, Phone, MapPin, Calendar, Building2, Clock, FileText, Upload, ShieldCheck, CreditCard, PalmtreeIcon, Loader2 } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
