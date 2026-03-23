@@ -432,7 +432,7 @@ export default function EmployeeDetail() {
             <p className="text-sm text-muted-foreground">{emp.title} · {emp.companies?.name}</p>
           </div>
         </div>
-        <Button variant="outline" size="sm">Edit Employee</Button>
+        <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>Edit Employee</Button>
       </div>
 
       <Tabs defaultValue="profile" className="animate-in-up stagger-1">
