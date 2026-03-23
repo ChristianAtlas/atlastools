@@ -452,6 +452,8 @@ export default function EmployeeDetail() {
         <TabsContent value="documents"><DocumentsTab /></TabsContent>
         <TabsContent value="pto"><PTOTab /></TabsContent>
       </Tabs>
+
+      <EditEmployeeDialog employee={emp} open={editOpen} onOpenChange={setEditOpen} />
     </div>
   );
 }
