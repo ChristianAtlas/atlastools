@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Mail, Phone, MapPin, Calendar, Building2, Clock, FileText, Upload, ShieldCheck, CreditCard, PalmtreeIcon, Loader2 } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
@@ -13,6 +14,7 @@ import {
   empCentsToUSD, getInitials,
   type EmployeeRow, type CompensationRecordRow,
 } from '@/hooks/useEmployees';
+import { EditEmployeeDialog } from '@/components/employees/EditEmployeeDialog';
 
 function InfoRow({ label, value, icon: Icon }: { label: string; value: string; icon?: React.ElementType }) {
   return (
@@ -389,6 +391,7 @@ export default function EmployeeDetail() {
   const navigate = useNavigate();
   const { data: emp, isLoading, error } = useEmployee(id);
   const { data: compHistory = [] } = useCompensationRecords(id);
+  const [editOpen, setEditOpen] = useState(false);
 
   if (isLoading) {
     return (
@@ -429,7 +432,7 @@ export default function EmployeeDetail() {
             <p className="text-sm text-muted-foreground">{emp.title} · {emp.companies?.name}</p>
           </div>
         </div>
-        <Button variant="outline" size="sm">Edit Employee</Button>
+        <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>Edit Employee</Button>
       </div>
 
       <Tabs defaultValue="profile" className="animate-in-up stagger-1">
@@ -449,6 +452,8 @@ export default function EmployeeDetail() {
         <TabsContent value="documents"><DocumentsTab /></TabsContent>
         <TabsContent value="pto"><PTOTab /></TabsContent>
       </Tabs>
+
+      <EditEmployeeDialog employee={emp} open={editOpen} onOpenChange={setEditOpen} />
     </div>
   );
 }
