@@ -3,7 +3,11 @@ import { cn } from '@/lib/utils';
 type BadgeStatus = 'active' | 'onboarding' | 'suspended' | 'terminated' | 'on_leave'
   | 'draft' | 'in_review' | 'pending_approval' | 'approved' | 'processing' | 'completed' | 'failed'
   | 'pending' | 'in_progress' | 'overdue'
-  | 'sent' | 'paid';
+  | 'sent' | 'paid'
+  | 'time_review' | 'editing' | 'preview'
+  | 'pending_client_approval' | 'client_approved'
+  | 'funding' | 'pending_admin_approval' | 'admin_approved'
+  | 'submitting' | 'submitted' | 'voided' | 'reversed';
 
 const statusConfig: Record<string, { label: string; className: string }> = {
   active: { label: 'Active', className: 'bg-success/10 text-success' },
@@ -23,6 +27,18 @@ const statusConfig: Record<string, { label: string; className: string }> = {
   overdue: { label: 'Overdue', className: 'bg-destructive/10 text-destructive' },
   sent: { label: 'Sent', className: 'bg-info/10 text-info' },
   paid: { label: 'Paid', className: 'bg-success/10 text-success' },
+  time_review: { label: 'Time Review', className: 'bg-info/10 text-info' },
+  editing: { label: 'Editing', className: 'bg-info/10 text-info' },
+  preview: { label: 'Preview', className: 'bg-info/10 text-info' },
+  pending_client_approval: { label: 'Pending Client', className: 'bg-warning/10 text-warning' },
+  client_approved: { label: 'Client Approved', className: 'bg-success/10 text-success' },
+  funding: { label: 'Funding', className: 'bg-info/10 text-info' },
+  pending_admin_approval: { label: 'Pending Admin', className: 'bg-warning/10 text-warning' },
+  admin_approved: { label: 'Admin Approved', className: 'bg-success/10 text-success' },
+  submitting: { label: 'Submitting', className: 'bg-info/10 text-info' },
+  submitted: { label: 'Submitted', className: 'bg-success/10 text-success' },
+  voided: { label: 'Voided', className: 'bg-destructive/10 text-destructive' },
+  reversed: { label: 'Reversed', className: 'bg-destructive/10 text-destructive' },
 };
 
 interface StatusBadgeProps {
