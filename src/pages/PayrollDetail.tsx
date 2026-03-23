@@ -232,7 +232,7 @@ function PayrollBreakdown({ run }: { run: PayrollRunRow }) {
 export default function PayrollDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, profile, role } = useAuth();
   const { toast } = useToast();
 
   const { data: run, isLoading, error } = usePayrollRun(id);
