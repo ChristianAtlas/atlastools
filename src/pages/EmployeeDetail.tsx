@@ -391,6 +391,7 @@ export default function EmployeeDetail() {
   const navigate = useNavigate();
   const { data: emp, isLoading, error } = useEmployee(id);
   const { data: compHistory = [] } = useCompensationRecords(id);
+  const [editOpen, setEditOpen] = useState(false);
 
   if (isLoading) {
     return (
@@ -412,7 +413,6 @@ export default function EmployeeDetail() {
   }
 
   const initials = getInitials(emp.first_name, emp.last_name);
-  const [editOpen, setEditOpen] = useState(false);
 
   return (
     <div className="space-y-5">
