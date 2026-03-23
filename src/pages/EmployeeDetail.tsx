@@ -15,6 +15,7 @@ import {
   type EmployeeRow, type CompensationRecordRow,
 } from '@/hooks/useEmployees';
 import { EditEmployeeDialog } from '@/components/employees/EditEmployeeDialog';
+import { usePTOBalances, usePTORequests, hoursToDays, type PTOBalance, type PTORequest } from '@/hooks/usePTO';
 
 function InfoRow({ label, value, icon: Icon }: { label: string; value: string; icon?: React.ElementType }) {
   return (
@@ -315,77 +316,91 @@ function DocumentsTab() {
   );
 }
 
-function PTOTab() {
-  const balances = [
-    { type: 'Vacation', used: 3, accrued: 10, pending: 1, color: 'var(--chart-1)' },
-    { type: 'Sick Leave', used: 1, accrued: 5, pending: 0, color: 'var(--chart-2)' },
-    { type: 'Personal', used: 0, accrued: 3, pending: 0, color: 'var(--chart-3)' },
-  ];
+function PTOTab({ employeeId, companyId }: { employeeId: string; companyId: string }) {
+  const { data: balances = [], isLoading: balLoading } = usePTOBalances(employeeId, companyId);
+  const { data: requests = [], isLoading: reqLoading } = usePTORequests({ employeeId });
 
-  const requests = [
-    { dates: 'Apr 7–11, 2025', type: 'Vacation', days: 5, status: 'pending' as const },
-    { dates: 'Feb 14, 2025', type: 'Sick Leave', days: 1, status: 'completed' as const },
-    { dates: 'Jan 2–3, 2025', type: 'Vacation', days: 2, status: 'completed' as const },
-  ];
+  if (balLoading || reqLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <div className="grid gap-5 md:grid-cols-3 animate-in-up">
-      {balances.map(b => {
-        const available = b.accrued - b.used - b.pending;
-        return (
-          <Card key={b.type}>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base">{b.type}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex items-baseline gap-1">
-                <span className="text-3xl font-semibold tabular-nums">{available}</span>
-                <span className="text-sm text-muted-foreground">days available</span>
-              </div>
-              <Progress value={(b.used / b.accrued) * 100} className="h-1.5" />
-              <div className="grid grid-cols-3 gap-2 text-center">
-                <div>
-                  <p className="text-lg font-semibold tabular-nums">{b.accrued}</p>
-                  <p className="text-xs text-muted-foreground">Accrued</p>
+      {balances.length === 0 ? (
+        <Card className="md:col-span-3">
+          <CardContent className="py-10 text-center text-muted-foreground text-sm">
+            No PTO policies configured for this company.
+          </CardContent>
+        </Card>
+      ) : (
+        balances.map(b => {
+          const pctUsed = b.accrued > 0 ? (b.used / b.accrued) * 100 : 0;
+          return (
+            <Card key={b.policy.id}>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base capitalize">{b.policy.name}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex items-baseline gap-1">
+                  <span className="text-3xl font-semibold tabular-nums">{hoursToDays(b.available)}</span>
+                  <span className="text-sm text-muted-foreground">days available</span>
                 </div>
-                <div>
-                  <p className="text-lg font-semibold tabular-nums">{b.used}</p>
-                  <p className="text-xs text-muted-foreground">Used</p>
-                </div>
-                <div>
-                  <p className="text-lg font-semibold tabular-nums">{b.pending}</p>
-                  <p className="text-xs text-muted-foreground">Pending</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        );
-      })}
-      <Card className="md:col-span-3">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base">Recent Requests</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            {requests.map((r, i) => (
-              <div key={i} className="flex items-center justify-between rounded-lg border px-3 py-2.5">
-                <div className="flex items-center gap-3">
-                  <PalmtreeIcon className="h-4 w-4 text-muted-foreground" />
+                <Progress value={Math.min(pctUsed, 100)} className="h-1.5" />
+                <div className="grid grid-cols-3 gap-2 text-center">
                   <div>
-                    <p className="text-sm font-medium">{r.type} — {r.days} day{r.days > 1 ? 's' : ''}</p>
-                    <p className="text-xs text-muted-foreground">{r.dates}</p>
+                    <p className="text-lg font-semibold tabular-nums">{hoursToDays(b.accrued)}</p>
+                    <p className="text-xs text-muted-foreground">Accrued</p>
+                  </div>
+                  <div>
+                    <p className="text-lg font-semibold tabular-nums">{hoursToDays(b.used)}</p>
+                    <p className="text-xs text-muted-foreground">Used</p>
+                  </div>
+                  <div>
+                    <p className="text-lg font-semibold tabular-nums">{hoursToDays(b.pending)}</p>
+                    <p className="text-xs text-muted-foreground">Pending</p>
                   </div>
                 </div>
-                <StatusBadge status={r.status} />
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+              </CardContent>
+            </Card>
+          );
+        })
+      )}
+
+      {requests.length > 0 && (
+        <Card className="md:col-span-3">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">Recent Requests</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {requests.map(r => (
+                <div key={r.id} className="flex items-center justify-between rounded-lg border px-3 py-2.5">
+                  <div className="flex items-center gap-3">
+                    <PalmtreeIcon className="h-4 w-4 text-muted-foreground" />
+                    <div>
+                      <p className="text-sm font-medium capitalize">
+                        {r.pto_policies?.name ?? r.policy_id} — {hoursToDays(r.hours)} day{Number(hoursToDays(r.hours)) !== 1 ? 's' : ''}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(r.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                        {r.start_date !== r.end_date && ` – ${new Date(r.end_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`}
+                      </p>
+                    </div>
+                  </div>
+                  <StatusBadge status={r.status === 'taken' ? 'completed' : r.status === 'pending' ? 'pending_approval' : r.status === 'denied' ? 'failed' : r.status as any} />
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
-
 export default function EmployeeDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -450,7 +465,7 @@ export default function EmployeeDetail() {
         <TabsContent value="tax"><TaxInfoTab /></TabsContent>
         <TabsContent value="deposit"><DirectDepositTab /></TabsContent>
         <TabsContent value="documents"><DocumentsTab /></TabsContent>
-        <TabsContent value="pto"><PTOTab /></TabsContent>
+        <TabsContent value="pto"><PTOTab employeeId={emp.id} companyId={emp.company_id} /></TabsContent>
       </Tabs>
 
       <EditEmployeeDialog employee={emp} open={editOpen} onOpenChange={setEditOpen} />
