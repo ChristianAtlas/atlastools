@@ -241,7 +241,8 @@ export default function PayrollDetail() {
   const updateStatus = useUpdatePayrollRunStatus();
 
   const [activeStep, setActiveStep] = useState<number | null>(null);
-  const [notes, setNotes] = useState<InternalNote[]>([]);
+  const { data: internalNotes = [] } = useInternalNotes('payroll_run', id);
+  const addNoteMutation = useAddInternalNote();
 
   const payrollDeadline = useMemo(() => getNextPayrollDeadline(), []);
 
