@@ -1,14 +1,15 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, Building2, Users, DollarSign, FileText, ShieldCheck, FolderOpen,
-  Mail, Phone, MapPin, Calendar, Hash, TrendingUp, Clock,
+  Mail, Phone, MapPin, Calendar, Hash, Loader2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { companies, employees, payrollRuns, invoices, complianceTasks } from '@/lib/mock-data';
-import type { Company, Employee, PayrollRun, Invoice, ComplianceTask } from '@/lib/types';
+import { useCompany, type CompanyRow } from '@/hooks/useCompanies';
+import { employees as mockEmployees, payrollRuns, invoices, complianceTasks } from '@/lib/mock-data';
+import type { Employee, PayrollRun, Invoice, ComplianceTask } from '@/lib/types';
 
 const formatCurrency = (n: number) =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(n);
@@ -28,7 +29,7 @@ function InfoItem({ icon: Icon, label, value }: { icon: React.ElementType; label
 }
 
 /* ─── Overview Tab ─── */
-function OverviewTab({ company, empCount, payrollTotal }: { company: Company; empCount: number; payrollTotal: number }) {
+function OverviewTab({ company, empCount, payrollTotal }: { company: CompanyRow; empCount: number; payrollTotal: number }) {
   return (
     <div className="grid gap-6 md:grid-cols-2 animate-in-up">
       <div className="rounded-lg border bg-card p-6 space-y-5">
@@ -37,8 +38,8 @@ function OverviewTab({ company, empCount, payrollTotal }: { company: Company; em
           <InfoItem icon={Building2} label="Company Name" value={company.name} />
           <InfoItem icon={Hash} label="EIN" value={company.ein} />
           <InfoItem icon={MapPin} label="State" value={company.state} />
-          <InfoItem icon={Calendar} label="Client Since" value={new Date(company.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })} />
-          <InfoItem icon={Mail} label="Primary Contact" value={company.primaryContact} />
+          <InfoItem icon={Calendar} label="Client Since" value={new Date(company.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })} />
+          <InfoItem icon={Mail} label="Primary Contact" value={company.primary_contact_name} />
           <InfoItem icon={Users} label="Employees" value={String(empCount)} />
         </div>
       </div>
@@ -64,7 +65,8 @@ function OverviewTab({ company, empCount, payrollTotal }: { company: Company; em
             <StatusBadge status={company.status} />
             <span className="text-sm text-muted-foreground">
               {company.status === 'active' ? 'Company is active and processing payroll' :
-               company.status === 'onboarding' ? 'Company is being onboarded' : 'Account suspended'}
+               company.status === 'onboarding' ? 'Company is being onboarded' :
+               company.status === 'suspended' ? 'Account suspended' : 'Account terminated'}
             </span>
           </div>
         </div>
@@ -224,7 +226,7 @@ const mockDocs = [
   { id: 'd3', name: 'Certificate of Insurance', type: 'Insurance', date: '2025-02-01', size: '890 KB' },
 ];
 
-function DocumentsTab({ companyName }: { companyName: string }) {
+function DocumentsTab() {
   return (
     <div className="rounded-lg border bg-card animate-in-up">
       <Table>
@@ -260,9 +262,17 @@ function DocumentsTab({ companyName }: { companyName: string }) {
 export default function CompanyDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const company = companies.find(c => c.id === id);
+  const { data: company, isLoading, error } = useCompany(id);
 
-  if (!company) {
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (!company || error) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
         <Building2 className="h-12 w-12 text-muted-foreground mb-4" />
@@ -275,7 +285,8 @@ export default function CompanyDetail() {
     );
   }
 
-  const companyEmployees = employees.filter(e => e.companyId === company.id);
+  // Still use mock data for related entities until those tables are built
+  const companyEmployees = mockEmployees.filter(e => e.companyId === company.id);
   const companyPayroll = payrollRuns.filter(p => p.companyId === company.id);
   const companyInvoices = invoices.filter(i => i.companyId === company.id);
   const companyCompliance = complianceTasks.filter(t => t.companyId === company.id);
@@ -294,7 +305,7 @@ export default function CompanyDetail() {
               <h1 className="text-2xl font-semibold">{company.name}</h1>
               <StatusBadge status={company.status} />
             </div>
-            <p className="text-sm text-muted-foreground mt-0.5">EIN: {company.ein} · {company.state} · {company.employeeCount} employees</p>
+            <p className="text-sm text-muted-foreground mt-0.5">EIN: {company.ein} · {company.state} · {company.employee_count} employees</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -318,7 +329,7 @@ export default function CompanyDetail() {
         <TabsContent value="payroll"><PayrollTab runs={companyPayroll} navigate={navigate} /></TabsContent>
         <TabsContent value="invoices"><InvoicesTab invs={companyInvoices} /></TabsContent>
         <TabsContent value="compliance"><ComplianceTab tasks={companyCompliance} /></TabsContent>
-        <TabsContent value="documents"><DocumentsTab companyName={company.name} /></TabsContent>
+        <TabsContent value="documents"><DocumentsTab /></TabsContent>
       </Tabs>
     </div>
   );

@@ -14,6 +14,69 @@ export type Database = {
   }
   public: {
     Tables: {
+      companies: {
+        Row: {
+          address_line1: string | null
+          address_line2: string | null
+          city: string | null
+          created_at: string
+          deleted_at: string | null
+          ein: string
+          employee_count: number
+          id: string
+          legal_name: string | null
+          name: string
+          primary_contact_email: string | null
+          primary_contact_name: string
+          primary_contact_phone: string | null
+          settings: Json
+          state: string
+          status: Database["public"]["Enums"]["company_status"]
+          updated_at: string
+          zip: string | null
+        }
+        Insert: {
+          address_line1?: string | null
+          address_line2?: string | null
+          city?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          ein: string
+          employee_count?: number
+          id?: string
+          legal_name?: string | null
+          name: string
+          primary_contact_email?: string | null
+          primary_contact_name: string
+          primary_contact_phone?: string | null
+          settings?: Json
+          state: string
+          status?: Database["public"]["Enums"]["company_status"]
+          updated_at?: string
+          zip?: string | null
+        }
+        Update: {
+          address_line1?: string | null
+          address_line2?: string | null
+          city?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          ein?: string
+          employee_count?: number
+          id?: string
+          legal_name?: string | null
+          name?: string
+          primary_contact_email?: string | null
+          primary_contact_name?: string
+          primary_contact_phone?: string | null
+          settings?: Json
+          state?: string
+          status?: Database["public"]["Enums"]["company_status"]
+          updated_at?: string
+          zip?: string | null
+        }
+        Relationships: []
+      }
       company_addons: {
         Row: {
           company_plan_id: string
@@ -580,6 +643,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_user_company: { Args: { _user_id: string }; Returns: string }
       get_user_role: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
@@ -591,6 +655,7 @@ export type Database = {
     }
     Enums: {
       app_role: "super_admin" | "client_admin" | "employee"
+      company_status: "active" | "onboarding" | "suspended" | "terminated"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -719,6 +784,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["super_admin", "client_admin", "employee"],
+      company_status: ["active", "onboarding", "suspended", "terminated"],
     },
   },
 } as const
