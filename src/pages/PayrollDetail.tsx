@@ -571,16 +571,25 @@ export default function PayrollDetail() {
           {/* Internal notes (Super Admin) */}
           <RoleGate allowedRoles={['super_admin']}>
             <InternalNotes
-              notes={notes}
+              notes={internalNotes.map(n => ({
+                id: n.id,
+                author: n.author_name,
+                authorRole: n.author_role,
+                content: n.content,
+                jiraRef: n.jira_ref ?? undefined,
+                createdAt: n.created_at,
+              }))}
               onAddNote={(content, jiraRef) => {
-                setNotes(prev => [...prev, {
-                  id: `pn-${Date.now()}`,
-                  author: 'You',
-                  authorRole: 'Super Admin',
+                if (!user) return;
+                addNoteMutation.mutate({
+                  record_type: 'payroll_run',
+                  record_id: id!,
+                  author_id: user.id,
+                  author_name: profile?.full_name || user.email || 'Unknown',
+                  author_role: role || 'super_admin',
                   content,
-                  jiraRef,
-                  createdAt: new Date().toISOString(),
-                }]);
+                  jira_ref: jiraRef,
+                });
               }}
             />
           </RoleGate>
