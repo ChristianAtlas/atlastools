@@ -465,7 +465,7 @@ export default function EmployeeDetail() {
         <TabsContent value="tax"><TaxInfoTab /></TabsContent>
         <TabsContent value="deposit"><DirectDepositTab /></TabsContent>
         <TabsContent value="documents"><DocumentsTab /></TabsContent>
-        <TabsContent value="pto"><PTOTab /></TabsContent>
+        <TabsContent value="pto"><PTOTab employeeId={emp.id} companyId={emp.company_id} /></TabsContent>
       </Tabs>
 
       <EditEmployeeDialog employee={emp} open={editOpen} onOpenChange={setEditOpen} />
