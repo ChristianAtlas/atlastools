@@ -57,17 +57,37 @@ export interface PayrollRunEmployeeRow {
   status: string;
   regular_hours: number;
   overtime_hours: number;
+  pto_hours: number;
+  holiday_hours: number;
   regular_pay_cents: number;
   overtime_pay_cents: number;
   bonus_cents: number;
   commission_cents: number;
   reimbursement_cents: number;
+  other_earnings_cents: number;
   gross_pay_cents: number;
+  federal_tax_cents: number;
+  state_tax_cents: number;
+  local_tax_cents: number;
+  social_security_cents: number;
+  medicare_cents: number;
+  benefits_deduction_cents: number;
+  retirement_deduction_cents: number;
+  garnishment_cents: number;
+  other_deductions_cents: number;
   total_deductions_cents: number;
   net_pay_cents: number;
+  employer_fica_cents: number;
+  employer_futa_cents: number;
+  employer_sui_cents: number;
+  employer_benefits_cents: number;
+  workers_comp_cents: number;
   total_employer_cost_cents: number;
+  notes: string | null;
   created_at: string;
   updated_at: string;
+  // Joined
+  employees?: { first_name: string; last_name: string; pay_type: string; title: string | null } | null;
 }
 
 export function usePayrollRuns(companyId?: string) {
