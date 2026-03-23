@@ -551,6 +551,273 @@ export type Database = {
           },
         ]
       }
+      payroll_run_employees: {
+        Row: {
+          benefits_deduction_cents: number
+          bonus_cents: number
+          commission_cents: number
+          company_id: string
+          created_at: string
+          employee_id: string
+          employer_benefits_cents: number
+          employer_fica_cents: number
+          employer_futa_cents: number
+          employer_sui_cents: number
+          federal_tax_cents: number
+          garnishment_cents: number
+          gross_pay_cents: number
+          holiday_hours: number
+          id: string
+          local_tax_cents: number
+          medicare_cents: number
+          net_pay_cents: number
+          notes: string | null
+          other_deductions_cents: number
+          other_earnings_cents: number
+          overtime_hours: number
+          overtime_pay_cents: number
+          payroll_run_id: string
+          provider_employee_id: string | null
+          provider_line_id: string | null
+          provider_status: string | null
+          pto_hours: number
+          regular_hours: number
+          regular_pay_cents: number
+          reimbursement_cents: number
+          retirement_deduction_cents: number
+          social_security_cents: number
+          state_tax_cents: number
+          status: Database["public"]["Enums"]["payroll_employee_status"]
+          total_deductions_cents: number
+          total_employer_cost_cents: number
+          updated_at: string
+          workers_comp_cents: number
+        }
+        Insert: {
+          benefits_deduction_cents?: number
+          bonus_cents?: number
+          commission_cents?: number
+          company_id: string
+          created_at?: string
+          employee_id: string
+          employer_benefits_cents?: number
+          employer_fica_cents?: number
+          employer_futa_cents?: number
+          employer_sui_cents?: number
+          federal_tax_cents?: number
+          garnishment_cents?: number
+          gross_pay_cents?: number
+          holiday_hours?: number
+          id?: string
+          local_tax_cents?: number
+          medicare_cents?: number
+          net_pay_cents?: number
+          notes?: string | null
+          other_deductions_cents?: number
+          other_earnings_cents?: number
+          overtime_hours?: number
+          overtime_pay_cents?: number
+          payroll_run_id: string
+          provider_employee_id?: string | null
+          provider_line_id?: string | null
+          provider_status?: string | null
+          pto_hours?: number
+          regular_hours?: number
+          regular_pay_cents?: number
+          reimbursement_cents?: number
+          retirement_deduction_cents?: number
+          social_security_cents?: number
+          state_tax_cents?: number
+          status?: Database["public"]["Enums"]["payroll_employee_status"]
+          total_deductions_cents?: number
+          total_employer_cost_cents?: number
+          updated_at?: string
+          workers_comp_cents?: number
+        }
+        Update: {
+          benefits_deduction_cents?: number
+          bonus_cents?: number
+          commission_cents?: number
+          company_id?: string
+          created_at?: string
+          employee_id?: string
+          employer_benefits_cents?: number
+          employer_fica_cents?: number
+          employer_futa_cents?: number
+          employer_sui_cents?: number
+          federal_tax_cents?: number
+          garnishment_cents?: number
+          gross_pay_cents?: number
+          holiday_hours?: number
+          id?: string
+          local_tax_cents?: number
+          medicare_cents?: number
+          net_pay_cents?: number
+          notes?: string | null
+          other_deductions_cents?: number
+          other_earnings_cents?: number
+          overtime_hours?: number
+          overtime_pay_cents?: number
+          payroll_run_id?: string
+          provider_employee_id?: string | null
+          provider_line_id?: string | null
+          provider_status?: string | null
+          pto_hours?: number
+          regular_hours?: number
+          regular_pay_cents?: number
+          reimbursement_cents?: number
+          retirement_deduction_cents?: number
+          social_security_cents?: number
+          state_tax_cents?: number
+          status?: Database["public"]["Enums"]["payroll_employee_status"]
+          total_deductions_cents?: number
+          total_employer_cost_cents?: number
+          updated_at?: string
+          workers_comp_cents?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payroll_run_employees_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payroll_run_employees_payroll_run_id_fkey"
+            columns: ["payroll_run_id"]
+            isOneToOne: false
+            referencedRelation: "payroll_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payroll_runs: {
+        Row: {
+          admin_approved_at: string | null
+          admin_approved_by: string | null
+          check_date: string | null
+          client_approved_at: string | null
+          client_approved_by: string | null
+          company_id: string
+          created_at: string
+          created_by: string
+          deleted_at: string | null
+          employee_count: number
+          employer_benefits_cents: number
+          employer_taxes_cents: number
+          gross_pay_cents: number
+          id: string
+          net_pay_cents: number
+          notes: string | null
+          parent_run_id: string | null
+          pay_date: string
+          pay_frequency: Database["public"]["Enums"]["pay_frequency"]
+          pay_period_end: string
+          pay_period_start: string
+          provider_batch_id: string | null
+          provider_response: Json | null
+          provider_status: string | null
+          run_type: Database["public"]["Enums"]["payroll_run_type"]
+          status: Database["public"]["Enums"]["payroll_run_status"]
+          submission_deadline: string | null
+          submitted_at: string | null
+          total_employer_cost_cents: number
+          updated_at: string
+          void_reason: string | null
+          voided_at: string | null
+          voided_by: string | null
+          workers_comp_cents: number
+        }
+        Insert: {
+          admin_approved_at?: string | null
+          admin_approved_by?: string | null
+          check_date?: string | null
+          client_approved_at?: string | null
+          client_approved_by?: string | null
+          company_id: string
+          created_at?: string
+          created_by: string
+          deleted_at?: string | null
+          employee_count?: number
+          employer_benefits_cents?: number
+          employer_taxes_cents?: number
+          gross_pay_cents?: number
+          id?: string
+          net_pay_cents?: number
+          notes?: string | null
+          parent_run_id?: string | null
+          pay_date: string
+          pay_frequency?: Database["public"]["Enums"]["pay_frequency"]
+          pay_period_end: string
+          pay_period_start: string
+          provider_batch_id?: string | null
+          provider_response?: Json | null
+          provider_status?: string | null
+          run_type?: Database["public"]["Enums"]["payroll_run_type"]
+          status?: Database["public"]["Enums"]["payroll_run_status"]
+          submission_deadline?: string | null
+          submitted_at?: string | null
+          total_employer_cost_cents?: number
+          updated_at?: string
+          void_reason?: string | null
+          voided_at?: string | null
+          voided_by?: string | null
+          workers_comp_cents?: number
+        }
+        Update: {
+          admin_approved_at?: string | null
+          admin_approved_by?: string | null
+          check_date?: string | null
+          client_approved_at?: string | null
+          client_approved_by?: string | null
+          company_id?: string
+          created_at?: string
+          created_by?: string
+          deleted_at?: string | null
+          employee_count?: number
+          employer_benefits_cents?: number
+          employer_taxes_cents?: number
+          gross_pay_cents?: number
+          id?: string
+          net_pay_cents?: number
+          notes?: string | null
+          parent_run_id?: string | null
+          pay_date?: string
+          pay_frequency?: Database["public"]["Enums"]["pay_frequency"]
+          pay_period_end?: string
+          pay_period_start?: string
+          provider_batch_id?: string | null
+          provider_response?: Json | null
+          provider_status?: string | null
+          run_type?: Database["public"]["Enums"]["payroll_run_type"]
+          status?: Database["public"]["Enums"]["payroll_run_status"]
+          submission_deadline?: string | null
+          submitted_at?: string | null
+          total_employer_cost_cents?: number
+          updated_at?: string
+          void_reason?: string | null
+          voided_at?: string | null
+          voided_by?: string | null
+          workers_comp_cents?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payroll_runs_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payroll_runs_parent_run_id_fkey"
+            columns: ["parent_run_id"]
+            isOneToOne: false
+            referencedRelation: "payroll_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pricing_tiers: {
         Row: {
           created_at: string
@@ -656,6 +923,37 @@ export type Database = {
     Enums: {
       app_role: "super_admin" | "client_admin" | "employee"
       company_status: "active" | "onboarding" | "suspended" | "terminated"
+      pay_frequency: "weekly" | "biweekly" | "semimonthly" | "monthly"
+      payroll_employee_status:
+        | "pending"
+        | "included"
+        | "excluded"
+        | "error"
+        | "completed"
+      payroll_run_status:
+        | "draft"
+        | "time_review"
+        | "editing"
+        | "preview"
+        | "pending_client_approval"
+        | "client_approved"
+        | "funding"
+        | "pending_admin_approval"
+        | "admin_approved"
+        | "submitting"
+        | "submitted"
+        | "processing"
+        | "completed"
+        | "failed"
+        | "voided"
+        | "reversed"
+      payroll_run_type:
+        | "regular"
+        | "off_cycle"
+        | "bonus"
+        | "commission"
+        | "reimbursement"
+        | "correction"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -785,6 +1083,40 @@ export const Constants = {
     Enums: {
       app_role: ["super_admin", "client_admin", "employee"],
       company_status: ["active", "onboarding", "suspended", "terminated"],
+      pay_frequency: ["weekly", "biweekly", "semimonthly", "monthly"],
+      payroll_employee_status: [
+        "pending",
+        "included",
+        "excluded",
+        "error",
+        "completed",
+      ],
+      payroll_run_status: [
+        "draft",
+        "time_review",
+        "editing",
+        "preview",
+        "pending_client_approval",
+        "client_approved",
+        "funding",
+        "pending_admin_approval",
+        "admin_approved",
+        "submitting",
+        "submitted",
+        "processing",
+        "completed",
+        "failed",
+        "voided",
+        "reversed",
+      ],
+      payroll_run_type: [
+        "regular",
+        "off_cycle",
+        "bonus",
+        "commission",
+        "reimbursement",
+        "correction",
+      ],
     },
   },
 } as const
