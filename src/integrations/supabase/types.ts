@@ -163,6 +163,277 @@ export type Database = {
           },
         ]
       }
+      compensation_records: {
+        Row: {
+          annual_salary_cents: number | null
+          approved_by: string | null
+          change_amount_cents: number | null
+          change_percentage: number | null
+          company_id: string
+          created_at: string
+          effective_date: string
+          employee_id: string
+          end_date: string | null
+          hourly_rate_cents: number | null
+          id: string
+          notes: string | null
+          pay_frequency: Database["public"]["Enums"]["pay_frequency"]
+          pay_type: Database["public"]["Enums"]["pay_type"]
+          reason: Database["public"]["Enums"]["compensation_reason"]
+        }
+        Insert: {
+          annual_salary_cents?: number | null
+          approved_by?: string | null
+          change_amount_cents?: number | null
+          change_percentage?: number | null
+          company_id: string
+          created_at?: string
+          effective_date: string
+          employee_id: string
+          end_date?: string | null
+          hourly_rate_cents?: number | null
+          id?: string
+          notes?: string | null
+          pay_frequency?: Database["public"]["Enums"]["pay_frequency"]
+          pay_type: Database["public"]["Enums"]["pay_type"]
+          reason: Database["public"]["Enums"]["compensation_reason"]
+        }
+        Update: {
+          annual_salary_cents?: number | null
+          approved_by?: string | null
+          change_amount_cents?: number | null
+          change_percentage?: number | null
+          company_id?: string
+          created_at?: string
+          effective_date?: string
+          employee_id?: string
+          end_date?: string | null
+          hourly_rate_cents?: number | null
+          id?: string
+          notes?: string | null
+          pay_frequency?: Database["public"]["Enums"]["pay_frequency"]
+          pay_type?: Database["public"]["Enums"]["pay_type"]
+          reason?: Database["public"]["Enums"]["compensation_reason"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "compensation_records_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "compensation_records_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employees: {
+        Row: {
+          address_line1: string | null
+          address_line2: string | null
+          annual_salary_cents: number | null
+          avatar_url: string | null
+          city: string | null
+          company_id: string
+          created_at: string
+          date_of_birth: string | null
+          deleted_at: string | null
+          department: string | null
+          email: string
+          emergency_contact_name: string | null
+          emergency_contact_phone: string | null
+          emergency_contact_relationship: string | null
+          first_name: string
+          gender: string | null
+          hourly_rate_cents: number | null
+          id: string
+          last_name: string
+          manager_id: string | null
+          pay_frequency: Database["public"]["Enums"]["pay_frequency"]
+          pay_type: Database["public"]["Enums"]["pay_type"]
+          personal_email: string | null
+          phone: string | null
+          provider_employee_id: string | null
+          ssn_encrypted: string | null
+          start_date: string
+          state: string | null
+          status: Database["public"]["Enums"]["employee_status"]
+          termination_date: string | null
+          termination_reason: string | null
+          title: string | null
+          updated_at: string
+          user_id: string | null
+          zip: string | null
+        }
+        Insert: {
+          address_line1?: string | null
+          address_line2?: string | null
+          annual_salary_cents?: number | null
+          avatar_url?: string | null
+          city?: string | null
+          company_id: string
+          created_at?: string
+          date_of_birth?: string | null
+          deleted_at?: string | null
+          department?: string | null
+          email: string
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          emergency_contact_relationship?: string | null
+          first_name: string
+          gender?: string | null
+          hourly_rate_cents?: number | null
+          id?: string
+          last_name: string
+          manager_id?: string | null
+          pay_frequency?: Database["public"]["Enums"]["pay_frequency"]
+          pay_type?: Database["public"]["Enums"]["pay_type"]
+          personal_email?: string | null
+          phone?: string | null
+          provider_employee_id?: string | null
+          ssn_encrypted?: string | null
+          start_date: string
+          state?: string | null
+          status?: Database["public"]["Enums"]["employee_status"]
+          termination_date?: string | null
+          termination_reason?: string | null
+          title?: string | null
+          updated_at?: string
+          user_id?: string | null
+          zip?: string | null
+        }
+        Update: {
+          address_line1?: string | null
+          address_line2?: string | null
+          annual_salary_cents?: number | null
+          avatar_url?: string | null
+          city?: string | null
+          company_id?: string
+          created_at?: string
+          date_of_birth?: string | null
+          deleted_at?: string | null
+          department?: string | null
+          email?: string
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          emergency_contact_relationship?: string | null
+          first_name?: string
+          gender?: string | null
+          hourly_rate_cents?: number | null
+          id?: string
+          last_name?: string
+          manager_id?: string | null
+          pay_frequency?: Database["public"]["Enums"]["pay_frequency"]
+          pay_type?: Database["public"]["Enums"]["pay_type"]
+          personal_email?: string | null
+          phone?: string | null
+          provider_employee_id?: string | null
+          ssn_encrypted?: string | null
+          start_date?: string
+          state?: string | null
+          status?: Database["public"]["Enums"]["employee_status"]
+          termination_date?: string | null
+          termination_reason?: string | null
+          title?: string | null
+          updated_at?: string
+          user_id?: string | null
+          zip?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employees_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employees_manager_id_fkey"
+            columns: ["manager_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employment_records: {
+        Row: {
+          action: Database["public"]["Enums"]["employment_action"]
+          approved_by: string | null
+          company_id: string
+          created_at: string
+          department: string | null
+          effective_date: string
+          employee_id: string
+          end_date: string | null
+          id: string
+          manager_id: string | null
+          notes: string | null
+          reason: string | null
+          status: Database["public"]["Enums"]["employee_status"]
+          title: string
+        }
+        Insert: {
+          action: Database["public"]["Enums"]["employment_action"]
+          approved_by?: string | null
+          company_id: string
+          created_at?: string
+          department?: string | null
+          effective_date: string
+          employee_id: string
+          end_date?: string | null
+          id?: string
+          manager_id?: string | null
+          notes?: string | null
+          reason?: string | null
+          status: Database["public"]["Enums"]["employee_status"]
+          title: string
+        }
+        Update: {
+          action?: Database["public"]["Enums"]["employment_action"]
+          approved_by?: string | null
+          company_id?: string
+          created_at?: string
+          department?: string | null
+          effective_date?: string
+          employee_id?: string
+          end_date?: string | null
+          id?: string
+          manager_id?: string | null
+          notes?: string | null
+          reason?: string | null
+          status?: Database["public"]["Enums"]["employee_status"]
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employment_records_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employment_records_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employment_records_manager_id_fkey"
+            columns: ["manager_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invoice_line_items: {
         Row: {
           created_at: string
@@ -923,7 +1194,33 @@ export type Database = {
     Enums: {
       app_role: "super_admin" | "client_admin" | "employee"
       company_status: "active" | "onboarding" | "suspended" | "terminated"
+      compensation_reason:
+        | "hire"
+        | "annual_review"
+        | "promotion"
+        | "market_adjustment"
+        | "correction"
+        | "demotion"
+        | "role_change"
+      employee_status:
+        | "active"
+        | "onboarding"
+        | "on_leave"
+        | "terminated"
+        | "suspended"
+      employment_action:
+        | "hire"
+        | "promotion"
+        | "transfer"
+        | "demotion"
+        | "title_change"
+        | "department_change"
+        | "rehire"
+        | "termination"
+        | "leave_start"
+        | "leave_end"
       pay_frequency: "weekly" | "biweekly" | "semimonthly" | "monthly"
+      pay_type: "salary" | "hourly"
       payroll_employee_status:
         | "pending"
         | "included"
@@ -1083,7 +1380,36 @@ export const Constants = {
     Enums: {
       app_role: ["super_admin", "client_admin", "employee"],
       company_status: ["active", "onboarding", "suspended", "terminated"],
+      compensation_reason: [
+        "hire",
+        "annual_review",
+        "promotion",
+        "market_adjustment",
+        "correction",
+        "demotion",
+        "role_change",
+      ],
+      employee_status: [
+        "active",
+        "onboarding",
+        "on_leave",
+        "terminated",
+        "suspended",
+      ],
+      employment_action: [
+        "hire",
+        "promotion",
+        "transfer",
+        "demotion",
+        "title_change",
+        "department_change",
+        "rehire",
+        "termination",
+        "leave_start",
+        "leave_end",
+      ],
       pay_frequency: ["weekly", "biweekly", "semimonthly", "monthly"],
+      pay_type: ["salary", "hourly"],
       payroll_employee_status: [
         "pending",
         "included",
