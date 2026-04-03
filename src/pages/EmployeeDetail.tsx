@@ -16,6 +16,10 @@ import {
 } from '@/hooks/useEmployees';
 import { EditEmployeeDialog } from '@/components/employees/EditEmployeeDialog';
 import { usePTOBalances, usePTORequests, hoursToDays, type PTOBalance, type PTORequest } from '@/hooks/usePTO';
+import { useAuth } from '@/contexts/AuthContext';
+import { useInternalNotes, useAddInternalNote } from '@/hooks/useInternalNotes';
+import { InternalNotes, type InternalNote } from '@/components/workflow/InternalNotes';
+import { RoleGate } from '@/components/RoleGate';
 
 function InfoRow({ label, value, icon: Icon }: { label: string; value: string; icon?: React.ElementType }) {
   return (
@@ -407,6 +411,31 @@ export default function EmployeeDetail() {
   const { data: emp, isLoading, error } = useEmployee(id);
   const { data: compHistory = [] } = useCompensationRecords(id);
   const [editOpen, setEditOpen] = useState(false);
+  const { user, profile, role } = useAuth();
+  const { data: rawNotes = [] } = useInternalNotes('employee', id);
+  const addNote = useAddInternalNote();
+
+  const internalNotes: InternalNote[] = rawNotes.map(n => ({
+    id: n.id,
+    author: n.author_name,
+    authorRole: n.author_role,
+    content: n.content,
+    jiraRef: n.jira_ref ?? undefined,
+    createdAt: n.created_at,
+  }));
+
+  const handleAddNote = (content: string, jiraRef?: string) => {
+    if (!user || !profile) return;
+    addNote.mutate({
+      record_type: 'employee',
+      record_id: id!,
+      author_id: user.id,
+      author_name: profile.full_name || profile.email || 'Unknown',
+      author_role: role || 'unknown',
+      content,
+      jira_ref: jiraRef,
+    });
+  };
 
   if (isLoading) {
     return (
@@ -467,6 +496,14 @@ export default function EmployeeDetail() {
         <TabsContent value="documents"><DocumentsTab /></TabsContent>
         <TabsContent value="pto"><PTOTab employeeId={emp.id} companyId={emp.company_id} /></TabsContent>
       </Tabs>
+
+      <RoleGate allowedRoles={['super_admin']}>
+        <InternalNotes
+          notes={internalNotes}
+          onAddNote={handleAddNote}
+          className="animate-in-up stagger-2"
+        />
+      </RoleGate>
 
       <EditEmployeeDialog employee={emp} open={editOpen} onOpenChange={setEditOpen} />
     </div>
