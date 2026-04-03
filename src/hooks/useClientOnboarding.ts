@@ -361,21 +361,16 @@ export function useLaunchClient() {
         }
       }
 
-      // 4. Create compliance items for the new company
-      const complianceItems = [
-        { title: 'Complete new hire reporting', category: 'new_hire_reporting', priority: 'high', status: 'pending' },
-        { title: 'Verify FEIN with IRS', category: 'tax_registration', priority: 'high', status: 'pending' },
-        { title: 'Set up workers compensation', category: 'workers_comp', priority: 'high', status: wizardData.tax?.workers_comp?.carrier ? 'compliant' : 'pending' },
-        { title: 'Execute Client Service Agreement', category: 'legal', priority: 'critical', status: wizardData.tax?.csa_uploaded ? 'compliant' : 'pending' },
-        { title: 'Authorize ACH funding', category: 'banking', priority: 'critical', status: wizardData.tax?.ach_authorized ? 'compliant' : 'pending' },
-      ].map(item => ({
-        ...item,
-        entity_type: 'client',
-        entity_id: company.id,
-        company_id: company.id,
-      }));
-
-      await supabase.from('compliance_items').insert(complianceItems);
+      // 4. Auto-generate comprehensive compliance checklist
+      const complianceItems = generateComplianceChecklist(
+        company.id,
+        wizardData,
+        workStates,
+        employeeData,
+      );
+      if (complianceItems.length > 0) {
+        await supabase.from('compliance_items').insert(complianceItems);
+      }
 
       // 5. Mark wizard as launched
       await supabase
