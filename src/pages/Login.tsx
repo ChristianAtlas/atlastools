@@ -8,6 +8,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { useToast } from '@/hooks/use-toast';
 import { LogIn, Zap } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
+import logoImg from '@/assets/logo.png';
+import { Separator } from '@/components/ui/separator';
 
 export default function Login() {
   const [email, setEmail] = useState('');
