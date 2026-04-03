@@ -283,6 +283,350 @@ export type Database = {
           },
         ]
       }
+      compliance_alerts: {
+        Row: {
+          acknowledged_at: string | null
+          acknowledged_by: string | null
+          alert_type: string
+          company_id: string | null
+          compliance_item_id: string | null
+          compliance_license_id: string | null
+          created_at: string
+          due_date: string | null
+          entity_id: string
+          entity_type: string
+          escalated: boolean | null
+          escalated_at: string | null
+          id: string
+          is_read: boolean | null
+          message: string | null
+          metadata: Json | null
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: string
+          title: string
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          alert_type: string
+          company_id?: string | null
+          compliance_item_id?: string | null
+          compliance_license_id?: string | null
+          created_at?: string
+          due_date?: string | null
+          entity_id: string
+          entity_type: string
+          escalated?: boolean | null
+          escalated_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          message?: string | null
+          metadata?: Json | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          title: string
+        }
+        Update: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          alert_type?: string
+          company_id?: string | null
+          compliance_item_id?: string | null
+          compliance_license_id?: string | null
+          created_at?: string
+          due_date?: string | null
+          entity_id?: string
+          entity_type?: string
+          escalated?: boolean | null
+          escalated_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          message?: string | null
+          metadata?: Json | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "compliance_alerts_compliance_item_id_fkey"
+            columns: ["compliance_item_id"]
+            isOneToOne: false
+            referencedRelation: "compliance_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "compliance_alerts_compliance_license_id_fkey"
+            columns: ["compliance_license_id"]
+            isOneToOne: false
+            referencedRelation: "compliance_licenses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      compliance_documents: {
+        Row: {
+          company_id: string | null
+          compliance_item_id: string | null
+          compliance_license_id: string | null
+          created_at: string
+          description: string | null
+          document_type: string
+          entity_id: string
+          entity_type: string
+          file_name: string | null
+          file_path: string | null
+          file_size: number | null
+          id: string
+          metadata: Json | null
+          mime_type: string | null
+          status: string | null
+          tags: string[] | null
+          title: string
+          updated_at: string
+          uploaded_by: string
+          uploaded_by_name: string | null
+          version: number | null
+        }
+        Insert: {
+          company_id?: string | null
+          compliance_item_id?: string | null
+          compliance_license_id?: string | null
+          created_at?: string
+          description?: string | null
+          document_type: string
+          entity_id: string
+          entity_type: string
+          file_name?: string | null
+          file_path?: string | null
+          file_size?: number | null
+          id?: string
+          metadata?: Json | null
+          mime_type?: string | null
+          status?: string | null
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+          uploaded_by: string
+          uploaded_by_name?: string | null
+          version?: number | null
+        }
+        Update: {
+          company_id?: string | null
+          compliance_item_id?: string | null
+          compliance_license_id?: string | null
+          created_at?: string
+          description?: string | null
+          document_type?: string
+          entity_id?: string
+          entity_type?: string
+          file_name?: string | null
+          file_path?: string | null
+          file_size?: number | null
+          id?: string
+          metadata?: Json | null
+          mime_type?: string | null
+          status?: string | null
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
+          uploaded_by?: string
+          uploaded_by_name?: string | null
+          version?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "compliance_documents_compliance_item_id_fkey"
+            columns: ["compliance_item_id"]
+            isOneToOne: false
+            referencedRelation: "compliance_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "compliance_documents_compliance_license_id_fkey"
+            columns: ["compliance_license_id"]
+            isOneToOne: false
+            referencedRelation: "compliance_licenses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      compliance_items: {
+        Row: {
+          assigned_to: string | null
+          assigned_to_name: string | null
+          blocker: boolean | null
+          category: string
+          company_id: string | null
+          completed_at: string | null
+          completed_by: string | null
+          compliance_score: number | null
+          created_at: string
+          description: string | null
+          due_date: string | null
+          entity_id: string
+          entity_type: string
+          id: string
+          is_recurring: boolean | null
+          metadata: Json | null
+          next_recurrence_date: string | null
+          notes: string | null
+          parent_item_id: string | null
+          priority: string
+          recurrence_interval: string | null
+          risk_level: string | null
+          state_code: string | null
+          status: string
+          subcategory: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          assigned_to_name?: string | null
+          blocker?: boolean | null
+          category?: string
+          company_id?: string | null
+          completed_at?: string | null
+          completed_by?: string | null
+          compliance_score?: number | null
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          entity_id: string
+          entity_type: string
+          id?: string
+          is_recurring?: boolean | null
+          metadata?: Json | null
+          next_recurrence_date?: string | null
+          notes?: string | null
+          parent_item_id?: string | null
+          priority?: string
+          recurrence_interval?: string | null
+          risk_level?: string | null
+          state_code?: string | null
+          status?: string
+          subcategory?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          assigned_to_name?: string | null
+          blocker?: boolean | null
+          category?: string
+          company_id?: string | null
+          completed_at?: string | null
+          completed_by?: string | null
+          compliance_score?: number | null
+          created_at?: string
+          description?: string | null
+          due_date?: string | null
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          is_recurring?: boolean | null
+          metadata?: Json | null
+          next_recurrence_date?: string | null
+          notes?: string | null
+          parent_item_id?: string | null
+          priority?: string
+          recurrence_interval?: string | null
+          risk_level?: string | null
+          state_code?: string | null
+          status?: string
+          subcategory?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "compliance_items_parent_item_id_fkey"
+            columns: ["parent_item_id"]
+            isOneToOne: false
+            referencedRelation: "compliance_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      compliance_licenses: {
+        Row: {
+          account_number: string | null
+          company_id: string | null
+          created_at: string
+          entity_id: string
+          entity_type: string
+          expiration_date: string | null
+          filing_frequency: string | null
+          id: string
+          issue_date: string | null
+          issuing_authority: string | null
+          license_number: string | null
+          license_type: string
+          metadata: Json | null
+          notes: string | null
+          owner_id: string | null
+          owner_name: string | null
+          renewal_date: string | null
+          renewal_status: string | null
+          state_code: string | null
+          status: string
+          sui_rate: number | null
+          updated_at: string
+        }
+        Insert: {
+          account_number?: string | null
+          company_id?: string | null
+          created_at?: string
+          entity_id: string
+          entity_type: string
+          expiration_date?: string | null
+          filing_frequency?: string | null
+          id?: string
+          issue_date?: string | null
+          issuing_authority?: string | null
+          license_number?: string | null
+          license_type: string
+          metadata?: Json | null
+          notes?: string | null
+          owner_id?: string | null
+          owner_name?: string | null
+          renewal_date?: string | null
+          renewal_status?: string | null
+          state_code?: string | null
+          status?: string
+          sui_rate?: number | null
+          updated_at?: string
+        }
+        Update: {
+          account_number?: string | null
+          company_id?: string | null
+          created_at?: string
+          entity_id?: string
+          entity_type?: string
+          expiration_date?: string | null
+          filing_frequency?: string | null
+          id?: string
+          issue_date?: string | null
+          issuing_authority?: string | null
+          license_number?: string | null
+          license_type?: string
+          metadata?: Json | null
+          notes?: string | null
+          owner_id?: string | null
+          owner_name?: string | null
+          renewal_date?: string | null
+          renewal_status?: string | null
+          state_code?: string | null
+          status?: string
+          sui_rate?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       employees: {
         Row: {
           address_line1: string | null
