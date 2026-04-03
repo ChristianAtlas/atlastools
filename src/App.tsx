@@ -16,6 +16,7 @@ import PayrollDetail from "@/pages/PayrollDetail";
 import PTO from "@/pages/PTO";
 import Onboarding from "@/pages/Onboarding";
 import OnboardingDetail from "@/pages/OnboardingDetail";
+import ClientOnboardingWizard from "@/pages/ClientOnboardingWizard";
 import Invoices from "@/pages/Invoices";
 import Documents from "@/pages/Documents";
 import Compliance from "@/pages/Compliance";
