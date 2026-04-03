@@ -285,7 +285,7 @@ export function useLaunchClient() {
 
       if (companyError) throw companyError;
 
-      // 2. Create employees
+      // 2. Create employees and invitation records
       const employeeData = wizardData.employees?.employee_data || [];
       if (employeeData.length > 0) {
         const employeeRows = employeeData.map(emp => ({
@@ -305,8 +305,23 @@ export function useLaunchClient() {
           status: 'active' as const,
         }));
 
-        const { error: empError } = await supabase.from('employees').insert(employeeRows);
+        const { data: createdEmployees, error: empError } = await supabase
+          .from('employees')
+          .insert(employeeRows)
+          .select('id, email, first_name, last_name');
         if (empError) throw empError;
+
+        // Create invitation records for each employee
+        if (createdEmployees && createdEmployees.length > 0) {
+          const invitationRows = createdEmployees.map(emp => ({
+            employee_id: emp.id,
+            company_id: company.id,
+            email: emp.email,
+            full_name: `${emp.first_name} ${emp.last_name}`,
+            status: 'pending',
+          }));
+          await supabase.from('employee_invitations').insert(invitationRows);
+        }
       }
 
       // 3. Create state compliance registrations

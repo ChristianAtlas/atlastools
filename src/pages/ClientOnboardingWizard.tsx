@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Check, Building2, FileText, DollarSign, Users, Rocket } from 'lucide-react';
+import { ArrowLeft, Check, Building2, FileText, DollarSign, Users, Rocket, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
@@ -11,6 +11,7 @@ import { TaxComplianceStep } from '@/components/client-onboarding/TaxComplianceS
 import { PayrollConfigStep } from '@/components/client-onboarding/PayrollConfigStep';
 import { EmployeeImportStep } from '@/components/client-onboarding/EmployeeImportStep';
 import { ReviewLaunchStep } from '@/components/client-onboarding/ReviewLaunchStep';
+import { EmployeeProvisioningStep } from '@/components/client-onboarding/EmployeeProvisioningStep';
 
 const STEPS = [
   { id: 1, label: 'Company Setup', icon: Building2 },
@@ -18,6 +19,7 @@ const STEPS = [
   { id: 3, label: 'Payroll Config', icon: DollarSign },
   { id: 4, label: 'Employee Import', icon: Users },
   { id: 5, label: 'Review & Launch', icon: Rocket },
+  { id: 6, label: 'Provisioning', icon: UserPlus },
 ];
 
 export default function ClientOnboardingWizard() {
@@ -29,11 +31,15 @@ export default function ClientOnboardingWizard() {
 
   const [activeStep, setActiveStep] = useState(1);
   const [wizardData, setWizardData] = useState<WizardData>({});
+  const [launchedCompanyId, setLaunchedCompanyId] = useState<string | null>(null);
 
   useEffect(() => {
     if (wizard) {
-      setActiveStep(Math.min(wizard.current_step, 5));
+      setActiveStep(Math.min(wizard.current_step, 6));
       setWizardData(wizard.wizard_data || {});
+      if (wizard.company_id) {
+        setLaunchedCompanyId(wizard.company_id);
+      }
     }
   }, [wizard]);
 
@@ -64,8 +70,9 @@ export default function ClientOnboardingWizard() {
   };
 
   const handleLaunch = async () => {
-    await launchClient.mutateAsync({ wizardId: wizard.id, wizardData });
-    navigate('/companies');
+    const result = await launchClient.mutateAsync({ wizardId: wizard.id, wizardData });
+    setLaunchedCompanyId(result.id);
+    setActiveStep(6);
   };
 
   const handleStepClick = (step: number) => {
@@ -168,6 +175,12 @@ export default function ClientOnboardingWizard() {
             onBack={handleBack}
             onEdit={(step) => setActiveStep(step)}
             isLaunching={launchClient.isPending}
+          />
+        )}
+        {activeStep === 6 && launchedCompanyId && (
+          <EmployeeProvisioningStep
+            companyId={launchedCompanyId}
+            onDone={() => navigate('/companies')}
           />
         )}
       </div>
