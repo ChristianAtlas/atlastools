@@ -114,7 +114,7 @@ export default function Compliance() {
   // Super admin view - full dashboard
   return (
     <div className="space-y-5">
-      <PageHeader title="Compliance Engine" description="Enterprise compliance management across all entities">
+      <PageHeader title="Compliance Engine" description="Enterprise compliance management across all entities" actions={
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={() => openAddLicense('enterprise')}>
             <Key className="h-4 w-4 mr-1" /> Add License
@@ -123,7 +123,7 @@ export default function Compliance() {
             <Plus className="h-4 w-4 mr-1" /> Add Item
           </Button>
         </div>
-      </PageHeader>
+      } />
 
       {/* Overview cards */}
       <div className="flex items-start gap-4 animate-in-up stagger-1">
