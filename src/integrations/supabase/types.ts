@@ -969,6 +969,66 @@ export type Database = {
           },
         ]
       }
+      funding_events: {
+        Row: {
+          amount_cents: number
+          company_id: string
+          confirmed_at: string | null
+          confirmed_by: string | null
+          created_at: string
+          id: string
+          method: string
+          notes: string | null
+          payroll_run_id: string
+          status: string
+          updated_at: string
+          wire_reference: string | null
+        }
+        Insert: {
+          amount_cents?: number
+          company_id: string
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          created_at?: string
+          id?: string
+          method?: string
+          notes?: string | null
+          payroll_run_id: string
+          status?: string
+          updated_at?: string
+          wire_reference?: string | null
+        }
+        Update: {
+          amount_cents?: number
+          company_id?: string
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          created_at?: string
+          id?: string
+          method?: string
+          notes?: string | null
+          payroll_run_id?: string
+          status?: string
+          updated_at?: string
+          wire_reference?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "funding_events_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funding_events_payroll_run_id_fkey"
+            columns: ["payroll_run_id"]
+            isOneToOne: false
+            referencedRelation: "payroll_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       internal_notes: {
         Row: {
           author_id: string
@@ -1538,6 +1598,8 @@ export type Database = {
         Row: {
           admin_approved_at: string | null
           admin_approved_by: string | null
+          approval_deadline: string | null
+          auto_approved: boolean
           check_date: string | null
           client_approved_at: string | null
           client_approved_by: string | null
@@ -1548,8 +1610,15 @@ export type Database = {
           employee_count: number
           employer_benefits_cents: number
           employer_taxes_cents: number
+          exception_count: number
+          expedited_deadline: string | null
+          funding_status: string
           gross_pay_cents: number
           id: string
+          invoice_status: string
+          is_expedited: boolean
+          is_manual_check: boolean
+          manual_check_count: number
           net_pay_cents: number
           notes: string | null
           parent_run_id: string | null
@@ -1560,10 +1629,12 @@ export type Database = {
           provider_batch_id: string | null
           provider_response: Json | null
           provider_status: string | null
+          readiness_score: number
           run_type: Database["public"]["Enums"]["payroll_run_type"]
           status: Database["public"]["Enums"]["payroll_run_status"]
           submission_deadline: string | null
           submitted_at: string | null
+          timecard_deadline: string | null
           total_employer_cost_cents: number
           updated_at: string
           void_reason: string | null
@@ -1574,6 +1645,8 @@ export type Database = {
         Insert: {
           admin_approved_at?: string | null
           admin_approved_by?: string | null
+          approval_deadline?: string | null
+          auto_approved?: boolean
           check_date?: string | null
           client_approved_at?: string | null
           client_approved_by?: string | null
@@ -1584,8 +1657,15 @@ export type Database = {
           employee_count?: number
           employer_benefits_cents?: number
           employer_taxes_cents?: number
+          exception_count?: number
+          expedited_deadline?: string | null
+          funding_status?: string
           gross_pay_cents?: number
           id?: string
+          invoice_status?: string
+          is_expedited?: boolean
+          is_manual_check?: boolean
+          manual_check_count?: number
           net_pay_cents?: number
           notes?: string | null
           parent_run_id?: string | null
@@ -1596,10 +1676,12 @@ export type Database = {
           provider_batch_id?: string | null
           provider_response?: Json | null
           provider_status?: string | null
+          readiness_score?: number
           run_type?: Database["public"]["Enums"]["payroll_run_type"]
           status?: Database["public"]["Enums"]["payroll_run_status"]
           submission_deadline?: string | null
           submitted_at?: string | null
+          timecard_deadline?: string | null
           total_employer_cost_cents?: number
           updated_at?: string
           void_reason?: string | null
@@ -1610,6 +1692,8 @@ export type Database = {
         Update: {
           admin_approved_at?: string | null
           admin_approved_by?: string | null
+          approval_deadline?: string | null
+          auto_approved?: boolean
           check_date?: string | null
           client_approved_at?: string | null
           client_approved_by?: string | null
@@ -1620,8 +1704,15 @@ export type Database = {
           employee_count?: number
           employer_benefits_cents?: number
           employer_taxes_cents?: number
+          exception_count?: number
+          expedited_deadline?: string | null
+          funding_status?: string
           gross_pay_cents?: number
           id?: string
+          invoice_status?: string
+          is_expedited?: boolean
+          is_manual_check?: boolean
+          manual_check_count?: number
           net_pay_cents?: number
           notes?: string | null
           parent_run_id?: string | null
@@ -1632,10 +1723,12 @@ export type Database = {
           provider_batch_id?: string | null
           provider_response?: Json | null
           provider_status?: string | null
+          readiness_score?: number
           run_type?: Database["public"]["Enums"]["payroll_run_type"]
           status?: Database["public"]["Enums"]["payroll_run_status"]
           submission_deadline?: string | null
           submitted_at?: string | null
+          timecard_deadline?: string | null
           total_employer_cost_cents?: number
           updated_at?: string
           void_reason?: string | null
@@ -1656,6 +1749,62 @@ export type Database = {
             columns: ["parent_run_id"]
             isOneToOne: false
             referencedRelation: "payroll_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payroll_schedules: {
+        Row: {
+          approval_deadline_days_before: number | null
+          approval_deadline_time: string | null
+          auto_approve_enabled: boolean
+          company_id: string
+          created_at: string
+          expedited_wire_deadline_day: string | null
+          expedited_wire_deadline_time: string | null
+          id: string
+          is_active: boolean
+          pay_frequency: Database["public"]["Enums"]["pay_frequency"]
+          timecard_deadline_day: string | null
+          timecard_deadline_time: string | null
+          updated_at: string
+        }
+        Insert: {
+          approval_deadline_days_before?: number | null
+          approval_deadline_time?: string | null
+          auto_approve_enabled?: boolean
+          company_id: string
+          created_at?: string
+          expedited_wire_deadline_day?: string | null
+          expedited_wire_deadline_time?: string | null
+          id?: string
+          is_active?: boolean
+          pay_frequency: Database["public"]["Enums"]["pay_frequency"]
+          timecard_deadline_day?: string | null
+          timecard_deadline_time?: string | null
+          updated_at?: string
+        }
+        Update: {
+          approval_deadline_days_before?: number | null
+          approval_deadline_time?: string | null
+          auto_approve_enabled?: boolean
+          company_id?: string
+          created_at?: string
+          expedited_wire_deadline_day?: string | null
+          expedited_wire_deadline_time?: string | null
+          id?: string
+          is_active?: boolean
+          pay_frequency?: Database["public"]["Enums"]["pay_frequency"]
+          timecard_deadline_day?: string | null
+          timecard_deadline_time?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payroll_schedules_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
             referencedColumns: ["id"]
           },
         ]
@@ -1925,6 +2074,109 @@ export type Database = {
           },
         ]
       }
+      timecards: {
+        Row: {
+          approval_status: string
+          approved_at: string | null
+          approved_by: string | null
+          company_id: string
+          created_at: string
+          employee_id: string
+          holiday_hours: number
+          id: string
+          notes: string | null
+          overtime_hours: number
+          payroll_run_id: string
+          pto_hours: number
+          regular_hours: number
+          submitted_at: string | null
+          total_hours: number | null
+          updated_at: string
+        }
+        Insert: {
+          approval_status?: string
+          approved_at?: string | null
+          approved_by?: string | null
+          company_id: string
+          created_at?: string
+          employee_id: string
+          holiday_hours?: number
+          id?: string
+          notes?: string | null
+          overtime_hours?: number
+          payroll_run_id: string
+          pto_hours?: number
+          regular_hours?: number
+          submitted_at?: string | null
+          total_hours?: number | null
+          updated_at?: string
+        }
+        Update: {
+          approval_status?: string
+          approved_at?: string | null
+          approved_by?: string | null
+          company_id?: string
+          created_at?: string
+          employee_id?: string
+          holiday_hours?: number
+          id?: string
+          notes?: string | null
+          overtime_hours?: number
+          payroll_run_id?: string
+          pto_hours?: number
+          regular_hours?: number
+          submitted_at?: string | null
+          total_hours?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "timecards_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "timecards_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "timecards_payroll_run_id_fkey"
+            columns: ["payroll_run_id"]
+            isOneToOne: false
+            referencedRelation: "payroll_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      us_holidays: {
+        Row: {
+          created_at: string
+          holiday_date: string
+          id: string
+          is_banking_holiday: boolean
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          holiday_date: string
+          id?: string
+          is_banking_holiday?: boolean
+          name: string
+        }
+        Update: {
+          created_at?: string
+          holiday_date?: string
+          id?: string
+          is_banking_holiday?: boolean
+          name?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
@@ -2011,6 +2263,20 @@ export type Database = {
         | "failed"
         | "voided"
         | "reversed"
+        | "upcoming"
+        | "open"
+        | "open_for_timecards"
+        | "awaiting_timecard_approval"
+        | "timecards_approved"
+        | "awaiting_approval"
+        | "auto_approved"
+        | "late_submission"
+        | "expedited_funding_required"
+        | "expedited_processing"
+        | "manual_check_required"
+        | "funded"
+        | "paid"
+        | "blocked"
       payroll_run_type:
         | "regular"
         | "off_cycle"
@@ -2226,6 +2492,20 @@ export const Constants = {
         "failed",
         "voided",
         "reversed",
+        "upcoming",
+        "open",
+        "open_for_timecards",
+        "awaiting_timecard_approval",
+        "timecards_approved",
+        "awaiting_approval",
+        "auto_approved",
+        "late_submission",
+        "expedited_funding_required",
+        "expedited_processing",
+        "manual_check_required",
+        "funded",
+        "paid",
+        "blocked",
       ],
       payroll_run_type: [
         "regular",

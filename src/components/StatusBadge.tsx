@@ -7,7 +7,13 @@ type BadgeStatus = 'active' | 'onboarding' | 'suspended' | 'terminated' | 'on_le
   | 'time_review' | 'editing' | 'preview'
   | 'pending_client_approval' | 'client_approved'
   | 'funding' | 'pending_admin_approval' | 'admin_approved'
-  | 'submitting' | 'submitted' | 'voided' | 'reversed';
+  | 'submitting' | 'submitted' | 'voided' | 'reversed'
+  | 'upcoming' | 'open' | 'open_for_timecards'
+  | 'awaiting_timecard_approval' | 'timecards_approved'
+  | 'awaiting_approval' | 'auto_approved'
+  | 'late_submission' | 'expedited_funding_required'
+  | 'expedited_processing' | 'manual_check_required'
+  | 'funded' | 'blocked';
 
 const statusConfig: Record<string, { label: string; className: string }> = {
   active: { label: 'Active', className: 'bg-success/10 text-success' },
@@ -39,6 +45,19 @@ const statusConfig: Record<string, { label: string; className: string }> = {
   submitted: { label: 'Submitted', className: 'bg-success/10 text-success' },
   voided: { label: 'Voided', className: 'bg-destructive/10 text-destructive' },
   reversed: { label: 'Reversed', className: 'bg-destructive/10 text-destructive' },
+  upcoming: { label: 'Upcoming', className: 'bg-muted text-muted-foreground' },
+  open: { label: 'Open', className: 'bg-info/10 text-info' },
+  open_for_timecards: { label: 'Open for Timecards', className: 'bg-info/10 text-info' },
+  awaiting_timecard_approval: { label: 'Awaiting Timecard Approval', className: 'bg-warning/10 text-warning' },
+  timecards_approved: { label: 'Timecards Approved', className: 'bg-success/10 text-success' },
+  awaiting_approval: { label: 'Awaiting Approval', className: 'bg-warning/10 text-warning' },
+  auto_approved: { label: 'Auto-Approved', className: 'bg-success/10 text-success' },
+  late_submission: { label: 'Late Submission', className: 'bg-destructive/10 text-destructive' },
+  expedited_funding_required: { label: 'Expedited Funding', className: 'bg-warning/10 text-warning' },
+  expedited_processing: { label: 'Expedited Processing', className: 'bg-info/10 text-info' },
+  manual_check_required: { label: 'Manual Check', className: 'bg-destructive/10 text-destructive' },
+  funded: { label: 'Funded', className: 'bg-success/10 text-success' },
+  blocked: { label: 'Blocked', className: 'bg-destructive/10 text-destructive' },
 };
 
 interface StatusBadgeProps {
