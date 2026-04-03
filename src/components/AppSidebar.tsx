@@ -6,6 +6,7 @@ import {
   CalendarDays, UserPlus
 } from 'lucide-react';
 import type { AppRole } from '@/contexts/AuthContext';
+import logoImg from '@/assets/logo.png';
 
 interface NavItem {
   label: string;
@@ -46,9 +47,7 @@ export function AppSidebar({ userName, userInitials, roleLabel, role }: AppSideb
     <aside className="fixed inset-y-0 left-0 z-30 flex w-60 flex-col bg-sidebar border-r border-sidebar-border">
       {/* Logo */}
       <div className="flex h-14 items-center gap-2.5 px-5 border-b border-sidebar-border">
-        <div className="flex h-7 w-7 items-center justify-center rounded-md bg-sidebar-primary">
-          <span className="text-xs font-bold text-sidebar-primary-foreground">A1</span>
-        </div>
+        <img src={logoImg} alt="AtlasOne logo" className="h-7 w-7 rounded-md invert" />
         <span className="text-sm font-semibold text-sidebar-accent-foreground">AtlasOne HR</span>
       </div>
 
@@ -62,14 +61,17 @@ export function AppSidebar({ userName, userInitials, roleLabel, role }: AppSideb
                 <NavLink
                   to={item.to}
                   className={cn(
-                    'flex items-center gap-2.5 rounded-md px-2.5 py-2 text-[13px] font-medium transition-colors duration-150',
+                    'group relative flex items-center gap-2.5 rounded-md px-2.5 py-2 text-[13px] font-medium transition-colors duration-150',
                     isActive
-                      ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                      ? 'text-sidebar-accent-foreground'
                       : 'text-sidebar-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground'
                   )}
                 >
-                  <item.icon className="h-4 w-4 shrink-0" />
-                  {item.label}
+                  {isActive && (
+                    <span className="absolute inset-0 rounded-md opacity-20" style={{ background: 'var(--gradient-primary)' }} />
+                  )}
+                  <item.icon className="h-4 w-4 shrink-0 relative z-10" />
+                  <span className="relative z-10">{item.label}</span>
                 </NavLink>
               </li>
             );
@@ -80,7 +82,7 @@ export function AppSidebar({ userName, userInitials, roleLabel, role }: AppSideb
       {/* User */}
       <div className="border-t border-sidebar-border p-3">
         <div className="flex items-center gap-2.5 rounded-md px-2.5 py-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-sidebar-primary text-xs font-semibold text-sidebar-primary-foreground">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full text-xs font-semibold text-white shrink-0" style={{ background: 'var(--gradient-primary)' }}>
             {userInitials}
           </div>
           <div className="min-w-0">
