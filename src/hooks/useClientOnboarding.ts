@@ -232,6 +232,13 @@ export function useLaunchClient() {
     }) => {
       const companyInfo = wizardData.company!;
       const payrollInfo = wizardData.payroll;
+      const employeeData = wizardData.employees?.employee_data || [];
+      // Collect all unique work states from company + employees
+      const workStates = Array.from(new Set([
+        companyInfo.state_of_incorporation,
+        ...(companyInfo.work_locations?.map(l => l.state) || []),
+        ...employeeData.map(e => e.work_state).filter(Boolean) as string[],
+      ]));
 
       // 1. Create company record
       const { data: company, error: companyError } = await supabase
