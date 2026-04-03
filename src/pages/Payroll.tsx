@@ -57,13 +57,14 @@ function badgeStatus(status: PayrollRunStatus): string {
 export default function Payroll() {
   const navigate = useNavigate();
   const { data: runs = [], isLoading } = usePayrollRuns();
+  const [newRunOpen, setNewRunOpen] = useState(false);
 
   return (
     <div className="space-y-5">
       <PageHeader
         title="Payroll Runs"
         description="Manage payroll workflows across all companies"
-        actions={<Button size="sm"><Plus className="h-4 w-4 mr-1.5" />New Payroll Run</Button>}
+        actions={<Button size="sm" onClick={() => setNewRunOpen(true)}><Plus className="h-4 w-4 mr-1.5" />New Payroll Run</Button>}
       />
 
       {/* Cutoff notice */}
