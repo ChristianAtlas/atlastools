@@ -16,6 +16,7 @@ import PayrollDetail from "@/pages/PayrollDetail";
 import PTO from "@/pages/PTO";
 import Onboarding from "@/pages/Onboarding";
 import OnboardingDetail from "@/pages/OnboardingDetail";
+import ClientOnboardingWizard from "@/pages/ClientOnboardingWizard";
 import Invoices from "@/pages/Invoices";
 import Documents from "@/pages/Documents";
 import Compliance from "@/pages/Compliance";
@@ -53,6 +54,7 @@ const App = () => (
               <Route path="/pto" element={<PTO />} />
               <Route path="/onboarding" element={<Onboarding />} />
               <Route path="/onboarding/:id" element={<OnboardingDetail />} />
+              <Route path="/onboarding/client/:id" element={<ClientOnboardingWizard />} />
               <Route path="/invoices" element={<Invoices />} />
               <Route path="/documents" element={<Documents />} />
               <Route path="/compliance" element={<Compliance />} />
