@@ -16,6 +16,10 @@ import {
 } from '@/hooks/useEmployees';
 import { EditEmployeeDialog } from '@/components/employees/EditEmployeeDialog';
 import { usePTOBalances, usePTORequests, hoursToDays, type PTOBalance, type PTORequest } from '@/hooks/usePTO';
+import { useAuth } from '@/contexts/AuthContext';
+import { useInternalNotes, useAddInternalNote } from '@/hooks/useInternalNotes';
+import { InternalNotes, type InternalNote } from '@/components/workflow/InternalNotes';
+import { RoleGate } from '@/components/RoleGate';
 
 function InfoRow({ label, value, icon: Icon }: { label: string; value: string; icon?: React.ElementType }) {
   return (
