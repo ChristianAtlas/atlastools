@@ -497,6 +497,14 @@ export default function EmployeeDetail() {
         <TabsContent value="pto"><PTOTab employeeId={emp.id} companyId={emp.company_id} /></TabsContent>
       </Tabs>
 
+      <RoleGate allowedRoles={['super_admin']}>
+        <InternalNotes
+          notes={internalNotes}
+          onAddNote={handleAddNote}
+          className="animate-in-up stagger-2"
+        />
+      </RoleGate>
+
       <EditEmployeeDialog employee={emp} open={editOpen} onOpenChange={setEditOpen} />
     </div>
   );
