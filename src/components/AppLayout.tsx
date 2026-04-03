@@ -5,6 +5,9 @@ import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { LogOut } from 'lucide-react';
+import { ImpersonationProvider } from '@/contexts/ImpersonationContext';
+import { ImpersonationBanner } from '@/components/ImpersonationBanner';
+import { ImpersonationSelector } from '@/components/ImpersonationSelector';
 
 const initialNotifications: Notification[] = [
   { id: 'n1', title: 'Payroll approval due', message: 'Meridian Construction payroll needs approval by Tuesday 6 PM EST.', type: 'warning', read: false, timestamp: new Date(Date.now() - 1800000).toISOString(), actionUrl: '/payroll/pr1' },
@@ -36,26 +39,30 @@ export function AppLayout() {
   const roleLabel = role === 'super_admin' ? 'Super Admin' : role === 'client_admin' ? 'Client Admin' : 'Employee';
 
   return (
-    <div className="min-h-screen bg-background">
-      <AppSidebar userName={profile?.full_name || 'User'} userInitials={initials} roleLabel={roleLabel} role={role} />
-      <main className="pl-60">
-        {/* Top bar with notification bell */}
-        <div className="sticky top-0 z-20 flex items-center justify-end gap-3 border-b bg-background/80 backdrop-blur-sm px-6 py-2">
-          <NotificationBell
-            notifications={notifications}
-            onMarkRead={handleMarkRead}
-            onMarkAllRead={handleMarkAllRead}
-            onDismiss={handleDismiss}
-          />
-          <Button variant="ghost" size="sm" className="gap-1.5 text-xs text-muted-foreground" onClick={signOut}>
-            <LogOut className="h-3.5 w-3.5" />
-            Sign out
-          </Button>
-        </div>
-        <div className="mx-auto max-w-7xl px-6 py-6">
-          <Outlet />
-        </div>
-      </main>
-    </div>
+    <ImpersonationProvider realRole={role}>
+      <div className="min-h-screen bg-background">
+        <AppSidebar userName={profile?.full_name || 'User'} userInitials={initials} roleLabel={roleLabel} role={role} />
+        <main className="pl-60">
+          <ImpersonationBanner />
+          {/* Top bar with notification bell */}
+          <div className="sticky top-0 z-20 flex items-center justify-end gap-3 border-b bg-background/80 backdrop-blur-sm px-6 py-2">
+            <ImpersonationSelector />
+            <NotificationBell
+              notifications={notifications}
+              onMarkRead={handleMarkRead}
+              onMarkAllRead={handleMarkAllRead}
+              onDismiss={handleDismiss}
+            />
+            <Button variant="ghost" size="sm" className="gap-1.5 text-xs text-muted-foreground" onClick={signOut}>
+              <LogOut className="h-3.5 w-3.5" />
+              Sign out
+            </Button>
+          </div>
+          <div className="mx-auto max-w-7xl px-6 py-6">
+            <Outlet />
+          </div>
+        </main>
+      </div>
+    </ImpersonationProvider>
   );
 }
