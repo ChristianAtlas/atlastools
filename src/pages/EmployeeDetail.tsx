@@ -411,6 +411,31 @@ export default function EmployeeDetail() {
   const { data: emp, isLoading, error } = useEmployee(id);
   const { data: compHistory = [] } = useCompensationRecords(id);
   const [editOpen, setEditOpen] = useState(false);
+  const { user, profile, role } = useAuth();
+  const { data: rawNotes = [] } = useInternalNotes('employee', id);
+  const addNote = useAddInternalNote();
+
+  const internalNotes: InternalNote[] = rawNotes.map(n => ({
+    id: n.id,
+    author: n.author_name,
+    authorRole: n.author_role,
+    content: n.content,
+    jiraRef: n.jira_ref ?? undefined,
+    createdAt: n.created_at,
+  }));
+
+  const handleAddNote = (content: string, jiraRef?: string) => {
+    if (!user || !profile) return;
+    addNote.mutate({
+      record_type: 'employee',
+      record_id: id!,
+      author_id: user.id,
+      author_name: profile.full_name || profile.email || 'Unknown',
+      author_role: role || 'unknown',
+      content,
+      jira_ref: jiraRef,
+    });
+  };
 
   if (isLoading) {
     return (
