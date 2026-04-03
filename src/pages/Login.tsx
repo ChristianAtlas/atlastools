@@ -74,9 +74,7 @@ export default function Login() {
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
-            <span className="text-sm font-bold text-primary-foreground">A1</span>
-          </div>
+          <img src={logoImg} alt="AtlasOne" className="mx-auto mb-3 h-10 w-10" />
           <CardTitle className="text-xl">Sign in to AtlasOne HR</CardTitle>
           <CardDescription>Enter your credentials to access the platform</CardDescription>
         </CardHeader>
