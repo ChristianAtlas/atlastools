@@ -61,14 +61,17 @@ export function AppSidebar({ userName, userInitials, roleLabel, role }: AppSideb
                 <NavLink
                   to={item.to}
                   className={cn(
-                    'flex items-center gap-2.5 rounded-md px-2.5 py-2 text-[13px] font-medium transition-colors duration-150',
+                    'group relative flex items-center gap-2.5 rounded-md px-2.5 py-2 text-[13px] font-medium transition-colors duration-150',
                     isActive
-                      ? 'bg-sidebar-accent text-sidebar-accent-foreground'
+                      ? 'text-sidebar-accent-foreground'
                       : 'text-sidebar-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground'
                   )}
                 >
-                  <item.icon className="h-4 w-4 shrink-0" />
-                  {item.label}
+                  {isActive && (
+                    <span className="absolute inset-0 rounded-md opacity-20" style={{ background: 'var(--gradient-primary)' }} />
+                  )}
+                  <item.icon className="h-4 w-4 shrink-0 relative z-10" />
+                  <span className="relative z-10">{item.label}</span>
                 </NavLink>
               </li>
             );
