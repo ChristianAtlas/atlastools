@@ -4,22 +4,61 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { LogIn, Zap, ArrowRight } from 'lucide-react';
+import { ArrowRight, Shield, Building2, User } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import logoImg from '@/assets/logo.png';
+
+interface DemoAccount {
+  label: string;
+  description: string;
+  icon: React.ElementType;
+  email: string;
+  password: string;
+  full_name: string;
+  role: string;
+  company_id?: string;
+}
+
+const DEMO_ACCOUNTS: DemoAccount[] = [
+  {
+    label: 'Super Admin',
+    description: 'Platform-wide access',
+    icon: Shield,
+    email: 'demo@atlasone.hr',
+    password: 'demo-password-2024',
+    full_name: 'Demo Admin',
+    role: 'super_admin',
+  },
+  {
+    label: 'Payroll Admin',
+    description: 'Acme Corp admin',
+    icon: Building2,
+    email: 'demo-admin@acme.test',
+    password: 'demo-password-2024',
+    full_name: 'Jordan Rivera',
+    role: 'client_admin',
+    company_id: 'd5415c8f-a972-4d62-998a-7468fc913578',
+  },
+  {
+    label: 'Employee',
+    description: 'Acme Corp employee',
+    icon: User,
+    email: 'demo-employee@acme.test',
+    password: 'demo-password-2024',
+    full_name: 'Alex Chen',
+    role: 'employee',
+    company_id: 'd5415c8f-a972-4d62-998a-7468fc913578',
+  },
+];
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [demoLoading, setDemoLoading] = useState(false);
+  const [demoLoading, setDemoLoading] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
-
-  const DEMO_EMAIL = 'demo@atlasone.hr';
-  const DEMO_PASSWORD = 'demo-password-2024';
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,53 +72,58 @@ export default function Login() {
     }
   };
 
-  const handleDemoLogin = async () => {
-    setDemoLoading(true);
+  const handleDemoLogin = async (account: DemoAccount) => {
+    setDemoLoading(account.email);
+
+    // Try signing in first
     const { error: signInError } = await supabase.auth.signInWithPassword({
-      email: DEMO_EMAIL,
-      password: DEMO_PASSWORD,
+      email: account.email,
+      password: account.password,
     });
     if (!signInError) {
-      setDemoLoading(false);
+      setDemoLoading(null);
       navigate('/');
       return;
     }
-    // Auto-register demo user
-    const { error: signUpError } = await supabase.auth.signUp({
-      email: DEMO_EMAIL,
-      password: DEMO_PASSWORD,
-      options: { data: { full_name: 'Demo Admin' } },
-    });
-    if (signUpError) {
-      setDemoLoading(false);
-      toast({ title: 'Demo login failed', description: signUpError.message, variant: 'destructive' });
-      return;
-    }
-    const { error: finalError } = await supabase.auth.signInWithPassword({
-      email: DEMO_EMAIL,
-      password: DEMO_PASSWORD,
-    });
-    setDemoLoading(false);
-    if (finalError) {
-      toast({ title: 'Demo login failed', description: finalError.message, variant: 'destructive' });
-    } else {
+
+    // Provision via edge function
+    try {
+      const { error: fnError } = await supabase.functions.invoke('provision-demo-user', {
+        body: {
+          email: account.email,
+          password: account.password,
+          full_name: account.full_name,
+          role: account.role,
+          company_id: account.company_id || null,
+        },
+      });
+      if (fnError) throw fnError;
+
+      // Now sign in
+      const { error: finalError } = await supabase.auth.signInWithPassword({
+        email: account.email,
+        password: account.password,
+      });
+      if (finalError) throw finalError;
       navigate('/');
+    } catch (err: any) {
+      toast({ title: 'Demo login failed', description: err.message, variant: 'destructive' });
+    } finally {
+      setDemoLoading(null);
     }
   };
 
   return (
     <div className="min-h-screen flex">
-      {/* Left: Hero panel matching website gradient */}
+      {/* Left: Hero panel */}
       <div
         className="hidden lg:flex lg:w-1/2 flex-col justify-between p-10 text-white relative overflow-hidden"
         style={{ background: 'var(--gradient-hero)' }}
       >
-        {/* Decorative circles — mirroring website hero */}
         <div className="absolute -top-20 -left-20 w-80 h-80 rounded-full bg-white/10" />
         <div className="absolute top-1/4 right-10 w-48 h-48 rounded-full bg-white/8" />
         <div className="absolute bottom-20 left-1/4 w-32 h-32 rounded-full bg-white/10" />
         <div className="absolute -bottom-16 -right-16 w-64 h-64 rounded-full bg-white/6" />
-        <div className="absolute top-1/2 left-10 w-20 h-20 rounded-full bg-white/12" />
 
         <div className="relative z-10">
           <div className="flex items-center gap-3">
@@ -110,7 +154,6 @@ export default function Login() {
       {/* Right: Login form */}
       <div className="flex-1 flex items-center justify-center px-6 py-12 bg-background">
         <div className="w-full max-w-sm">
-          {/* Mobile-only logo */}
           <div className="flex items-center gap-2.5 mb-8 lg:hidden">
             <img src={logoImg} alt="AtlasOne" className="h-8 w-8" />
             <span className="text-lg font-semibold text-foreground">AtlasOne</span>
@@ -145,20 +188,28 @@ export default function Login() {
           <div className="relative my-6">
             <Separator />
             <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-background px-3 text-xs text-muted-foreground">
-              or
+              demo access
             </span>
           </div>
 
-          <Button
-            type="button"
-            variant="outline"
-            className="w-full gap-2 h-11 text-sm"
-            disabled={demoLoading}
-            onClick={handleDemoLogin}
-          >
-            <Zap className="h-4 w-4" />
-            {demoLoading ? 'Signing in…' : 'Demo Login'}
-          </Button>
+          <div className="space-y-2">
+            {DEMO_ACCOUNTS.map((account) => (
+              <Button
+                key={account.email}
+                type="button"
+                variant="outline"
+                className="w-full justify-start gap-3 h-11 text-sm"
+                disabled={demoLoading !== null}
+                onClick={() => handleDemoLogin(account)}
+              >
+                <account.icon className="h-4 w-4 shrink-0 text-muted-foreground" />
+                <span className="font-medium">{account.label}</span>
+                <span className="text-muted-foreground text-xs ml-auto">
+                  {demoLoading === account.email ? 'Signing in…' : account.description}
+                </span>
+              </Button>
+            ))}
+          </div>
 
           <p className="text-sm text-muted-foreground text-center mt-6">
             Don't have an account?{' '}
