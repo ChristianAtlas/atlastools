@@ -76,11 +76,11 @@ export default function Compliance() {
     const clientScore = computeComplianceScore(clientItems.concat(employeeItems));
     return (
       <div className="space-y-5">
-        <PageHeader title="Compliance" description="Company compliance status and requirements">
+        <PageHeader title="Compliance" description="Company compliance status and requirements" actions={
           <Button size="sm" onClick={() => openAddItem('client')}>
             <Plus className="h-4 w-4 mr-1" /> Add Item
           </Button>
-        </PageHeader>
+        } />
         <div className="flex items-start gap-4">
           <ComplianceScoreBadge score={clientScore} size="lg" />
           <div className="grid grid-cols-4 gap-3 flex-1">
