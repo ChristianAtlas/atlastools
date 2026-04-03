@@ -47,9 +47,7 @@ export function AppSidebar({ userName, userInitials, roleLabel, role }: AppSideb
     <aside className="fixed inset-y-0 left-0 z-30 flex w-60 flex-col bg-sidebar border-r border-sidebar-border">
       {/* Logo */}
       <div className="flex h-14 items-center gap-2.5 px-5 border-b border-sidebar-border">
-        <div className="flex h-7 w-7 items-center justify-center rounded-md bg-sidebar-primary">
-          <span className="text-xs font-bold text-sidebar-primary-foreground">A1</span>
-        </div>
+        <img src={logoImg} alt="AtlasOne logo" className="h-7 w-7 rounded-md invert" />
         <span className="text-sm font-semibold text-sidebar-accent-foreground">AtlasOne HR</span>
       </div>
 
