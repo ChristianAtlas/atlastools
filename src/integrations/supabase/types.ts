@@ -65,17 +65,77 @@ export type Database = {
         }
         Relationships: []
       }
+      client_onboarding_wizards: {
+        Row: {
+          company_id: string | null
+          completed_at: string | null
+          created_at: string
+          created_by: string
+          current_step: number
+          id: string
+          launched_at: string | null
+          mode: string
+          status: string
+          updated_at: string
+          wizard_data: Json
+        }
+        Insert: {
+          company_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          created_by: string
+          current_step?: number
+          id?: string
+          launched_at?: string | null
+          mode?: string
+          status?: string
+          updated_at?: string
+          wizard_data?: Json
+        }
+        Update: {
+          company_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string
+          current_step?: number
+          id?: string
+          launched_at?: string | null
+          mode?: string
+          status?: string
+          updated_at?: string
+          wizard_data?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_onboarding_wizards_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       companies: {
         Row: {
           address_line1: string | null
           address_line2: string | null
+          business_description: string | null
           city: string | null
           created_at: string
+          date_of_incorporation: string | null
+          dba_name: string | null
           deleted_at: string | null
           ein: string
           employee_count: number
+          entity_type: string | null
           id: string
           legal_name: string | null
+          mailing_address_line1: string | null
+          mailing_address_line2: string | null
+          mailing_city: string | null
+          mailing_state: string | null
+          mailing_zip: string | null
+          naics_code: string | null
           name: string
           primary_contact_email: string | null
           primary_contact_name: string
@@ -89,13 +149,23 @@ export type Database = {
         Insert: {
           address_line1?: string | null
           address_line2?: string | null
+          business_description?: string | null
           city?: string | null
           created_at?: string
+          date_of_incorporation?: string | null
+          dba_name?: string | null
           deleted_at?: string | null
           ein: string
           employee_count?: number
+          entity_type?: string | null
           id?: string
           legal_name?: string | null
+          mailing_address_line1?: string | null
+          mailing_address_line2?: string | null
+          mailing_city?: string | null
+          mailing_state?: string | null
+          mailing_zip?: string | null
+          naics_code?: string | null
           name: string
           primary_contact_email?: string | null
           primary_contact_name: string
@@ -109,13 +179,23 @@ export type Database = {
         Update: {
           address_line1?: string | null
           address_line2?: string | null
+          business_description?: string | null
           city?: string | null
           created_at?: string
+          date_of_incorporation?: string | null
+          dba_name?: string | null
           deleted_at?: string | null
           ein?: string
           employee_count?: number
+          entity_type?: string | null
           id?: string
           legal_name?: string | null
+          mailing_address_line1?: string | null
+          mailing_address_line2?: string | null
+          mailing_city?: string | null
+          mailing_state?: string | null
+          mailing_zip?: string | null
+          naics_code?: string | null
           name?: string
           primary_contact_email?: string | null
           primary_contact_name?: string
