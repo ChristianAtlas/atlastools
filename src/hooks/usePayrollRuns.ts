@@ -158,6 +158,30 @@ export function useUpdatePayrollRunStatus() {
   });
 }
 
+export function useCreatePayrollRun() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (body: {
+      company_id: string;
+      run_type?: string;
+      pay_frequency?: string;
+      pay_period_start: string;
+      pay_period_end: string;
+      pay_date: string;
+      check_date?: string;
+      notes?: string;
+    }) => {
+      const { data, error } = await supabase.functions.invoke('create-payroll-run', {
+        body,
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      return data as { id: string; employee_count: number };
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['payroll_runs'] }),
+  });
+}
+
 /** Convert cents to formatted USD */
 export function centsToUSD(cents: number): string {
   return new Intl.NumberFormat('en-US', {

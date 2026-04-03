@@ -1,9 +1,11 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '@/components/PageHeader';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { usePayrollRuns, centsToUSD, type PayrollRunStatus } from '@/hooks/usePayrollRuns';
 import { Plus, Clock, Loader2 } from 'lucide-react';
+import { NewPayrollRunDialog } from '@/components/payroll/NewPayrollRunDialog';
 
 const workflowSteps = ['Time Review', 'Payroll Edit', 'Preview', 'Client Approval', 'Funding', 'Admin Approval', 'Submit'];
 
@@ -55,13 +57,14 @@ function badgeStatus(status: PayrollRunStatus): string {
 export default function Payroll() {
   const navigate = useNavigate();
   const { data: runs = [], isLoading } = usePayrollRuns();
+  const [newRunOpen, setNewRunOpen] = useState(false);
 
   return (
     <div className="space-y-5">
       <PageHeader
         title="Payroll Runs"
         description="Manage payroll workflows across all companies"
-        actions={<Button size="sm"><Plus className="h-4 w-4 mr-1.5" />New Payroll Run</Button>}
+        actions={<Button size="sm" onClick={() => setNewRunOpen(true)}><Plus className="h-4 w-4 mr-1.5" />New Payroll Run</Button>}
       />
 
       {/* Cutoff notice */}
@@ -130,6 +133,8 @@ export default function Payroll() {
           })}
         </div>
       )}
+
+      <NewPayrollRunDialog open={newRunOpen} onOpenChange={setNewRunOpen} />
     </div>
   );
 }
