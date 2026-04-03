@@ -707,6 +707,66 @@ export type Database = {
         }
         Relationships: []
       }
+      employee_invitations: {
+        Row: {
+          activated_at: string | null
+          company_id: string
+          created_at: string
+          email: string
+          employee_id: string
+          error_message: string | null
+          full_name: string
+          id: string
+          invited_at: string | null
+          invited_by: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          activated_at?: string | null
+          company_id: string
+          created_at?: string
+          email: string
+          employee_id: string
+          error_message?: string | null
+          full_name: string
+          id?: string
+          invited_at?: string | null
+          invited_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          activated_at?: string | null
+          company_id?: string
+          created_at?: string
+          email?: string
+          employee_id?: string
+          error_message?: string | null
+          full_name?: string
+          id?: string
+          invited_at?: string | null
+          invited_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_invitations_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_invitations_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       employees: {
         Row: {
           address_line1: string | null
