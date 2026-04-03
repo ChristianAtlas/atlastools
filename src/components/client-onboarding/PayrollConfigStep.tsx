@@ -27,7 +27,7 @@ export function PayrollConfigStep({ data, onSave, onBack, isSaving }: Props) {
   const [checkDateOffset, setCheckDateOffset] = useState(p?.check_date_offset?.toString() || '5');
   const [earningTypes, setEarningTypes] = useState<string[]>(p?.default_earning_types || ['Regular', 'Overtime', 'PTO']);
   const [deductions, setDeductions] = useState<string[]>(p?.benefit_deductions || []);
-  const [timeTracking, setTimeTracking] = useState(p?.time_tracking_method || 'none');
+  const [timeTracking, setTimeTracking] = useState<string>(p?.time_tracking_method || 'none');
 
   const toggleEarning = (t: string) => {
     setEarningTypes(prev => prev.includes(t) ? prev.filter(e => e !== t) : [...prev, t]);
