@@ -82,7 +82,7 @@ export function AppSidebar({ userName, userInitials, roleLabel, role }: AppSideb
       {/* User */}
       <div className="border-t border-sidebar-border p-3">
         <div className="flex items-center gap-2.5 rounded-md px-2.5 py-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-sidebar-primary text-xs font-semibold text-sidebar-primary-foreground">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full text-xs font-semibold text-white shrink-0" style={{ background: 'var(--gradient-primary)' }}>
             {userInitials}
           </div>
           <div className="min-w-0">
