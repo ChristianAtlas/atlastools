@@ -51,6 +51,18 @@ export interface PayrollRunRow {
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
+  // New fields
+  approval_deadline: string | null;
+  timecard_deadline: string | null;
+  expedited_deadline: string | null;
+  funding_status: string;
+  invoice_status: string;
+  auto_approved: boolean;
+  is_expedited: boolean;
+  is_manual_check: boolean;
+  exception_count: number;
+  manual_check_count: number;
+  readiness_score: number;
   // Joined fields
   companies?: { name: string } | null;
 }
