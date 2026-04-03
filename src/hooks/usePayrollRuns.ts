@@ -6,7 +6,13 @@ export type PayrollRunStatus =
   | 'pending_client_approval' | 'client_approved'
   | 'funding' | 'pending_admin_approval' | 'admin_approved'
   | 'submitting' | 'submitted' | 'processing'
-  | 'completed' | 'failed' | 'voided' | 'reversed';
+  | 'completed' | 'failed' | 'voided' | 'reversed'
+  | 'upcoming' | 'open' | 'open_for_timecards'
+  | 'awaiting_timecard_approval' | 'timecards_approved'
+  | 'awaiting_approval' | 'auto_approved'
+  | 'late_submission' | 'expedited_funding_required'
+  | 'expedited_processing' | 'manual_check_required'
+  | 'funded' | 'paid' | 'blocked';
 
 export type PayrollRunType = 'regular' | 'off_cycle' | 'bonus' | 'commission' | 'reimbursement' | 'correction';
 
