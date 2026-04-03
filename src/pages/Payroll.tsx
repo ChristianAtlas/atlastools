@@ -133,6 +133,8 @@ export default function Payroll() {
           })}
         </div>
       )}
+
+      <NewPayrollRunDialog open={newRunOpen} onOpenChange={setNewRunOpen} />
     </div>
   );
 }
