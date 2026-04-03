@@ -6,6 +6,7 @@ import {
   CalendarDays, UserPlus
 } from 'lucide-react';
 import type { AppRole } from '@/contexts/AuthContext';
+import logoImg from '@/assets/logo.png';
 
 interface NavItem {
   label: string;
