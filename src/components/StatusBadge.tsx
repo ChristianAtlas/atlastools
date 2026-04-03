@@ -7,7 +7,13 @@ type BadgeStatus = 'active' | 'onboarding' | 'suspended' | 'terminated' | 'on_le
   | 'time_review' | 'editing' | 'preview'
   | 'pending_client_approval' | 'client_approved'
   | 'funding' | 'pending_admin_approval' | 'admin_approved'
-  | 'submitting' | 'submitted' | 'voided' | 'reversed';
+  | 'submitting' | 'submitted' | 'voided' | 'reversed'
+  | 'upcoming' | 'open' | 'open_for_timecards'
+  | 'awaiting_timecard_approval' | 'timecards_approved'
+  | 'awaiting_approval' | 'auto_approved'
+  | 'late_submission' | 'expedited_funding_required'
+  | 'expedited_processing' | 'manual_check_required'
+  | 'funded' | 'blocked';
 
 const statusConfig: Record<string, { label: string; className: string }> = {
   active: { label: 'Active', className: 'bg-success/10 text-success' },
