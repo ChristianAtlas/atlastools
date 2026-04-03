@@ -293,7 +293,7 @@ export function useLaunchClient() {
       if (companyError) throw companyError;
 
       // 2. Create employees and invitation records
-      const employeeData = wizardData.employees?.employee_data || [];
+      // employeeData already declared above
       if (employeeData.length > 0) {
         const employeeRows = employeeData.map(emp => ({
           company_id: company.id,
