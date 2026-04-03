@@ -1,9 +1,11 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PageHeader } from '@/components/PageHeader';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { usePayrollRuns, centsToUSD, type PayrollRunStatus } from '@/hooks/usePayrollRuns';
 import { Plus, Clock, Loader2 } from 'lucide-react';
+import { NewPayrollRunDialog } from '@/components/payroll/NewPayrollRunDialog';
 
 const workflowSteps = ['Time Review', 'Payroll Edit', 'Preview', 'Client Approval', 'Funding', 'Admin Approval', 'Submit'];
 
