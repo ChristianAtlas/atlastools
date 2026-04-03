@@ -4,9 +4,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
-import { UserPlus } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
+import logoImg from '@/assets/logo.png';
 
 export default function Signup() {
   const [email, setEmail] = useState('');
@@ -35,42 +36,95 @@ export default function Signup() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
-            <span className="text-sm font-bold text-primary-foreground">A1</span>
+    <div className="min-h-screen flex">
+      {/* Left: Hero panel */}
+      <div
+        className="hidden lg:flex lg:w-1/2 flex-col justify-between p-10 text-white relative overflow-hidden"
+        style={{ background: 'var(--gradient-hero)' }}
+      >
+        <div className="absolute -top-20 -left-20 w-80 h-80 rounded-full bg-white/10" />
+        <div className="absolute top-1/4 right-10 w-48 h-48 rounded-full bg-white/8" />
+        <div className="absolute bottom-20 left-1/4 w-32 h-32 rounded-full bg-white/10" />
+        <div className="absolute -bottom-16 -right-16 w-64 h-64 rounded-full bg-white/6" />
+
+        <div className="relative z-10">
+          <div className="flex items-center gap-3">
+            <img src={logoImg} alt="AtlasOne" className="h-8 w-8 invert brightness-200" />
+            <span className="text-lg font-semibold">AtlasOne</span>
           </div>
-          <CardTitle className="text-xl">Create an account</CardTitle>
-          <CardDescription>Sign up for AtlasOne HR</CardDescription>
-        </CardHeader>
-        <form onSubmit={handleSignup}>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
+        </div>
+
+        <div className="relative z-10 max-w-md">
+          <h1 className="text-4xl font-bold leading-tight mb-4">
+            Join teams who traded chaos for{' '}
+            <span className="gradient-text">clarity.</span>
+          </h1>
+          <p className="text-white/80 text-base leading-relaxed">
+            Set up your AtlasOne portal and get your team running in minutes — not months.
+          </p>
+        </div>
+
+        <div className="relative z-10 flex items-center gap-6 text-sm text-white/70">
+          <span>No credit card required</span>
+          <span className="w-1 h-1 rounded-full bg-white/40" />
+          <span>Free onboarding</span>
+          <span className="w-1 h-1 rounded-full bg-white/40" />
+          <span>Cancel anytime</span>
+        </div>
+      </div>
+
+      {/* Right: Signup form */}
+      <div className="flex-1 flex items-center justify-center px-6 py-12 bg-background">
+        <div className="w-full max-w-sm">
+          <div className="flex items-center gap-2.5 mb-8 lg:hidden">
+            <img src={logoImg} alt="AtlasOne" className="h-8 w-8" />
+            <span className="text-lg font-semibold text-foreground">AtlasOne</span>
+          </div>
+
+          <div className="mb-8">
+            <h2 className="text-2xl font-semibold text-foreground">Create your account</h2>
+            <p className="text-sm text-muted-foreground mt-1">Get started with AtlasOne HR</p>
+          </div>
+
+          <form onSubmit={handleSignup} className="space-y-4">
+            <div className="space-y-1.5">
               <Label htmlFor="fullName">Full Name</Label>
               <Input id="fullName" placeholder="Jane Smith" value={fullName} onChange={e => setFullName(e.target.value)} required />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label htmlFor="email">Email</Label>
               <Input id="email" type="email" placeholder="you@company.com" value={email} onChange={e => setEmail(e.target.value)} required />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <Label htmlFor="password">Password</Label>
               <Input id="password" type="password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} required minLength={6} />
             </div>
-          </CardContent>
-          <CardFooter className="flex flex-col gap-3">
-            <Button type="submit" className="w-full gap-2" disabled={loading}>
-              <UserPlus className="h-4 w-4" />
+
+            <Button
+              type="submit"
+              className="w-full gap-2 h-11 text-sm font-medium"
+              style={{ background: 'var(--gradient-primary)' }}
+              disabled={loading}
+            >
               {loading ? 'Creating account…' : 'Create Account'}
+              {!loading && <ArrowRight className="h-4 w-4" />}
             </Button>
-            <p className="text-sm text-muted-foreground">
-              Already have an account?{' '}
-              <Link to="/login" className="text-primary font-medium hover:underline">Sign in</Link>
-            </p>
-          </CardFooter>
-        </form>
-      </Card>
+          </form>
+
+          <p className="text-sm text-muted-foreground text-center mt-6">
+            Already have an account?{' '}
+            <Link to="/login" className="font-medium hover:underline" style={{ color: 'hsl(var(--primary))' }}>
+              Sign in
+            </Link>
+          </p>
+
+          <p className="text-xs text-muted-foreground/60 text-center mt-8">
+            <a href="https://www.atlasonehr.com" target="_blank" rel="noopener noreferrer" className="hover:underline">
+              atlasonehr.com
+            </a>
+          </p>
+        </div>
+      </div>
     </div>
   );
 }
