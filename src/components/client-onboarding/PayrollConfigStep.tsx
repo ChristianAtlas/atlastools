@@ -20,14 +20,14 @@ const EARNING_TYPES = ['Regular', 'Overtime', 'Holiday', 'PTO', 'Bonus', 'Commis
 const DEDUCTION_TYPES = ['Medical', 'Dental', 'Vision', '401(k)', 'HSA', 'FSA', 'Life Insurance', 'Disability'];
 
 export function PayrollConfigStep({ data, onSave, onBack, isSaving }: Props) {
-  const p = data.payroll || {};
+  const p = data.payroll;
 
-  const [payFrequency, setPayFrequency] = useState(p.pay_frequency || 'biweekly');
-  const [firstPayrollDate, setFirstPayrollDate] = useState(p.first_payroll_date || '');
-  const [checkDateOffset, setCheckDateOffset] = useState(p.check_date_offset?.toString() || '5');
-  const [earningTypes, setEarningTypes] = useState<string[]>(p.default_earning_types || ['Regular', 'Overtime', 'PTO']);
-  const [deductions, setDeductions] = useState<string[]>(p.benefit_deductions || []);
-  const [timeTracking, setTimeTracking] = useState(p.time_tracking_method || 'none');
+  const [payFrequency, setPayFrequency] = useState(p?.pay_frequency || 'biweekly');
+  const [firstPayrollDate, setFirstPayrollDate] = useState(p?.first_payroll_date || '');
+  const [checkDateOffset, setCheckDateOffset] = useState(p?.check_date_offset?.toString() || '5');
+  const [earningTypes, setEarningTypes] = useState<string[]>(p?.default_earning_types || ['Regular', 'Overtime', 'PTO']);
+  const [deductions, setDeductions] = useState<string[]>(p?.benefit_deductions || []);
+  const [timeTracking, setTimeTracking] = useState(p?.time_tracking_method || 'none');
 
   const toggleEarning = (t: string) => {
     setEarningTypes(prev => prev.includes(t) ? prev.filter(e => e !== t) : [...prev, t]);
