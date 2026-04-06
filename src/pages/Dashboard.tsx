@@ -75,7 +75,7 @@ export default function Dashboard() {
               activeRuns.map(run => (
                 <div key={run.id} className="flex items-center justify-between px-5 py-3">
                   <div>
-                    <p className="text-sm font-medium">{run.company_name ?? '—'}</p>
+                    <p className="text-sm font-medium">{run.companies?.name ?? '—'}</p>
                     <p className="text-xs text-muted-foreground">
                       {run.employee_count} employees · Pay date {run.pay_date}
                     </p>
