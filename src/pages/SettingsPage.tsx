@@ -504,7 +504,7 @@ function ClientSettingsTab() {
                   <Input value={editReason} onChange={e => setEditReason(e.target.value)} placeholder="e.g. Per client request" />
                 </div>
                 {source === 'enterprise' && (
-                  <div className="flex items-center gap-2 text-xs text-amber-600">
+                  <div className="flex items-center gap-2 text-xs text-destructive">
                     <AlertTriangle className="h-3.5 w-3.5" />
                     This will override the enterprise default for this client only.
                   </div>
