@@ -391,9 +391,9 @@ function ClientSettingsTab() {
             <CardContent className="grid grid-cols-2 gap-4">
               {[
                 ['Legal Name', selectedCompany?.legal_name || selectedCompany?.name],
-                ['DBA', selectedCompany?.dba_name || '—'],
+                ['DBA', (selectedCompany as any)?.dba_name || '—'],
                 ['FEIN', selectedCompany?.ein],
-                ['Entity Type', selectedCompany?.entity_type || '—'],
+                ['Entity Type', (selectedCompany as any)?.entity_type || '—'],
                 ['State', selectedCompany?.state],
                 ['City', selectedCompany?.city || '—'],
                 ['Primary Contact', selectedCompany?.primary_contact_name],
@@ -728,10 +728,10 @@ export default function SettingsPage() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 animate-in-up stagger-1">
-        <StatCard title="Enterprise Settings" value={ENTERPRISE_SETTING_DEFS.length} icon={<Settings className="h-5 w-5" />} />
-        <StatCard title="Changes This Month" value={thisMonthChanges} icon={<History className="h-5 w-5" />} />
-        <StatCard title="Active Clients" value={companies.filter(c => c.status === 'active').length} icon={<Building2 className="h-5 w-5" />} />
-        <StatCard title="Clients on Hold" value={holdCompanies} icon={<AlertTriangle className="h-5 w-5" />} trend={holdCompanies > 0 ? 'down' : undefined} />
+        <StatCard title="Enterprise Settings" value={String(ENTERPRISE_SETTING_DEFS.length)} icon={Settings} />
+        <StatCard title="Changes This Month" value={String(thisMonthChanges)} icon={History} />
+        <StatCard title="Active Clients" value={String(companies.filter(c => c.status === 'active').length)} icon={Building2} />
+        <StatCard title="Clients on Hold" value={String(holdCompanies)} icon={AlertTriangle} />
       </div>
 
       {/* Main Tabs */}
