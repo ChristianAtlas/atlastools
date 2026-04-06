@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, Building2, Users, DollarSign, FileText, ShieldCheck, FolderOpen,
@@ -10,6 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useCompany, type CompanyRow } from '@/hooks/useCompanies';
 import { employees as mockEmployees, payrollRuns, invoices, complianceTasks } from '@/lib/mock-data';
 import type { Employee, PayrollRun, Invoice, ComplianceTask } from '@/lib/types';
+import { EditCompanyDialog } from '@/components/companies/EditCompanyDialog';
 
 const formatCurrency = (n: number) =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(n);
@@ -263,6 +265,7 @@ export default function CompanyDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data: company, isLoading, error } = useCompany(id);
+  const [editOpen, setEditOpen] = useState(false);
 
   if (isLoading) {
     return (
@@ -309,7 +312,7 @@ export default function CompanyDetail() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm">Edit Company</Button>
+          <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>Edit Company</Button>
         </div>
       </div>
 
@@ -331,6 +334,8 @@ export default function CompanyDetail() {
         <TabsContent value="compliance"><ComplianceTab tasks={companyCompliance} /></TabsContent>
         <TabsContent value="documents"><DocumentsTab /></TabsContent>
       </Tabs>
+
+      <EditCompanyDialog company={company} open={editOpen} onOpenChange={setEditOpen} />
     </div>
   );
 }
