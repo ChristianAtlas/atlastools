@@ -155,6 +155,11 @@ function EnterpriseSettingsTab() {
           </Card>
         )}
 
+        {/* Earnings & Deductions Manager - shown under Payroll category */}
+        {activeCategory === 'payroll' && (
+          <EarningsDeductionsManager />
+        )}
+
         {/* Recent changes sidebar */}
         {activeCategory !== 'audit' && recentChanges.length > 0 && (
           <Card>
