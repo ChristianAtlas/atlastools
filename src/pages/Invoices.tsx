@@ -1,210 +1,437 @@
 import { useState, useMemo } from 'react';
 import { PageHeader } from '@/components/PageHeader';
 import { StatusBadge } from '@/components/StatusBadge';
-import { BILLING_TIERS, PAYROLL_MARKUPS } from '@/lib/billing-config';
-import { invoices as mockInvoices } from '@/lib/mock-data';
-import { companies, employees, payrollRuns } from '@/lib/mock-data';
+import {
+  useInvoices, useInvoiceLineItems, useNsfEvents, useBillingProfiles,
+  useUpdateInvoiceStatus, useGenerateMonthlyInvoices, useGeneratePayrollInvoice,
+  useCreateNsfCase, useUpdateNsfCase,
+  centsToUSD, type InvoiceRow, type NsfEventRow,
+} from '@/hooks/useInvoices';
+import { useCompanies } from '@/hooks/useCompanies';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { DollarSign, FileText, Calculator, Users, TrendingUp, AlertTriangle } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { toast } from 'sonner';
+import {
+  DollarSign, FileText, TrendingUp, AlertTriangle, Clock, Send,
+  Download, CheckCircle, XCircle, RefreshCw, Search, Filter,
+  CreditCard, Ban, CalendarDays, Users, ArrowUpRight, Eye,
+} from 'lucide-react';
 
-const formatCurrency = (n: number) =>
-  new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(n);
+const fmt = (cents: number) => centsToUSD(cents);
+const fmtDate = (d: string) => d ? new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—';
 
-const formatCurrencyCents = (cents: number) => formatCurrency(cents / 100);
+const INVOICE_STATUS_COLORS: Record<string, string> = {
+  draft: 'bg-muted text-muted-foreground',
+  generated: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+  sent: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
+  due_immediately: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
+  pending_payment: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
+  paid: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
+  partially_paid: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
+  past_due: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+  failed_payment: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+  nsf_returned: 'bg-red-200 text-red-800 dark:bg-red-900/40 dark:text-red-300',
+  in_collections: 'bg-red-200 text-red-800 dark:bg-red-900/40 dark:text-red-300',
+  resolved: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
+  written_off: 'bg-muted text-muted-foreground',
+};
 
-// Simulated invoice generation using mock data + billing tiers
-function generateMockInvoice(companyId: string, tierSlug: string, addons: string[]) {
-  const company = companies.find(c => c.id === companyId);
-  if (!company) return null;
-
-  const tier = BILLING_TIERS[tierSlug as keyof typeof BILLING_TIERS];
-  if (!tier) return null;
-
-  const empCount = employees.filter(e => e.companyId === companyId && e.status === 'active').length;
-  const companyPayrolls = payrollRuns.filter(pr => pr.companyId === companyId);
-
-  const lineItems: Array<{ description: string; qty: number; unitCents: number; totalCents: number; isMarkup: boolean }> = [];
-
-  // Base plan
-  const baseQty = tier.perEmployee ? empCount : 1;
-  lineItems.push({
-    description: `${tier.name} × ${baseQty} ${tier.perEmployee ? 'employees' : ''}`,
-    qty: baseQty,
-    unitCents: tier.pricePerEmployee * 100,
-    totalCents: tier.pricePerEmployee * 100 * baseQty,
-    isMarkup: false,
-  });
-
-  // Monthly service charge
-  const svc = BILLING_TIERS.monthly_service;
-  lineItems.push({
-    description: svc.name,
-    qty: 1,
-    unitCents: svc.pricePerEmployee * 100,
-    totalCents: svc.pricePerEmployee * 100,
-    isMarkup: false,
-  });
-
-  // Add-ons
-  for (const slug of addons) {
-    const addon = BILLING_TIERS[slug as keyof typeof BILLING_TIERS];
-    if (addon && addon.isAddon) {
-      const qty = addon.perEmployee ? empCount : 1;
-      lineItems.push({
-        description: `${addon.name} × ${qty} ${addon.perEmployee ? 'employees' : ''}`,
-        qty,
-        unitCents: addon.pricePerEmployee * 100,
-        totalCents: addon.pricePerEmployee * 100 * qty,
-        isMarkup: false,
-      });
-    }
-  }
-
-  // Payroll markups
-  for (const pr of companyPayrolls) {
-    const grossCents = Math.round(pr.grossPay * 100);
-    const general = Math.round(grossCents * PAYROLL_MARKUPS.general.rate);
-    const sui = Math.round(grossCents * PAYROLL_MARKUPS.sui.rate);
-
-    lineItems.push({
-      description: `General Markup (${PAYROLL_MARKUPS.general.rate * 100}%) — ${pr.payPeriodStart} to ${pr.payPeriodEnd}`,
-      qty: 1,
-      unitCents: general,
-      totalCents: general,
-      isMarkup: true,
-    });
-    lineItems.push({
-      description: `SUI Markup (${PAYROLL_MARKUPS.sui.rate * 100}%) — ${pr.payPeriodStart} to ${pr.payPeriodEnd}`,
-      qty: 1,
-      unitCents: sui,
-      totalCents: sui,
-      isMarkup: true,
-    });
-  }
-
-  const subtotal = lineItems.filter(li => !li.isMarkup).reduce((s, li) => s + li.totalCents, 0);
-  const markup = lineItems.filter(li => li.isMarkup).reduce((s, li) => s + li.totalCents, 0);
-
-  return { company, lineItems, subtotal, markup, total: subtotal + markup, empCount };
+function InvoiceStatusBadge({ status }: { status: string }) {
+  const cls = INVOICE_STATUS_COLORS[status] || 'bg-muted text-muted-foreground';
+  return (
+    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${cls}`}>
+      {status.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
+    </span>
+  );
 }
 
-export default function Invoices() {
-  const [selectedCompany, setSelectedCompany] = useState('c1');
-  const [selectedTier, setSelectedTier] = useState('peo_basic');
-  const [selectedAddons, setSelectedAddons] = useState<string[]>([]);
-  const [showPreview, setShowPreview] = useState(false);
-
-  const preview = useMemo(
-    () => generateMockInvoice(selectedCompany, selectedTier, selectedAddons),
-    [selectedCompany, selectedTier, selectedAddons]
+function StatCard({ icon: Icon, label, value, iconColor }: { icon: React.ElementType; label: string; value: string | number; iconColor?: string }) {
+  return (
+    <Card className="shadow-sm hover:shadow-md transition-shadow">
+      <CardContent className="flex items-center gap-4 p-5">
+        <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${iconColor || 'bg-primary/10'}`}>
+          <Icon className={`h-5 w-5 ${iconColor ? 'text-inherit' : 'text-primary'}`} />
+        </div>
+        <div>
+          <p className="text-sm text-muted-foreground">{label}</p>
+          <p className="text-xl font-semibold tabular-nums">{value}</p>
+        </div>
+      </CardContent>
+    </Card>
   );
+}
 
-  const toggleAddon = (slug: string) => {
-    setSelectedAddons(prev =>
-      prev.includes(slug) ? prev.filter(s => s !== slug) : [...prev, slug]
-    );
+// ─── Invoice Detail Dialog ───
+function InvoiceDetailDialog({ invoice, open, onClose }: { invoice: InvoiceRow | null; open: boolean; onClose: () => void }) {
+  const { data: lineItems } = useInvoiceLineItems(invoice?.id);
+  const updateStatus = useUpdateInvoiceStatus();
+
+  if (!invoice) return null;
+
+  const clientItems = (lineItems || []).filter(li => !li.is_markup);
+  const markupItems = (lineItems || []).filter(li => li.is_markup);
+
+  const handleMarkPaid = () => {
+    updateStatus.mutate({ id: invoice.id, status: 'paid' }, {
+      onSuccess: () => { toast.success('Invoice marked as paid'); onClose(); },
+      onError: (e) => toast.error(e.message),
+    });
   };
 
-  const addonTiers = Object.entries(BILLING_TIERS).filter(([, t]) => t.isAddon);
-  const planTiers = Object.entries(BILLING_TIERS).filter(([, t]) => !t.isAddon && t.slug !== 'monthly_service');
+  const handleSend = () => {
+    updateStatus.mutate({ id: invoice.id, status: 'sent', sent_at: new Date().toISOString(), delivery_status: 'sent' } as any, {
+      onSuccess: () => toast.success('Invoice sent'),
+      onError: (e) => toast.error(e.message),
+    });
+  };
 
-  // Summary stats from mock invoices
-  const totalOutstanding = mockInvoices.filter(i => i.status === 'sent' || i.status === 'overdue').reduce((s, i) => s + i.amount, 0);
-  const totalPaid = mockInvoices.filter(i => i.status === 'paid').reduce((s, i) => s + i.amount, 0);
-  const overdueCount = mockInvoices.filter(i => i.status === 'overdue').length;
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center justify-between">
+            <span>Invoice {invoice.invoice_number}</span>
+            <InvoiceStatusBadge status={invoice.status} />
+          </DialogTitle>
+          <DialogDescription>
+            {invoice.company_name} · {invoice.invoice_type === 'monthly' ? 'Monthly' : 'Payroll'} Invoice
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          {/* Header Info */}
+          <div className="grid grid-cols-2 gap-3 text-sm">
+            <div>
+              <span className="text-muted-foreground">Invoice Date</span>
+              <p className="font-medium">{fmtDate(invoice.created_at)}</p>
+            </div>
+            <div>
+              <span className="text-muted-foreground">Due Date</span>
+              <p className="font-medium">{fmtDate(invoice.due_date)}</p>
+            </div>
+            <div>
+              <span className="text-muted-foreground">Period</span>
+              <p className="font-medium">{fmtDate(invoice.period_start)} – {fmtDate(invoice.period_end)}</p>
+            </div>
+            <div>
+              <span className="text-muted-foreground">Employees</span>
+              <p className="font-medium">{invoice.employee_count}</p>
+            </div>
+          </div>
+
+          {/* Line Items */}
+          <div className="border rounded-lg overflow-hidden">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b bg-muted/50">
+                  <th className="px-3 py-2 text-left font-medium text-muted-foreground">Description</th>
+                  <th className="px-3 py-2 text-right font-medium text-muted-foreground">Qty</th>
+                  <th className="px-3 py-2 text-right font-medium text-muted-foreground">Amount</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                {clientItems.map(li => (
+                  <tr key={li.id}>
+                    <td className="px-3 py-2">{li.description}</td>
+                    <td className="px-3 py-2 text-right tabular-nums">{li.quantity}</td>
+                    <td className="px-3 py-2 text-right font-medium tabular-nums">{fmt(li.total_cents)}</td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr className="border-t bg-muted/30">
+                  <td colSpan={2} className="px-3 py-2 font-semibold">Total</td>
+                  <td className="px-3 py-2 text-right font-semibold tabular-nums">{fmt(invoice.total_cents)}</td>
+                </tr>
+                {invoice.balance_due_cents > 0 && invoice.balance_due_cents !== invoice.total_cents && (
+                  <tr>
+                    <td colSpan={2} className="px-3 py-2 text-muted-foreground">Balance Due</td>
+                    <td className="px-3 py-2 text-right font-semibold tabular-nums text-destructive">{fmt(invoice.balance_due_cents)}</td>
+                  </tr>
+                )}
+              </tfoot>
+            </table>
+          </div>
+
+          {/* Internal markup details (super admin only) */}
+          {markupItems.length > 0 && (
+            <div className="border rounded-lg p-3 bg-muted/20">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Internal Markup Details</p>
+              <div className="space-y-1">
+                {markupItems.map(li => (
+                  <div key={li.id} className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">{li.description}</span>
+                    <span className="tabular-nums">{fmt(li.total_cents)}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Catch-up info */}
+          {invoice.catch_up_count > 0 && (
+            <div className="flex items-center gap-2 text-sm text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 rounded-lg p-3">
+              <ArrowUpRight className="h-4 w-4" />
+              Includes catch-up charges for {invoice.catch_up_count} employees ({fmt(invoice.catch_up_cents)})
+            </div>
+          )}
+        </div>
+
+        <DialogFooter className="gap-2">
+          {invoice.status !== 'paid' && (
+            <>
+              <Button variant="outline" size="sm" onClick={handleSend} disabled={invoice.status === 'sent'}>
+                <Send className="h-4 w-4 mr-1" /> Send
+              </Button>
+              <Button size="sm" onClick={handleMarkPaid} disabled={updateStatus.isPending}>
+                <CheckCircle className="h-4 w-4 mr-1" /> Mark Paid
+              </Button>
+            </>
+          )}
+          <Button variant="outline" size="sm" onClick={onClose}>Close</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ─── NSF Case Dialog ───
+function NsfDetailDialog({ nsfCase, open, onClose }: { nsfCase: NsfEventRow | null; open: boolean; onClose: () => void }) {
+  const updateNsf = useUpdateNsfCase();
+  const [notes, setNotes] = useState('');
+
+  if (!nsfCase) return null;
+
+  const handleResolve = () => {
+    updateNsf.mutate({ id: nsfCase.id, status: 'resolved', resolved_at: new Date().toISOString(), notes: notes || nsfCase.notes }, {
+      onSuccess: () => { toast.success('NSF case resolved'); onClose(); },
+      onError: (e) => toast.error(e.message),
+    });
+  };
+
+  const handleRetry = () => {
+    updateNsf.mutate({ id: nsfCase.id, status: 'retry_scheduled', retry_count: nsfCase.retry_count + 1, retry_scheduled_at: new Date().toISOString() } as any, {
+      onSuccess: () => toast.success('Retry scheduled'),
+      onError: (e) => toast.error(e.message),
+    });
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>NSF Case #{nsfCase.id.slice(0, 8)}</DialogTitle>
+          <DialogDescription>Failed payment resolution</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3 text-sm">
+          <div className="grid grid-cols-2 gap-3">
+            <div><span className="text-muted-foreground">Amount</span><p className="font-medium">{fmt(nsfCase.amount_cents)}</p></div>
+            <div><span className="text-muted-foreground">Fee</span><p className="font-medium">{fmt(nsfCase.fee_cents)}</p></div>
+            <div><span className="text-muted-foreground">Type</span><p className="font-medium capitalize">{nsfCase.failure_type || 'NSF'}</p></div>
+            <div><span className="text-muted-foreground">Retries</span><p className="font-medium">{nsfCase.retry_count}/3</p></div>
+            <div><span className="text-muted-foreground">Status</span><p><InvoiceStatusBadge status={nsfCase.status} /></p></div>
+            <div><span className="text-muted-foreground">Created</span><p className="font-medium">{fmtDate(nsfCase.created_at)}</p></div>
+          </div>
+          <Textarea placeholder="Add resolution notes..." value={notes} onChange={e => setNotes(e.target.value)} rows={3} />
+        </div>
+        <DialogFooter className="gap-2">
+          {nsfCase.retry_eligible && nsfCase.retry_count < 3 && (
+            <Button variant="outline" size="sm" onClick={handleRetry} disabled={updateNsf.isPending}>
+              <RefreshCw className="h-4 w-4 mr-1" /> Retry Payment
+            </Button>
+          )}
+          <Button size="sm" onClick={handleResolve} disabled={updateNsf.isPending}>
+            <CheckCircle className="h-4 w-4 mr-1" /> Resolve
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ─── Main Page ───
+export default function Invoices() {
+  const { data: invoices = [], isLoading } = useInvoices();
+  const { data: nsfEvents = [] } = useNsfEvents();
+  const { data: billingProfiles = [] } = useBillingProfiles();
+  const { data: companies = [] } = useCompanies();
+  const generateMonthly = useGenerateMonthlyInvoices();
+  const updateStatus = useUpdateInvoiceStatus();
+
+  const [selectedInvoice, setSelectedInvoice] = useState<InvoiceRow | null>(null);
+  const [selectedNsf, setSelectedNsf] = useState<NsfEventRow | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [typeFilter, setTypeFilter] = useState('all');
+  const [companyFilter, setCompanyFilter] = useState('all');
+
+  // Stats
+  const totalAR = invoices.filter(i => !['paid', 'written_off', 'resolved'].includes(i.status)).reduce((s, i) => s + i.balance_due_cents, 0);
+  const paidThisMonth = invoices
+    .filter(i => i.status === 'paid' && i.paid_at && new Date(i.paid_at).getMonth() === new Date().getMonth())
+    .reduce((s, i) => s + i.total_cents, 0);
+  const overdueInvoices = invoices.filter(i => ['past_due', 'failed_payment', 'nsf_returned'].includes(i.status));
+  const openNsf = nsfEvents.filter(n => !['resolved', 'closed'].includes(n.status));
+  const invoicesToday = invoices.filter(i => new Date(i.created_at).toDateString() === new Date().toDateString());
+
+  // Filtered invoices
+  const filtered = useMemo(() => {
+    return invoices.filter(inv => {
+      if (searchTerm && !inv.company_name.toLowerCase().includes(searchTerm.toLowerCase()) && !inv.invoice_number.toLowerCase().includes(searchTerm.toLowerCase())) return false;
+      if (statusFilter !== 'all' && inv.status !== statusFilter) return false;
+      if (typeFilter !== 'all' && inv.invoice_type !== typeFilter) return false;
+      if (companyFilter !== 'all' && inv.company_id !== companyFilter) return false;
+      return true;
+    });
+  }, [invoices, searchTerm, statusFilter, typeFilter, companyFilter]);
+
+  const handleGenerateMonthly = () => {
+    generateMonthly.mutate({}, {
+      onSuccess: (d) => toast.success(`Generated ${d.count} monthly invoice(s)`),
+      onError: (e) => toast.error(e.message),
+    });
+  };
+
+  const uniqueStatuses = [...new Set(invoices.map(i => i.status))];
+  const uniqueCompanies = [...new Map(invoices.map(i => [i.company_id, i.company_name])).entries()];
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Billing & Invoices" description="Invoice generation, pricing tiers, and markup calculations" />
+      <PageHeader title="Billing & Invoices" description="Invoice generation, payment tracking, and collections management" actions={
+        <Button onClick={handleGenerateMonthly} disabled={generateMonthly.isPending}>
+          <CalendarDays className="h-4 w-4 mr-2" />
+          {generateMonthly.isPending ? 'Generating...' : 'Generate Monthly Invoices'}
+        </Button>
+      } />
 
-      {/* Stats */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 animate-in-up stagger-1">
-        <Card className="shadow-sm hover:shadow-md transition-shadow">
-          <CardContent className="flex items-center gap-4 p-5">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-              <DollarSign className="h-5 w-5 text-primary" />
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Total Outstanding</p>
-              <p className="text-xl font-semibold tabular-nums">{formatCurrency(totalOutstanding)}</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="shadow-sm hover:shadow-md transition-shadow">
-          <CardContent className="flex items-center gap-4 p-5">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[hsl(var(--success))]/10">
-              <TrendingUp className="h-5 w-5 text-[hsl(var(--success))]" />
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Collected This Month</p>
-              <p className="text-xl font-semibold tabular-nums">{formatCurrency(totalPaid)}</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="shadow-sm hover:shadow-md transition-shadow">
-          <CardContent className="flex items-center gap-4 p-5">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[hsl(var(--warning))]/10">
-              <AlertTriangle className="h-5 w-5 text-[hsl(var(--warning))]" />
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Overdue</p>
-              <p className="text-xl font-semibold tabular-nums">{overdueCount}</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="shadow-sm hover:shadow-md transition-shadow">
-          <CardContent className="flex items-center gap-4 p-5">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-muted">
-              <FileText className="h-5 w-5 text-muted-foreground" />
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Total Invoices</p>
-              <p className="text-xl font-semibold tabular-nums">{mockInvoices.length}</p>
-            </div>
-          </CardContent>
-        </Card>
+      {/* KPI Cards */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <StatCard icon={DollarSign} label="Open AR" value={fmt(totalAR)} />
+        <StatCard icon={TrendingUp} label="Collected This Month" value={fmt(paidThisMonth)} iconColor="bg-green-100 dark:bg-green-900/30" />
+        <StatCard icon={AlertTriangle} label="Overdue" value={overdueInvoices.length} iconColor="bg-destructive/10" />
+        <StatCard icon={XCircle} label="NSF Cases Open" value={openNsf.length} iconColor="bg-red-100 dark:bg-red-900/30" />
+        <StatCard icon={FileText} label="Generated Today" value={invoicesToday.length} />
       </div>
 
-      <Tabs defaultValue="invoices" className="animate-in-up stagger-2">
+      <Tabs defaultValue="invoices">
         <TabsList>
-          <TabsTrigger value="invoices">Invoices</TabsTrigger>
-          <TabsTrigger value="calculator">Invoice Calculator</TabsTrigger>
-          <TabsTrigger value="pricing">Pricing Tiers</TabsTrigger>
+          <TabsTrigger value="invoices">All Invoices</TabsTrigger>
+          <TabsTrigger value="overdue" className="relative">
+            Overdue / Failed
+            {overdueInvoices.length > 0 && (
+              <span className="ml-1.5 inline-flex items-center justify-center rounded-full bg-destructive text-destructive-foreground text-[10px] h-4 w-4">{overdueInvoices.length}</span>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="nsf" className="relative">
+            NSF Cases
+            {openNsf.length > 0 && (
+              <span className="ml-1.5 inline-flex items-center justify-center rounded-full bg-destructive text-destructive-foreground text-[10px] h-4 w-4">{openNsf.length}</span>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="ar">Client AR Summary</TabsTrigger>
         </TabsList>
 
-        {/* Invoices Table */}
-        <TabsContent value="invoices">
+        {/* ─── All Invoices Tab ─── */}
+        <TabsContent value="invoices" className="space-y-4">
+          {/* Filters */}
+          <div className="flex flex-wrap gap-3">
+            <div className="relative flex-1 min-w-[200px]">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input placeholder="Search by company or invoice #..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-9" />
+            </div>
+            <Select value={typeFilter} onValueChange={setTypeFilter}>
+              <SelectTrigger className="w-[140px]"><SelectValue placeholder="Type" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Types</SelectItem>
+                <SelectItem value="monthly">Monthly</SelectItem>
+                <SelectItem value="payroll">Payroll</SelectItem>
+                <SelectItem value="off_cycle">Off-Cycle</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-[160px]"><SelectValue placeholder="Status" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Statuses</SelectItem>
+                {uniqueStatuses.map(s => (
+                  <SelectItem key={s} value={s}>{s.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={companyFilter} onValueChange={setCompanyFilter}>
+              <SelectTrigger className="w-[180px]"><SelectValue placeholder="Company" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Companies</SelectItem>
+                {uniqueCompanies.map(([id, name]) => (
+                  <SelectItem key={id} value={id}>{name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
           <Card className="shadow-sm">
-            <div className="overflow-hidden rounded-lg">
+            <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b bg-muted/50">
-                    <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Invoice</th>
+                    <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Invoice #</th>
                     <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Company</th>
                     <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Type</th>
-                    <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Amount</th>
+                    <th className="px-4 py-2.5 text-right font-medium text-muted-foreground">Amount</th>
+                    <th className="px-4 py-2.5 text-right font-medium text-muted-foreground">Balance</th>
                     <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Due Date</th>
+                    <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">EEs</th>
                     <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Status</th>
+                    <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y">
-                  {mockInvoices.map(inv => (
-                    <tr key={inv.id} className="hover:bg-muted/30 transition-colors cursor-pointer">
-                      <td className="px-4 py-3 font-medium">{inv.id.toUpperCase()}</td>
-                      <td className="px-4 py-3 text-muted-foreground">{inv.companyName}</td>
+                  {isLoading ? (
+                    <tr><td colSpan={9} className="px-4 py-8 text-center text-muted-foreground">Loading invoices...</td></tr>
+                  ) : filtered.length === 0 ? (
+                    <tr><td colSpan={9} className="px-4 py-8 text-center text-muted-foreground">No invoices found. Click "Generate Monthly Invoices" to create invoices for all active clients.</td></tr>
+                  ) : filtered.map(inv => (
+                    <tr key={inv.id} className="hover:bg-muted/30 transition-colors">
+                      <td className="px-4 py-3 font-medium text-xs">{inv.invoice_number}</td>
+                      <td className="px-4 py-3">{inv.company_name}</td>
                       <td className="px-4 py-3">
-                        <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-xs font-medium capitalize">
-                          {inv.type}
-                        </span>
+                        <Badge variant={inv.invoice_type === 'payroll' ? 'default' : 'secondary'} className="text-xs capitalize">
+                          {inv.invoice_type}
+                        </Badge>
                       </td>
-                      <td className="px-4 py-3 font-medium tabular-nums">{formatCurrency(inv.amount)}</td>
-                      <td className="px-4 py-3 text-muted-foreground">{inv.dueDate}</td>
-                      <td className="px-4 py-3"><StatusBadge status={inv.status} /></td>
+                      <td className="px-4 py-3 text-right font-medium tabular-nums">{fmt(inv.total_cents)}</td>
+                      <td className="px-4 py-3 text-right tabular-nums">
+                        {inv.balance_due_cents > 0 ? (
+                          <span className="text-destructive font-medium">{fmt(inv.balance_due_cents)}</span>
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 text-muted-foreground">{fmtDate(inv.due_date)}</td>
+                      <td className="px-4 py-3 tabular-nums">{inv.employee_count}</td>
+                      <td className="px-4 py-3"><InvoiceStatusBadge status={inv.status} /></td>
+                      <td className="px-4 py-3">
+                        <div className="flex gap-1">
+                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setSelectedInvoice(inv)}>
+                            <Eye className="h-3.5 w-3.5" />
+                          </Button>
+                          {inv.status !== 'paid' && (
+                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => {
+                              updateStatus.mutate({ id: inv.id, status: 'paid' }, {
+                                onSuccess: () => toast.success('Marked as paid'),
+                                onError: (e) => toast.error(e.message),
+                              });
+                            }}>
+                              <CheckCircle className="h-3.5 w-3.5 text-green-600" />
+                            </Button>
+                          )}
+                        </div>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -213,228 +440,178 @@ export default function Invoices() {
           </Card>
         </TabsContent>
 
-        {/* Invoice Calculator */}
-        <TabsContent value="calculator">
-          <div className="grid gap-6 lg:grid-cols-5">
-            {/* Configuration */}
-            <Card className="shadow-sm lg:col-span-2">
-              <CardHeader className="pb-4">
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <Calculator className="h-4 w-4" /> Configure Invoice
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-5">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Company</label>
-                  <Select value={selectedCompany} onValueChange={setSelectedCompany}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {companies.map(c => (
-                        <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Plan</label>
-                  <Select value={selectedTier} onValueChange={setSelectedTier}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {planTiers.map(([slug, tier]) => (
-                        <SelectItem key={slug} value={slug}>
-                          {tier.name} — ${tier.pricePerEmployee}/ee/mo
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Add-ons</label>
-                  <div className="space-y-2">
-                    {addonTiers.map(([slug, tier]) => (
-                      <label key={slug} className="flex items-center gap-2.5 rounded-md border px-3 py-2 cursor-pointer hover:bg-muted/50 transition-colors">
-                        <input
-                          type="checkbox"
-                          checked={selectedAddons.includes(slug)}
-                          onChange={() => toggleAddon(slug)}
-                          className="rounded border-input"
-                        />
-                        <span className="text-sm flex-1">{tier.name}</span>
-                        <span className="text-xs text-muted-foreground tabular-nums">
-                          ${tier.pricePerEmployee}/{tier.perEmployee ? 'ee' : 'mo'}
-                        </span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2 text-sm text-muted-foreground pt-2 border-t">
-                  <Users className="h-4 w-4" />
-                  <span>
-                    {preview?.empCount ?? 0} active employees for{' '}
-                    {companies.find(c => c.id === selectedCompany)?.name}
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Preview */}
-            <Card className="shadow-sm lg:col-span-3">
-              <CardHeader className="pb-4 flex flex-row items-center justify-between">
-                <CardTitle className="text-base">Invoice Preview</CardTitle>
-                <Button size="sm" onClick={() => setShowPreview(true)} disabled={!preview}>
-                  View Full Invoice
-                </Button>
-              </CardHeader>
-              <CardContent>
-                {preview ? (
-                  <div className="space-y-4">
-                    {/* Service charges */}
-                    <div>
-                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
-                        Service Charges
-                      </p>
-                      <div className="space-y-1.5">
-                        {preview.lineItems.filter(li => !li.isMarkup).map((li, i) => (
-                          <div key={i} className="flex items-center justify-between text-sm">
-                            <span className="text-muted-foreground">{li.description}</span>
-                            <span className="font-medium tabular-nums">{formatCurrencyCents(li.totalCents)}</span>
-                          </div>
-                        ))}
+        {/* ─── Overdue / Failed Tab ─── */}
+        <TabsContent value="overdue" className="space-y-4">
+          <Card className="shadow-sm">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4 text-destructive" />
+                Overdue & Failed Payment Invoices
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {overdueInvoices.length === 0 ? (
+                <p className="text-sm text-muted-foreground py-4 text-center">No overdue or failed invoices 🎉</p>
+              ) : (
+                <div className="space-y-3">
+                  {overdueInvoices.map(inv => (
+                    <div key={inv.id} className="flex items-center justify-between rounded-lg border p-3 hover:bg-muted/30 transition-colors">
+                      <div className="space-y-0.5">
+                        <p className="font-medium text-sm">{inv.company_name}</p>
+                        <p className="text-xs text-muted-foreground">{inv.invoice_number} · Due {fmtDate(inv.due_date)}</p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="font-semibold tabular-nums text-destructive">{fmt(inv.balance_due_cents)}</span>
+                        <InvoiceStatusBadge status={inv.status} />
+                        <Button variant="outline" size="sm" onClick={() => setSelectedInvoice(inv)}>View</Button>
+                        <Button variant="outline" size="sm" onClick={() => {
+                          updateStatus.mutate({ id: inv.id, status: 'paid' }, {
+                            onSuccess: () => toast.success('Marked paid'),
+                          });
+                        }}>
+                          <CheckCircle className="h-3.5 w-3.5 mr-1" /> Mark Paid
+                        </Button>
                       </div>
                     </div>
-
-                    {/* Payroll markups */}
-                    {preview.lineItems.some(li => li.isMarkup) && (
-                      <div>
-                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
-                          Payroll Markups
-                        </p>
-                        <div className="space-y-1.5">
-                          {preview.lineItems.filter(li => li.isMarkup).map((li, i) => (
-                            <div key={i} className="flex items-center justify-between text-sm">
-                              <span className="text-muted-foreground">{li.description}</span>
-                              <span className="font-medium tabular-nums">{formatCurrencyCents(li.totalCents)}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="border-t pt-3 space-y-1.5">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Subtotal (services)</span>
-                        <span className="tabular-nums">{formatCurrencyCents(preview.subtotal)}</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Payroll markups</span>
-                        <span className="tabular-nums">{formatCurrencyCents(preview.markup)}</span>
-                      </div>
-                      <div className="flex justify-between text-base font-semibold pt-1 border-t">
-                        <span>Total</span>
-                        <span className="tabular-nums">{formatCurrencyCents(preview.total)}</span>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground">Select a company and plan to preview.</p>
-                )}
-              </CardContent>
-            </Card>
-          </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
 
-        {/* Pricing Tiers */}
-        <TabsContent value="pricing">
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {Object.entries(BILLING_TIERS).map(([slug, tier]) => (
-              <Card key={slug} className="shadow-sm hover:shadow-md transition-shadow">
-                <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-base">{tier.name}</CardTitle>
-                    {tier.isAddon && <Badge variant="secondary" className="text-xs">Add-on</Badge>}
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-2xl font-bold tabular-nums">${tier.pricePerEmployee}</span>
-                    <span className="text-sm text-muted-foreground">
-                      /{tier.perEmployee ? 'employee' : 'month'}
-                      {tier.perEmployee ? '/month' : ''}
-                    </span>
-                  </div>
-                  <p className="mt-2 text-sm text-muted-foreground">
-                    {slug === 'contractors' ? 'Per paid contractor per month' :
-                     tier.perEmployee ? 'Per active employee per month' :
-                     'Flat monthly platform fee'}
-                  </p>
-                </CardContent>
-              </Card>
-            ))}
+        {/* ─── NSF Cases Tab ─── */}
+        <TabsContent value="nsf" className="space-y-4">
+          <Card className="shadow-sm">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <XCircle className="h-4 w-4 text-destructive" />
+                NSF / Failed Payment Cases ({nsfEvents.length})
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {nsfEvents.length === 0 ? (
+                <p className="text-sm text-muted-foreground py-4 text-center">No NSF cases</p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b bg-muted/50">
+                        <th className="px-3 py-2 text-left font-medium text-muted-foreground">Case ID</th>
+                        <th className="px-3 py-2 text-left font-medium text-muted-foreground">Company</th>
+                        <th className="px-3 py-2 text-right font-medium text-muted-foreground">Amount</th>
+                        <th className="px-3 py-2 text-right font-medium text-muted-foreground">Fee</th>
+                        <th className="px-3 py-2 text-left font-medium text-muted-foreground">Type</th>
+                        <th className="px-3 py-2 text-left font-medium text-muted-foreground">Retries</th>
+                        <th className="px-3 py-2 text-left font-medium text-muted-foreground">Status</th>
+                        <th className="px-3 py-2 text-left font-medium text-muted-foreground">Date</th>
+                        <th className="px-3 py-2"></th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y">
+                      {nsfEvents.map(nsf => (
+                        <tr key={nsf.id} className="hover:bg-muted/30">
+                          <td className="px-3 py-2 font-mono text-xs">{nsf.id.slice(0, 8)}</td>
+                          <td className="px-3 py-2">{nsf.company_id.slice(0, 8)}</td>
+                          <td className="px-3 py-2 text-right font-medium tabular-nums">{fmt(nsf.amount_cents)}</td>
+                          <td className="px-3 py-2 text-right tabular-nums">{fmt(nsf.fee_cents)}</td>
+                          <td className="px-3 py-2 capitalize">{nsf.failure_type || 'nsf'}</td>
+                          <td className="px-3 py-2 tabular-nums">{nsf.retry_count}/3</td>
+                          <td className="px-3 py-2"><InvoiceStatusBadge status={nsf.status} /></td>
+                          <td className="px-3 py-2 text-muted-foreground">{fmtDate(nsf.created_at)}</td>
+                          <td className="px-3 py-2">
+                            <Button variant="ghost" size="sm" onClick={() => setSelectedNsf(nsf)}>Manage</Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-            {/* Markup rates card */}
-            <Card className="shadow-sm hover:shadow-md transition-shadow border-dashed">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base">Payroll Markups</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {Object.entries(PAYROLL_MARKUPS).map(([key, m]) => (
-                  <div key={key} className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">{m.label}</span>
-                    <span className="text-lg font-bold tabular-nums">{(m.rate * 100).toFixed(1)}%</span>
-                  </div>
-                ))}
-                <p className="text-xs text-muted-foreground pt-2 border-t">
-                  Applied to gross wages on each payroll run
-                </p>
-              </CardContent>
-            </Card>
-          </div>
+        {/* ─── Client AR Summary Tab ─── */}
+        <TabsContent value="ar" className="space-y-4">
+          <Card className="shadow-sm">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base flex items-center gap-2">
+                <CreditCard className="h-4 w-4" />
+                Accounts Receivable by Client
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {(() => {
+                // Group invoices by company
+                const arByCompany = new Map<string, { name: string; total: number; pastDue: number; count: number; riskStatus: string }>();
+                for (const inv of invoices) {
+                  if (['paid', 'written_off'].includes(inv.status)) continue;
+                  const existing = arByCompany.get(inv.company_id) || { name: inv.company_name, total: 0, pastDue: 0, count: 0, riskStatus: 'none' };
+                  existing.total += inv.balance_due_cents;
+                  existing.count += 1;
+                  if (['past_due', 'failed_payment', 'nsf_returned', 'in_collections'].includes(inv.status)) {
+                    existing.pastDue += inv.balance_due_cents;
+                  }
+                  const profile = billingProfiles.find(bp => bp.company_id.toString() === inv.company_id);
+                  if (profile) existing.riskStatus = profile.nsf_risk_status;
+                  arByCompany.set(inv.company_id, existing);
+                }
+                const entries = Array.from(arByCompany.entries()).sort((a, b) => b[1].total - a[1].total);
+
+                if (entries.length === 0) {
+                  return <p className="text-sm text-muted-foreground py-4 text-center">No outstanding balances</p>;
+                }
+
+                return (
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b bg-muted/50">
+                        <th className="px-3 py-2 text-left font-medium text-muted-foreground">Client</th>
+                        <th className="px-3 py-2 text-right font-medium text-muted-foreground">Outstanding</th>
+                        <th className="px-3 py-2 text-right font-medium text-muted-foreground">Past Due</th>
+                        <th className="px-3 py-2 text-right font-medium text-muted-foreground">Invoices</th>
+                        <th className="px-3 py-2 text-left font-medium text-muted-foreground">Risk</th>
+                        <th className="px-3 py-2"></th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y">
+                      {entries.map(([companyId, data]) => (
+                        <tr key={companyId} className="hover:bg-muted/30">
+                          <td className="px-3 py-2 font-medium">{data.name}</td>
+                          <td className="px-3 py-2 text-right font-medium tabular-nums">{fmt(data.total)}</td>
+                          <td className="px-3 py-2 text-right tabular-nums">
+                            {data.pastDue > 0 ? <span className="text-destructive font-medium">{fmt(data.pastDue)}</span> : '—'}
+                          </td>
+                          <td className="px-3 py-2 text-right tabular-nums">{data.count}</td>
+                          <td className="px-3 py-2">
+                            {data.riskStatus !== 'none' ? (
+                              <Badge variant="destructive" className="text-xs capitalize">{data.riskStatus}</Badge>
+                            ) : (
+                              <Badge variant="secondary" className="text-xs">Normal</Badge>
+                            )}
+                          </td>
+                          <td className="px-3 py-2">
+                            <Button variant="ghost" size="sm" onClick={() => {
+                              setCompanyFilter(companyId);
+                              // switch to invoices tab programmatically via DOM
+                              document.querySelector<HTMLButtonElement>('[data-state][value="invoices"]')?.click();
+                            }}>View Invoices</Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                );
+              })()}
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
 
-      {/* Full Invoice Modal */}
-      <Dialog open={showPreview} onOpenChange={setShowPreview}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Invoice Preview</DialogTitle>
-            <DialogDescription>
-              {preview?.company.name} — Monthly billing breakdown
-            </DialogDescription>
-          </DialogHeader>
-          {preview && (
-            <div className="space-y-4 text-sm">
-              <div className="grid grid-cols-2 gap-2 text-muted-foreground">
-                <span>Company</span><span className="font-medium text-foreground">{preview.company.name}</span>
-                <span>Active Employees</span><span className="font-medium text-foreground">{preview.empCount}</span>
-                <span>Plan</span><span className="font-medium text-foreground">{BILLING_TIERS[selectedTier as keyof typeof BILLING_TIERS]?.name}</span>
-              </div>
-
-              <div className="border-t pt-3 space-y-2">
-                {preview.lineItems.map((li, i) => (
-                  <div key={i} className="flex justify-between">
-                    <span className={li.isMarkup ? 'text-muted-foreground italic' : 'text-muted-foreground'}>
-                      {li.description}
-                    </span>
-                    <span className="font-medium tabular-nums">{formatCurrencyCents(li.totalCents)}</span>
-                  </div>
-                ))}
-              </div>
-
-              <div className="border-t pt-3 flex justify-between text-base font-semibold">
-                <span>Total Due</span>
-                <span className="tabular-nums">{formatCurrencyCents(preview.total)}</span>
-              </div>
-            </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowPreview(false)}>Close</Button>
-            <Button>Generate & Send via Stripe</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Dialogs */}
+      <InvoiceDetailDialog invoice={selectedInvoice} open={!!selectedInvoice} onClose={() => setSelectedInvoice(null)} />
+      <NsfDetailDialog nsfCase={selectedNsf} open={!!selectedNsf} onClose={() => setSelectedNsf(null)} />
     </div>
   );
 }
