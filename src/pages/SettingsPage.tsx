@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
-import { EarningsDeductionsManager } from '@/components/settings/EarningsDeductionsManager';
+import { EnterpriseEDSettings } from '@/components/settings/earnings-deductions/EnterpriseEDSettings';
+import { ClientEDSettings } from '@/components/settings/earnings-deductions/ClientEDSettings';
 import { PageHeader } from '@/components/PageHeader';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -157,7 +158,7 @@ function EnterpriseSettingsTab() {
 
         {/* Earnings & Deductions Manager - shown under Payroll category */}
         {activeCategory === 'payroll' && (
-          <EarningsDeductionsManager />
+          <EnterpriseEDSettings />
         )}
 
         {/* Recent changes sidebar */}
@@ -421,7 +422,7 @@ function ClientSettingsTab() {
         {activeSection === 'payroll' && (
           <>
             {renderOverridableSettings(clientPayrollDefs, 'Payroll Settings')}
-            <EarningsDeductionsManager companyId={selectedCompanyId} companyName={selectedCompany?.name} />
+            <ClientEDSettings companyId={selectedCompanyId!} companyName={selectedCompany?.name} />
           </>
         )}
         {activeSection === 'tax' && renderOverridableSettings(clientTaxDefs, 'Tax Settings')}
