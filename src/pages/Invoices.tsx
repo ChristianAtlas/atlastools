@@ -303,12 +303,12 @@ export default function Invoices() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Billing & Invoices" description="Invoice generation, payment tracking, and collections management">
+      <PageHeader title="Billing & Invoices" description="Invoice generation, payment tracking, and collections management" actions={
         <Button onClick={handleGenerateMonthly} disabled={generateMonthly.isPending}>
           <CalendarDays className="h-4 w-4 mr-2" />
           {generateMonthly.isPending ? 'Generating...' : 'Generate Monthly Invoices'}
         </Button>
-      </PageHeader>
+      } />
 
       {/* KPI Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
