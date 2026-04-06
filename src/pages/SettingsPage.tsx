@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { EarningsDeductionsManager } from '@/components/settings/EarningsDeductionsManager';
 import { PageHeader } from '@/components/PageHeader';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -152,6 +153,11 @@ function EnterpriseSettingsTab() {
               })}
             </CardContent>
           </Card>
+        )}
+
+        {/* Earnings & Deductions Manager - shown under Payroll category */}
+        {activeCategory === 'payroll' && (
+          <EarningsDeductionsManager />
         )}
 
         {/* Recent changes sidebar */}
@@ -412,7 +418,12 @@ function ClientSettingsTab() {
           </Card>
         )}
 
-        {activeSection === 'payroll' && renderOverridableSettings(clientPayrollDefs, 'Payroll Settings')}
+        {activeSection === 'payroll' && (
+          <>
+            {renderOverridableSettings(clientPayrollDefs, 'Payroll Settings')}
+            <EarningsDeductionsManager companyId={selectedCompanyId} companyName={selectedCompany?.name} />
+          </>
+        )}
         {activeSection === 'tax' && renderOverridableSettings(clientTaxDefs, 'Tax Settings')}
         {activeSection === 'billing' && renderOverridableSettings(clientBillingDefs, 'Billing Settings')}
         {activeSection === 'compliance' && renderOverridableSettings(clientComplianceDefs, 'Compliance Settings')}

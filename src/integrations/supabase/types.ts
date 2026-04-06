@@ -829,6 +829,65 @@ export type Database = {
         }
         Relationships: []
       }
+      earning_deduction_types: {
+        Row: {
+          category: string
+          code: string
+          company_id: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          is_active: boolean
+          is_default: boolean
+          name: string
+          sort_order: number
+          subcategory: string
+          taxable: boolean
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          code: string
+          company_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          is_default?: boolean
+          name: string
+          sort_order?: number
+          subcategory?: string
+          taxable?: boolean
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          code?: string
+          company_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          is_default?: boolean
+          name?: string
+          sort_order?: number
+          subcategory?: string
+          taxable?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "earning_deduction_types_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       employee_invitations: {
         Row: {
           activated_at: string | null
