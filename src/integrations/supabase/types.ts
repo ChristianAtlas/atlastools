@@ -65,6 +65,87 @@ export type Database = {
         }
         Relationships: []
       }
+      billing_profiles: {
+        Row: {
+          account_hold: boolean | null
+          ach_authorization_status: string | null
+          backup_payment_method: string | null
+          billing_contact_email: string | null
+          billing_contact_name: string | null
+          billing_emails: string[] | null
+          collections_status: string | null
+          company_id: string
+          created_at: string
+          credit_limit_cents: number | null
+          current_ar_balance_cents: number | null
+          default_payment_method: string | null
+          id: string
+          invoice_delivery_preference: string | null
+          legal_billing_name: string | null
+          monthly_service_charge_cents: number | null
+          nsf_risk_status: string | null
+          past_due_balance_cents: number | null
+          sui_billing_method: string | null
+          sui_markup_rate: number | null
+          updated_at: string
+          wire_required: boolean | null
+          workers_comp_billing_method: string | null
+          workers_comp_markup_rate: number | null
+        }
+        Insert: {
+          account_hold?: boolean | null
+          ach_authorization_status?: string | null
+          backup_payment_method?: string | null
+          billing_contact_email?: string | null
+          billing_contact_name?: string | null
+          billing_emails?: string[] | null
+          collections_status?: string | null
+          company_id: string
+          created_at?: string
+          credit_limit_cents?: number | null
+          current_ar_balance_cents?: number | null
+          default_payment_method?: string | null
+          id?: string
+          invoice_delivery_preference?: string | null
+          legal_billing_name?: string | null
+          monthly_service_charge_cents?: number | null
+          nsf_risk_status?: string | null
+          past_due_balance_cents?: number | null
+          sui_billing_method?: string | null
+          sui_markup_rate?: number | null
+          updated_at?: string
+          wire_required?: boolean | null
+          workers_comp_billing_method?: string | null
+          workers_comp_markup_rate?: number | null
+        }
+        Update: {
+          account_hold?: boolean | null
+          ach_authorization_status?: string | null
+          backup_payment_method?: string | null
+          billing_contact_email?: string | null
+          billing_contact_name?: string | null
+          billing_emails?: string[] | null
+          collections_status?: string | null
+          company_id?: string
+          created_at?: string
+          credit_limit_cents?: number | null
+          current_ar_balance_cents?: number | null
+          default_payment_method?: string | null
+          id?: string
+          invoice_delivery_preference?: string | null
+          legal_billing_name?: string | null
+          monthly_service_charge_cents?: number | null
+          nsf_risk_status?: string | null
+          past_due_balance_cents?: number | null
+          sui_billing_method?: string | null
+          sui_markup_rate?: number | null
+          updated_at?: string
+          wire_required?: boolean | null
+          workers_comp_billing_method?: string | null
+          workers_comp_markup_rate?: number | null
+        }
+        Relationships: []
+      }
       client_onboarding_wizards: {
         Row: {
           company_id: string | null
@@ -1117,16 +1198,26 @@ export type Database = {
       }
       invoices: {
         Row: {
+          balance_due_cents: number
+          billing_profile_id: string | null
+          catch_up_cents: number | null
+          catch_up_count: number | null
           company_id: string
           company_name: string
           created_at: string
+          delivery_status: string | null
           due_date: string
+          employee_count: number | null
           id: string
           invoice_number: string
+          invoice_type: string
           markup_cents: number
+          paid_amount_cents: number
           paid_at: string | null
+          payroll_run_id: string | null
           period_end: string
           period_start: string
+          sent_at: string | null
           status: string
           stripe_invoice_id: string | null
           subtotal_cents: number
@@ -1134,16 +1225,26 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          balance_due_cents?: number
+          billing_profile_id?: string | null
+          catch_up_cents?: number | null
+          catch_up_count?: number | null
           company_id: string
           company_name: string
           created_at?: string
+          delivery_status?: string | null
           due_date: string
+          employee_count?: number | null
           id?: string
           invoice_number: string
+          invoice_type?: string
           markup_cents?: number
+          paid_amount_cents?: number
           paid_at?: string | null
+          payroll_run_id?: string | null
           period_end: string
           period_start: string
+          sent_at?: string | null
           status?: string
           stripe_invoice_id?: string | null
           subtotal_cents?: number
@@ -1151,16 +1252,26 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          balance_due_cents?: number
+          billing_profile_id?: string | null
+          catch_up_cents?: number | null
+          catch_up_count?: number | null
           company_id?: string
           company_name?: string
           created_at?: string
+          delivery_status?: string | null
           due_date?: string
+          employee_count?: number | null
           id?: string
           invoice_number?: string
+          invoice_type?: string
           markup_cents?: number
+          paid_amount_cents?: number
           paid_at?: string | null
+          payroll_run_id?: string | null
           period_end?: string
           period_start?: string
+          sent_at?: string | null
           status?: string
           stripe_invoice_id?: string | null
           subtotal_cents?: number
@@ -1169,39 +1280,145 @@ export type Database = {
         }
         Relationships: []
       }
-      nsf_events: {
+      monthly_employee_billing: {
         Row: {
-          amount_cents: number
+          billing_month: string
+          catch_up_billed: boolean | null
+          catch_up_invoice_id: string | null
+          catch_up_needed: boolean | null
+          charge_cents: number
           company_id: string
           created_at: string
+          employee_id: string
+          id: string
+          invoice_id: string | null
+          status: string
+          tier_id: string | null
+        }
+        Insert: {
+          billing_month: string
+          catch_up_billed?: boolean | null
+          catch_up_invoice_id?: string | null
+          catch_up_needed?: boolean | null
+          charge_cents?: number
+          company_id: string
+          created_at?: string
+          employee_id: string
+          id?: string
+          invoice_id?: string | null
+          status?: string
+          tier_id?: string | null
+        }
+        Update: {
+          billing_month?: string
+          catch_up_billed?: boolean | null
+          catch_up_invoice_id?: string | null
+          catch_up_needed?: boolean | null
+          charge_cents?: number
+          company_id?: string
+          created_at?: string
+          employee_id?: string
+          id?: string
+          invoice_id?: string | null
+          status?: string
+          tier_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "monthly_employee_billing_catch_up_invoice_id_fkey"
+            columns: ["catch_up_invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "monthly_employee_billing_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "monthly_employee_billing_tier_id_fkey"
+            columns: ["tier_id"]
+            isOneToOne: false
+            referencedRelation: "pricing_tiers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      nsf_events: {
+        Row: {
+          account_hold_applied: boolean | null
+          amount_cents: number
+          client_notified_at: string | null
+          company_id: string
+          created_at: string
+          escalated_at: string | null
+          failure_code: string | null
+          failure_type: string | null
           fee_cents: number
           id: string
           invoice_id: string | null
+          max_retries: number | null
           notes: string | null
+          owner_id: string | null
+          owner_name: string | null
+          required_resolution_method: string | null
           resolved_at: string | null
+          retry_count: number | null
+          retry_eligible: boolean | null
+          retry_scheduled_at: string | null
           status: string
+          updated_at: string | null
         }
         Insert: {
+          account_hold_applied?: boolean | null
           amount_cents: number
+          client_notified_at?: string | null
           company_id: string
           created_at?: string
+          escalated_at?: string | null
+          failure_code?: string | null
+          failure_type?: string | null
           fee_cents?: number
           id?: string
           invoice_id?: string | null
+          max_retries?: number | null
           notes?: string | null
+          owner_id?: string | null
+          owner_name?: string | null
+          required_resolution_method?: string | null
           resolved_at?: string | null
+          retry_count?: number | null
+          retry_eligible?: boolean | null
+          retry_scheduled_at?: string | null
           status?: string
+          updated_at?: string | null
         }
         Update: {
+          account_hold_applied?: boolean | null
           amount_cents?: number
+          client_notified_at?: string | null
           company_id?: string
           created_at?: string
+          escalated_at?: string | null
+          failure_code?: string | null
+          failure_type?: string | null
           fee_cents?: number
           id?: string
           invoice_id?: string | null
+          max_retries?: number | null
           notes?: string | null
+          owner_id?: string | null
+          owner_name?: string | null
+          required_resolution_method?: string | null
           resolved_at?: string | null
+          retry_count?: number | null
+          retry_eligible?: boolean | null
+          retry_scheduled_at?: string | null
           status?: string
+          updated_at?: string | null
         }
         Relationships: [
           {
@@ -1405,6 +1622,59 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      payment_attempts: {
+        Row: {
+          amount_cents: number
+          attempt_date: string
+          company_id: string
+          created_at: string
+          id: string
+          invoice_id: string
+          method: string
+          notes: string | null
+          processor_response_code: string | null
+          processor_response_message: string | null
+          status: string
+          stripe_payment_intent_id: string | null
+        }
+        Insert: {
+          amount_cents?: number
+          attempt_date?: string
+          company_id: string
+          created_at?: string
+          id?: string
+          invoice_id: string
+          method?: string
+          notes?: string | null
+          processor_response_code?: string | null
+          processor_response_message?: string | null
+          status?: string
+          stripe_payment_intent_id?: string | null
+        }
+        Update: {
+          amount_cents?: number
+          attempt_date?: string
+          company_id?: string
+          created_at?: string
+          id?: string
+          invoice_id?: string
+          method?: string
+          notes?: string | null
+          processor_response_code?: string | null
+          processor_response_message?: string | null
+          status?: string
+          stripe_payment_intent_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_attempts_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       payroll_markups: {
         Row: {
