@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -75,6 +76,23 @@ export interface CompensationRecordRow {
 }
 
 export function useEmployees(companyId?: string, search?: string) {
+  const qc = useQueryClient();
+
+  useEffect(() => {
+    const channel = supabase
+      .channel(`employees-${companyId ?? 'all'}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'employees' }, () => {
+        qc.invalidateQueries({ queryKey: ['employees'] });
+        qc.invalidateQueries({ queryKey: ['companies'] });
+        qc.invalidateQueries({ queryKey: ['payroll_runs'] });
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [companyId, qc]);
+
   return useQuery({
     queryKey: ['employees', companyId, search],
     queryFn: async () => {
@@ -95,6 +113,26 @@ export function useEmployees(companyId?: string, search?: string) {
 }
 
 export function useEmployee(id: string | undefined) {
+  const qc = useQueryClient();
+
+  useEffect(() => {
+    if (!id) return;
+
+    const channel = supabase
+      .channel(`employee-${id}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'employees', filter: `id=eq.${id}` }, () => {
+        qc.invalidateQueries({ queryKey: ['employees', id] });
+        qc.invalidateQueries({ queryKey: ['employees'] });
+        qc.invalidateQueries({ queryKey: ['companies'] });
+        qc.invalidateQueries({ queryKey: ['payroll_runs'] });
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [id, qc]);
+
   return useQuery({
     queryKey: ['employees', id],
     queryFn: async () => {
@@ -154,7 +192,11 @@ export function useCreateEmployee() {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['employees'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['employees'] });
+      qc.invalidateQueries({ queryKey: ['companies'] });
+      qc.invalidateQueries({ queryKey: ['payroll_runs'] });
+    },
   });
 }
 
@@ -171,7 +213,11 @@ export function useUpdateEmployee() {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['employees'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['employees'] });
+      qc.invalidateQueries({ queryKey: ['companies'] });
+      qc.invalidateQueries({ queryKey: ['payroll_runs'] });
+    },
   });
 }
 

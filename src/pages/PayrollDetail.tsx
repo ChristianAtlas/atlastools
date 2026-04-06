@@ -405,7 +405,7 @@ export default function PayrollDetail() {
   const { user, profile, role } = useAuth();
   const { toast } = useToast();
 
-  const { data: run, isLoading, error } = usePayrollRun(id);
+  const { data: run, isLoading, error, refetch: refetchRun } = usePayrollRun(id);
   const { data: lines = [], refetch: refetchLines } = usePayrollRunEmployees(id);
   const { data: timecards = [] } = useTimecards(id);
   const { data: auditLogs = [] } = useAuditLogs({ tableName: 'payroll_runs', recordId: id, limit: 30 });
@@ -528,6 +528,19 @@ export default function PayrollDetail() {
       // Remove from this run
       await supabase.from('payroll_run_employees').update({ status: 'excluded' } as any).eq('id', line.id);
 
+      const { count: includedCount, error: countError } = await supabase
+        .from('payroll_run_employees')
+        .select('id', { count: 'exact', head: true })
+        .eq('payroll_run_id', run.id)
+        .neq('status', 'excluded');
+
+      if (countError) throw countError;
+
+      await supabase
+        .from('payroll_runs')
+        .update({ employee_count: includedCount ?? 0 } as any)
+        .eq('id', run.id);
+
       // Create off-cycle payroll run for this employee
       const { data: offCycle } = await supabase.from('payroll_runs').insert({
         company_id: run.company_id,
@@ -559,6 +572,7 @@ export default function PayrollDetail() {
       await supabase.from('payroll_runs').update({ exception_count: Math.max(0, (run.exception_count ?? 0) + 1) } as any).eq('id', run.id);
 
       toast({ title: 'Employee excluded and off-cycle created' });
+      refetchRun();
       refetchLines();
     } catch (err: any) {
       toast({ title: 'Exclusion failed', description: err.message, variant: 'destructive' });
