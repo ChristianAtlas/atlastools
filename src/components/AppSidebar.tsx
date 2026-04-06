@@ -12,7 +12,7 @@ interface NavItem {
   label: string;
   to: string;
   icon: React.ElementType;
-  roles?: AppRole[]; // if undefined, visible to all
+  roles?: AppRole[];
 }
 
 const navItems: NavItem[] = [
@@ -37,9 +37,10 @@ interface AppSidebarProps {
   userInitials: string;
   roleLabel: string;
   role: AppRole | null;
+  onNavClick?: () => void;
 }
 
-export function AppSidebar({ userName, userInitials, roleLabel, role }: AppSidebarProps) {
+export function AppSidebar({ userName, userInitials, roleLabel, role, onNavClick }: AppSidebarProps) {
   const location = useLocation();
 
   const visibleItems = navItems.filter(item => !item.roles || (role && item.roles.includes(role)));
@@ -61,6 +62,7 @@ export function AppSidebar({ userName, userInitials, roleLabel, role }: AppSideb
               <li key={item.to}>
                 <NavLink
                   to={item.to}
+                  onClick={onNavClick}
                   className={cn(
                     'group relative flex items-center gap-2.5 rounded-md px-2.5 py-2 text-[13px] font-medium transition-colors duration-150',
                     isActive
