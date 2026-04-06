@@ -418,7 +418,12 @@ function ClientSettingsTab() {
           </Card>
         )}
 
-        {activeSection === 'payroll' && renderOverridableSettings(clientPayrollDefs, 'Payroll Settings')}
+        {activeSection === 'payroll' && (
+          <>
+            {renderOverridableSettings(clientPayrollDefs, 'Payroll Settings')}
+            <EarningsDeductionsManager companyId={selectedCompanyId} companyName={selectedCompany?.name} />
+          </>
+        )}
         {activeSection === 'tax' && renderOverridableSettings(clientTaxDefs, 'Tax Settings')}
         {activeSection === 'billing' && renderOverridableSettings(clientBillingDefs, 'Billing Settings')}
         {activeSection === 'compliance' && renderOverridableSettings(clientComplianceDefs, 'Compliance Settings')}
