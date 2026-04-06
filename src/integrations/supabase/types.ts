@@ -196,6 +196,47 @@ export type Database = {
           },
         ]
       }
+      client_setting_overrides: {
+        Row: {
+          company_id: string
+          created_at: string
+          id: string
+          inherited: boolean
+          override_value: Json
+          setting_key: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          id?: string
+          inherited?: boolean
+          override_value?: Json
+          setting_key: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          id?: string
+          inherited?: boolean
+          override_value?: Json
+          setting_key?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_setting_overrides_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       companies: {
         Row: {
           address_line1: string | null
@@ -1049,6 +1090,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      enterprise_settings: {
+        Row: {
+          category: string
+          created_at: string
+          data_type: string
+          description: string | null
+          id: string
+          key: string
+          updated_at: string
+          updated_by: string | null
+          value: Json
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          data_type?: string
+          description?: string | null
+          id?: string
+          key: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: Json
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          data_type?: string
+          description?: string | null
+          id?: string
+          key?: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: Json
+        }
+        Relationships: []
       }
       funding_events: {
         Row: {
@@ -2340,6 +2417,53 @@ export type Database = {
             columns: ["policy_id"]
             isOneToOne: false
             referencedRelation: "pto_policies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      setting_audit_logs: {
+        Row: {
+          changed_by: string | null
+          changed_by_email: string | null
+          company_id: string | null
+          created_at: string
+          id: string
+          new_value: Json | null
+          old_value: Json | null
+          reason: string | null
+          scope: string
+          setting_key: string
+        }
+        Insert: {
+          changed_by?: string | null
+          changed_by_email?: string | null
+          company_id?: string | null
+          created_at?: string
+          id?: string
+          new_value?: Json | null
+          old_value?: Json | null
+          reason?: string | null
+          scope?: string
+          setting_key: string
+        }
+        Update: {
+          changed_by?: string | null
+          changed_by_email?: string | null
+          company_id?: string | null
+          created_at?: string
+          id?: string
+          new_value?: Json | null
+          old_value?: Json | null
+          reason?: string | null
+          scope?: string
+          setting_key?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "setting_audit_logs_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
             referencedColumns: ["id"]
           },
         ]
