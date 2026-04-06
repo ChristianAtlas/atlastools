@@ -52,8 +52,9 @@ export function useCompanies(search?: string) {
   const qc = useQueryClient();
 
   useEffect(() => {
+    const channelName = `companies-live-${search ?? 'all'}-${Date.now()}`;
     const channel = supabase
-      .channel('companies-live')
+      .channel(channelName)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'companies' }, () => {
         qc.invalidateQueries({ queryKey: ['companies'] });
         qc.invalidateQueries({ queryKey: ['employees'] });
@@ -64,7 +65,7 @@ export function useCompanies(search?: string) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [qc]);
+  }, [qc, search]);
 
   return useQuery({
     queryKey: ['companies', search],
