@@ -266,8 +266,6 @@ export default function CompanyDetail() {
   const navigate = useNavigate();
   const { data: company, isLoading, error } = useCompany(id);
   const [editOpen, setEditOpen] = useState(false);
-  const navigate = useNavigate();
-  const { data: company, isLoading, error } = useCompany(id);
 
   if (isLoading) {
     return (
