@@ -158,7 +158,7 @@ function EnterpriseSettingsTab() {
 
         {/* Earnings & Deductions Manager - shown under Payroll category */}
         {activeCategory === 'payroll' && (
-          <EarningsDeductionsManager />
+          <EnterpriseEDSettings />
         )}
 
         {/* Recent changes sidebar */}
@@ -422,7 +422,7 @@ function ClientSettingsTab() {
         {activeSection === 'payroll' && (
           <>
             {renderOverridableSettings(clientPayrollDefs, 'Payroll Settings')}
-            <EarningsDeductionsManager companyId={selectedCompanyId} companyName={selectedCompany?.name} />
+            <ClientEDSettings companyId={selectedCompanyId!} companyName={selectedCompany?.name} />
           </>
         )}
         {activeSection === 'tax' && renderOverridableSettings(clientTaxDefs, 'Tax Settings')}
