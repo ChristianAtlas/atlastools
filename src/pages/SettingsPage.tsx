@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { EarningsDeductionsManager } from '@/components/settings/EarningsDeductionsManager';
 import { PageHeader } from '@/components/PageHeader';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
