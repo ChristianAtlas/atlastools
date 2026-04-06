@@ -146,6 +146,62 @@ export type Database = {
         }
         Relationships: []
       }
+      client_earning_deduction_overrides: {
+        Row: {
+          company_id: string
+          created_at: string
+          display_label_override: string | null
+          earning_deduction_type_id: string
+          frequency_eligibility: string[] | null
+          gl_code_override: string | null
+          id: string
+          is_enabled: boolean
+          notes: string | null
+          pay_run_types_override: string[] | null
+          updated_at: string
+          updated_by: string | null
+          worker_type_override: string | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          display_label_override?: string | null
+          earning_deduction_type_id: string
+          frequency_eligibility?: string[] | null
+          gl_code_override?: string | null
+          id?: string
+          is_enabled?: boolean
+          notes?: string | null
+          pay_run_types_override?: string[] | null
+          updated_at?: string
+          updated_by?: string | null
+          worker_type_override?: string | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          display_label_override?: string | null
+          earning_deduction_type_id?: string
+          frequency_eligibility?: string[] | null
+          gl_code_override?: string | null
+          id?: string
+          is_enabled?: boolean
+          notes?: string | null
+          pay_run_types_override?: string[] | null
+          updated_at?: string
+          updated_by?: string | null
+          worker_type_override?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_earning_deduction_overrid_earning_deduction_type_id_fkey"
+            columns: ["earning_deduction_type_id"]
+            isOneToOne: false
+            referencedRelation: "earning_deduction_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_onboarding_wizards: {
         Row: {
           company_id: string | null
@@ -829,56 +885,198 @@ export type Database = {
         }
         Relationships: []
       }
+      earning_deduction_categories: {
+        Row: {
+          created_at: string
+          description: string | null
+          display_order: number
+          id: string
+          is_active: boolean
+          name: string
+          slug: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          name: string
+          slug: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          name?: string
+          slug?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       earning_deduction_types: {
         Row: {
+          annual_limit_cents: number | null
+          archived_at: string | null
+          availability: string | null
+          calculation_method: string | null
+          catch_up_eligible: boolean | null
+          catch_up_limit_cents: number | null
           category: string
+          category_id: string | null
           code: string
           company_id: string | null
           created_at: string
           created_by: string | null
+          deduction_side: string | null
+          default_multiplier: number | null
+          default_rate: number | null
           description: string | null
+          garnishment_settings: Json | null
+          gl_code: string | null
+          goal_amount_cents: number | null
           id: string
           is_active: boolean
           is_default: boolean
           name: string
+          pay_behavior: string | null
+          pay_run_types: string[] | null
+          priority_order: number | null
+          reporting_1099_type: string | null
+          reporting_box_code: string | null
+          reporting_box14_literal: string | null
+          reporting_w2_box: string | null
+          scope: string
           sort_order: number
+          special_flags: string[] | null
+          stop_at_goal: boolean | null
           subcategory: string
+          tax_federal_income: boolean | null
+          tax_futa: boolean | null
+          tax_local: boolean | null
+          tax_medicare: boolean | null
+          tax_social_security: boolean | null
+          tax_state_income: boolean | null
+          tax_state_unemployment: boolean | null
+          tax_treatment: string | null
           taxable: boolean
           updated_at: string
+          used_by_clients_count: number | null
+          worker_type: string | null
         }
         Insert: {
+          annual_limit_cents?: number | null
+          archived_at?: string | null
+          availability?: string | null
+          calculation_method?: string | null
+          catch_up_eligible?: boolean | null
+          catch_up_limit_cents?: number | null
           category: string
+          category_id?: string | null
           code: string
           company_id?: string | null
           created_at?: string
           created_by?: string | null
+          deduction_side?: string | null
+          default_multiplier?: number | null
+          default_rate?: number | null
           description?: string | null
+          garnishment_settings?: Json | null
+          gl_code?: string | null
+          goal_amount_cents?: number | null
           id?: string
           is_active?: boolean
           is_default?: boolean
           name: string
+          pay_behavior?: string | null
+          pay_run_types?: string[] | null
+          priority_order?: number | null
+          reporting_1099_type?: string | null
+          reporting_box_code?: string | null
+          reporting_box14_literal?: string | null
+          reporting_w2_box?: string | null
+          scope?: string
           sort_order?: number
+          special_flags?: string[] | null
+          stop_at_goal?: boolean | null
           subcategory?: string
+          tax_federal_income?: boolean | null
+          tax_futa?: boolean | null
+          tax_local?: boolean | null
+          tax_medicare?: boolean | null
+          tax_social_security?: boolean | null
+          tax_state_income?: boolean | null
+          tax_state_unemployment?: boolean | null
+          tax_treatment?: string | null
           taxable?: boolean
           updated_at?: string
+          used_by_clients_count?: number | null
+          worker_type?: string | null
         }
         Update: {
+          annual_limit_cents?: number | null
+          archived_at?: string | null
+          availability?: string | null
+          calculation_method?: string | null
+          catch_up_eligible?: boolean | null
+          catch_up_limit_cents?: number | null
           category?: string
+          category_id?: string | null
           code?: string
           company_id?: string | null
           created_at?: string
           created_by?: string | null
+          deduction_side?: string | null
+          default_multiplier?: number | null
+          default_rate?: number | null
           description?: string | null
+          garnishment_settings?: Json | null
+          gl_code?: string | null
+          goal_amount_cents?: number | null
           id?: string
           is_active?: boolean
           is_default?: boolean
           name?: string
+          pay_behavior?: string | null
+          pay_run_types?: string[] | null
+          priority_order?: number | null
+          reporting_1099_type?: string | null
+          reporting_box_code?: string | null
+          reporting_box14_literal?: string | null
+          reporting_w2_box?: string | null
+          scope?: string
           sort_order?: number
+          special_flags?: string[] | null
+          stop_at_goal?: boolean | null
           subcategory?: string
+          tax_federal_income?: boolean | null
+          tax_futa?: boolean | null
+          tax_local?: boolean | null
+          tax_medicare?: boolean | null
+          tax_social_security?: boolean | null
+          tax_state_income?: boolean | null
+          tax_state_unemployment?: boolean | null
+          tax_treatment?: string | null
           taxable?: boolean
           updated_at?: string
+          used_by_clients_count?: number | null
+          worker_type?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "earning_deduction_types_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "earning_deduction_categories"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "earning_deduction_types_company_id_fkey"
             columns: ["company_id"]
