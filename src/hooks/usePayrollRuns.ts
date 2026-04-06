@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -132,6 +133,27 @@ async function withLiveEmployeeCounts(runs: PayrollRunRow[]): Promise<PayrollRun
 }
 
 export function usePayrollRuns(companyId?: string) {
+  const qc = useQueryClient();
+
+  useEffect(() => {
+    const channel = supabase
+      .channel(`payroll-runs-${companyId ?? 'all'}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'payroll_runs' }, () => {
+        qc.invalidateQueries({ queryKey: ['payroll_runs'] });
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'payroll_run_employees' }, () => {
+        qc.invalidateQueries({ queryKey: ['payroll_runs'] });
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'employees' }, () => {
+        qc.invalidateQueries({ queryKey: ['payroll_runs'] });
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [companyId, qc]);
+
   return useQuery({
     queryKey: ['payroll_runs', companyId],
     queryFn: async () => {
@@ -152,6 +174,27 @@ export function usePayrollRuns(companyId?: string) {
 }
 
 export function usePayrollRun(id: string | undefined) {
+  const qc = useQueryClient();
+
+  useEffect(() => {
+    if (!id) return;
+
+    const channel = supabase
+      .channel(`payroll-run-${id}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'payroll_runs', filter: `id=eq.${id}` }, () => {
+        qc.invalidateQueries({ queryKey: ['payroll_runs', id] });
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'payroll_run_employees', filter: `payroll_run_id=eq.${id}` }, () => {
+        qc.invalidateQueries({ queryKey: ['payroll_runs', id] });
+        qc.invalidateQueries({ queryKey: ['payroll_run_employees', id] });
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [id, qc]);
+
   return useQuery({
     queryKey: ['payroll_runs', id],
     queryFn: async () => {
@@ -170,6 +213,25 @@ export function usePayrollRun(id: string | undefined) {
 }
 
 export function usePayrollRunEmployees(runId: string | undefined) {
+  const qc = useQueryClient();
+
+  useEffect(() => {
+    if (!runId) return;
+
+    const channel = supabase
+      .channel(`payroll-run-employees-${runId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'payroll_run_employees', filter: `payroll_run_id=eq.${runId}` }, () => {
+        qc.invalidateQueries({ queryKey: ['payroll_run_employees', runId] });
+        qc.invalidateQueries({ queryKey: ['payroll_runs', runId] });
+        qc.invalidateQueries({ queryKey: ['payroll_runs'] });
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [qc, runId]);
+
   return useQuery({
     queryKey: ['payroll_run_employees', runId],
     queryFn: async () => {

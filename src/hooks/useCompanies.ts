@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -48,6 +49,23 @@ async function fetchCompany(id: string): Promise<CompanyRow> {
 }
 
 export function useCompanies(search?: string) {
+  const qc = useQueryClient();
+
+  useEffect(() => {
+    const channel = supabase
+      .channel('companies-live')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'companies' }, () => {
+        qc.invalidateQueries({ queryKey: ['companies'] });
+        qc.invalidateQueries({ queryKey: ['employees'] });
+        qc.invalidateQueries({ queryKey: ['payroll_runs'] });
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [qc]);
+
   return useQuery({
     queryKey: ['companies', search],
     queryFn: () => fetchCompanies(search),
@@ -55,6 +73,26 @@ export function useCompanies(search?: string) {
 }
 
 export function useCompany(id: string | undefined) {
+  const qc = useQueryClient();
+
+  useEffect(() => {
+    if (!id) return;
+
+    const channel = supabase
+      .channel(`company-${id}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'companies', filter: `id=eq.${id}` }, () => {
+        qc.invalidateQueries({ queryKey: ['companies', id] });
+        qc.invalidateQueries({ queryKey: ['companies'] });
+        qc.invalidateQueries({ queryKey: ['employees'] });
+        qc.invalidateQueries({ queryKey: ['payroll_runs'] });
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [id, qc]);
+
   return useQuery({
     queryKey: ['companies', id],
     queryFn: () => fetchCompany(id!),
