@@ -1146,6 +1146,64 @@ export type Database = {
           },
         ]
       }
+      employee_wc_assignments: {
+        Row: {
+          company_id: string
+          created_at: string
+          effective_date: string
+          employee_id: string
+          end_date: string | null
+          id: string
+          is_active: boolean
+          updated_at: string
+          wc_code_id: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          effective_date?: string
+          employee_id: string
+          end_date?: string | null
+          id?: string
+          is_active?: boolean
+          updated_at?: string
+          wc_code_id: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          effective_date?: string
+          employee_id?: string
+          end_date?: string | null
+          id?: string
+          is_active?: boolean
+          updated_at?: string
+          wc_code_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_wc_assignments_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_wc_assignments_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_wc_assignments_wc_code_id_fkey"
+            columns: ["wc_code_id"]
+            isOneToOne: false
+            referencedRelation: "workers_comp_codes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       employees: {
         Row: {
           address_line1: string | null
@@ -2845,6 +2903,264 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      wc_invoice_items: {
+        Row: {
+          base_premium_cents: number
+          company_id: string
+          created_at: string
+          employee_count: number
+          id: string
+          invoice_id: string | null
+          markup_cents: number
+          payroll_run_id: string
+          total_charge_cents: number
+        }
+        Insert: {
+          base_premium_cents?: number
+          company_id: string
+          created_at?: string
+          employee_count?: number
+          id?: string
+          invoice_id?: string | null
+          markup_cents?: number
+          payroll_run_id: string
+          total_charge_cents?: number
+        }
+        Update: {
+          base_premium_cents?: number
+          company_id?: string
+          created_at?: string
+          employee_count?: number
+          id?: string
+          invoice_id?: string | null
+          markup_cents?: number
+          payroll_run_id?: string
+          total_charge_cents?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wc_invoice_items_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wc_invoice_items_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wc_payroll_calculations: {
+        Row: {
+          company_id: string
+          created_at: string
+          employee_id: string
+          id: string
+          markup_cents: number
+          markup_rate: number
+          payroll_run_id: string
+          premium_cents: number
+          rate_per_hundred: number
+          total_charge_cents: number
+          wages_cents: number
+          wc_code: string
+          wc_code_id: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          employee_id: string
+          id?: string
+          markup_cents?: number
+          markup_rate?: number
+          payroll_run_id: string
+          premium_cents?: number
+          rate_per_hundred?: number
+          total_charge_cents?: number
+          wages_cents?: number
+          wc_code: string
+          wc_code_id: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          employee_id?: string
+          id?: string
+          markup_cents?: number
+          markup_rate?: number
+          payroll_run_id?: string
+          premium_cents?: number
+          rate_per_hundred?: number
+          total_charge_cents?: number
+          wages_cents?: number
+          wc_code?: string
+          wc_code_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wc_payroll_calculations_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wc_payroll_calculations_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wc_payroll_calculations_wc_code_id_fkey"
+            columns: ["wc_code_id"]
+            isOneToOne: false
+            referencedRelation: "workers_comp_codes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workers_comp_codes: {
+        Row: {
+          code: string
+          company_id: string
+          created_at: string
+          description: string
+          effective_date: string
+          expiration_date: string | null
+          id: string
+          is_active: boolean
+          policy_id: string
+          rate_per_hundred: number
+          state: string
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          company_id: string
+          created_at?: string
+          description: string
+          effective_date: string
+          expiration_date?: string | null
+          id?: string
+          is_active?: boolean
+          policy_id: string
+          rate_per_hundred?: number
+          state: string
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          company_id?: string
+          created_at?: string
+          description?: string
+          effective_date?: string
+          expiration_date?: string | null
+          id?: string
+          is_active?: boolean
+          policy_id?: string
+          rate_per_hundred?: number
+          state?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workers_comp_codes_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workers_comp_codes_policy_id_fkey"
+            columns: ["policy_id"]
+            isOneToOne: false
+            referencedRelation: "workers_comp_policies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workers_comp_policies: {
+        Row: {
+          carrier_name: string
+          company_id: string
+          created_at: string
+          effective_date: string
+          experience_mod: number
+          expiration_date: string
+          id: string
+          is_monopolistic: boolean
+          last_report_submitted_at: string | null
+          markup_flat_cents: number | null
+          markup_rate: number
+          markup_type: string
+          minimum_premium_cents: number | null
+          notes: string | null
+          policy_number: string
+          reporting_frequency: string | null
+          state_fund_account: string | null
+          states_covered: string[]
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          carrier_name: string
+          company_id: string
+          created_at?: string
+          effective_date: string
+          experience_mod?: number
+          expiration_date: string
+          id?: string
+          is_monopolistic?: boolean
+          last_report_submitted_at?: string | null
+          markup_flat_cents?: number | null
+          markup_rate?: number
+          markup_type?: string
+          minimum_premium_cents?: number | null
+          notes?: string | null
+          policy_number: string
+          reporting_frequency?: string | null
+          state_fund_account?: string | null
+          states_covered?: string[]
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          carrier_name?: string
+          company_id?: string
+          created_at?: string
+          effective_date?: string
+          experience_mod?: number
+          expiration_date?: string
+          id?: string
+          is_monopolistic?: boolean
+          last_report_submitted_at?: string | null
+          markup_flat_cents?: number | null
+          markup_rate?: number
+          markup_type?: string
+          minimum_premium_cents?: number | null
+          notes?: string | null
+          policy_number?: string
+          reporting_frequency?: string | null
+          state_fund_account?: string | null
+          states_covered?: string[]
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workers_comp_policies_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
