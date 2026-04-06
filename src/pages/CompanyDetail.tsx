@@ -334,6 +334,8 @@ export default function CompanyDetail() {
         <TabsContent value="compliance"><ComplianceTab tasks={companyCompliance} /></TabsContent>
         <TabsContent value="documents"><DocumentsTab /></TabsContent>
       </Tabs>
+
+      <EditCompanyDialog company={company} open={editOpen} onOpenChange={setEditOpen} />
     </div>
   );
 }
