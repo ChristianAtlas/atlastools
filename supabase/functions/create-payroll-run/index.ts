@@ -101,6 +101,7 @@ Deno.serve(async (req) => {
       .select("id, pay_type, annual_salary_cents, hourly_rate_cents, pay_frequency")
       .eq("company_id", company_id)
       .eq("status", "active")
+      .eq("pay_frequency", pay_frequency)
       .is("deleted_at", null);
 
     if (empError) {
@@ -118,16 +119,19 @@ Deno.serve(async (req) => {
         let regularHours = 0;
 
         if (emp.pay_type === "salary" && emp.annual_salary_cents) {
-          const periodsPerYear = emp.pay_frequency === "weekly" ? 52
-            : emp.pay_frequency === "biweekly" ? 26
-            : emp.pay_frequency === "semimonthly" ? 24
+          const periodsPerYear = pay_frequency === "weekly" ? 52
+            : pay_frequency === "biweekly" ? 26
+            : pay_frequency === "semimonthly" ? 24
             : 12;
           regularPayCents = Math.round(emp.annual_salary_cents / periodsPerYear);
-          regularHours = 80; // default biweekly
+          regularHours = pay_frequency === "weekly" ? 40
+            : pay_frequency === "biweekly" ? 80
+            : pay_frequency === "semimonthly" ? 86.67
+            : 173.33;
         } else if (emp.pay_type === "hourly" && emp.hourly_rate_cents) {
-          regularHours = emp.pay_frequency === "weekly" ? 40
-            : emp.pay_frequency === "biweekly" ? 80
-            : emp.pay_frequency === "semimonthly" ? 86.67
+          regularHours = pay_frequency === "weekly" ? 40
+            : pay_frequency === "biweekly" ? 80
+            : pay_frequency === "semimonthly" ? 86.67
             : 173.33;
           regularPayCents = Math.round(emp.hourly_rate_cents * regularHours);
         }

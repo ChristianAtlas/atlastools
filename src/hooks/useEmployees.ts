@@ -154,7 +154,11 @@ export function useCreateEmployee() {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['employees'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['employees'] });
+      qc.invalidateQueries({ queryKey: ['companies'] });
+      qc.invalidateQueries({ queryKey: ['payroll_runs'] });
+    },
   });
 }
 
@@ -171,7 +175,11 @@ export function useUpdateEmployee() {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['employees'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['employees'] });
+      qc.invalidateQueries({ queryKey: ['companies'] });
+      qc.invalidateQueries({ queryKey: ['payroll_runs'] });
+    },
   });
 }
 

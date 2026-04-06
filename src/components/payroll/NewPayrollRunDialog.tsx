@@ -98,7 +98,9 @@ export function NewPayrollRunDialog({ open, onOpenChange }: NewPayrollRunDialogP
 
   // Fetch active employees for selected company
   const { data: employees = [] } = useEmployees(companyId || undefined);
-  const activeEmployees = employees.filter(e => e.status === 'active');
+  const activeEmployees = employees.filter(
+    (employee) => employee.status === 'active' && employee.pay_frequency === payFrequency,
+  );
 
   // Auto-compute deadline
   const deadline = useMemo(() => computeNextTuesday6pmEST(), []);
@@ -253,7 +255,7 @@ export function NewPayrollRunDialog({ open, onOpenChange }: NewPayrollRunDialogP
               <div>
                 <p className="font-medium text-xs">Employees to Include</p>
                 <p className="text-xs text-muted-foreground">
-                  {activeEmployees.length} active employee{activeEmployees.length !== 1 ? 's' : ''} at {selectedCompany?.name}
+                  {activeEmployees.length} active {payFrequency} employee{activeEmployees.length !== 1 ? 's' : ''} at {selectedCompany?.name}
                 </p>
               </div>
             </div>

@@ -91,7 +91,11 @@ export function useUpdateCompany() {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['companies'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['companies'] });
+      qc.invalidateQueries({ queryKey: ['employees'] });
+      qc.invalidateQueries({ queryKey: ['payroll_runs'] });
+    },
   });
 }
 

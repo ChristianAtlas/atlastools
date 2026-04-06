@@ -108,6 +108,29 @@ export interface PayrollRunEmployeeRow {
   employees?: { first_name: string; last_name: string; pay_type: string; title: string | null } | null;
 }
 
+async function withLiveEmployeeCounts(runs: PayrollRunRow[]): Promise<PayrollRunRow[]> {
+  if (runs.length === 0) return runs;
+
+  const { data, error } = await supabase
+    .from('payroll_run_employees')
+    .select('payroll_run_id, status')
+    .in('payroll_run_id', runs.map((run) => run.id));
+
+  if (error) throw error;
+
+  const counts = new Map<string, number>();
+
+  for (const row of data ?? []) {
+    if (row.status === 'excluded') continue;
+    counts.set(row.payroll_run_id, (counts.get(row.payroll_run_id) ?? 0) + 1);
+  }
+
+  return runs.map((run) => ({
+    ...run,
+    employee_count: counts.get(run.id) ?? 0,
+  }));
+}
+
 export function usePayrollRuns(companyId?: string) {
   return useQuery({
     queryKey: ['payroll_runs', companyId],
@@ -122,7 +145,8 @@ export function usePayrollRuns(companyId?: string) {
       }
       const { data, error } = await query;
       if (error) throw error;
-      return (data ?? []) as unknown as PayrollRunRow[];
+
+      return withLiveEmployeeCounts((data ?? []) as unknown as PayrollRunRow[]);
     },
   });
 }
@@ -137,7 +161,9 @@ export function usePayrollRun(id: string | undefined) {
         .eq('id', id!)
         .single();
       if (error) throw error;
-      return data as unknown as PayrollRunRow;
+
+      const [run] = await withLiveEmployeeCounts([data as unknown as PayrollRunRow]);
+      return run;
     },
     enabled: !!id,
   });
