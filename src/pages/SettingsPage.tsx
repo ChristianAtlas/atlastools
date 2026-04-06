@@ -15,7 +15,7 @@ import { StatCard } from '@/components/StatCard';
 import { toast } from 'sonner';
 import {
   Building2, DollarSign, Receipt, CreditCard, Shield, Users, Zap, Plug, Bell, History,
-  Building, UserCheck, Key, FileText, Search, Settings, Save, RotateCcw, ChevronRight,
+  Building, UserCheck, Key, FileText, Search, Settings as SettingsIcon, Save, RotateCcw, ChevronRight,
   AlertTriangle, CheckCircle2, Clock, Edit2, X
 } from 'lucide-react';
 import {
@@ -81,7 +81,7 @@ function EnterpriseSettingsTab() {
       {/* Left Nav */}
       <div className="w-56 shrink-0 space-y-1">
         {SETTING_CATEGORIES.map(cat => {
-          const Icon = ICON_MAP[cat.icon] || Settings;
+          const Icon = ICON_MAP[cat.icon] || SettingsIcon;
           return (
             <button
               key={cat.key}
@@ -358,7 +358,7 @@ function ClientSettingsTab() {
         </button>
         <Separator className="my-2" />
         {CLIENT_SETTING_SECTIONS.map(sec => {
-          const Icon = ICON_MAP[sec.icon] || Settings;
+          const Icon = ICON_MAP[sec.icon] || SettingsIcon;
           return (
             <button
               key={sec.key}
@@ -728,7 +728,7 @@ export default function SettingsPage() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 animate-in-up stagger-1">
-        <StatCard title="Enterprise Settings" value={String(ENTERPRISE_SETTING_DEFS.length)} icon={Settings} />
+        <StatCard title="Enterprise Settings" value={String(ENTERPRISE_SETTING_DEFS.length)} icon={SettingsIcon} />
         <StatCard title="Changes This Month" value={String(thisMonthChanges)} icon={History} />
         <StatCard title="Active Clients" value={String(companies.filter(c => c.status === 'active').length)} icon={Building2} />
         <StatCard title="Clients on Hold" value={String(holdCompanies)} icon={AlertTriangle} />
