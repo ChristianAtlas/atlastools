@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, Building2, Users, DollarSign, FileText, ShieldCheck, FolderOpen,
@@ -10,6 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useCompany, type CompanyRow } from '@/hooks/useCompanies';
 import { employees as mockEmployees, payrollRuns, invoices, complianceTasks } from '@/lib/mock-data';
 import type { Employee, PayrollRun, Invoice, ComplianceTask } from '@/lib/types';
+import { EditCompanyDialog } from '@/components/companies/EditCompanyDialog';
 
 const formatCurrency = (n: number) =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(n);
