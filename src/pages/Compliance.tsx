@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { PageHeader } from '@/components/PageHeader';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Plus, Building2, Users, Shield, Calendar, Key, AlertTriangle, FileText, FileCheck } from 'lucide-react';
+import { Plus, Building2, Users, Shield, Calendar, Key, AlertTriangle, FileText, FileCheck, UserPlus } from 'lucide-react';
 import { useComplianceItems, useComplianceLicenses } from '@/hooks/useCompliance';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -15,6 +15,7 @@ import { RiskDashboard } from '@/components/compliance/RiskDashboard';
 import { ComplianceItemDialog } from '@/components/compliance/ComplianceItemDialog';
 import { LicenseDialog } from '@/components/compliance/LicenseDialog';
 import { Form8973Tab } from '@/components/compliance/Form8973Tab';
+import { NewHireReportingDirectory } from '@/components/compliance/NewHireReportingDirectory';
 import { computeComplianceScore } from '@/hooks/useCompliance';
 
 const ENTERPRISE_CATEGORIES = ['PEO Licensing', 'CPEO Status', 'Annual Filings', 'SUI Registration', 'Business Entity', 'Workers Comp', 'Compliance Calendar'];
