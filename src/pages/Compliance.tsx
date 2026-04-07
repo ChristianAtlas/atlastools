@@ -218,6 +218,10 @@ export default function Compliance() {
           </div>
           <LicensesTable licenses={licenses} loading={licensesLoading} />
         </TabsContent>
+
+        <TabsContent value="form8973" className="mt-4">
+          <Form8973Tab />
+        </TabsContent>
       </Tabs>
 
       {/* Dialogs */}
