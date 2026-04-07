@@ -67,7 +67,27 @@ export default function Login() {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const [googleLoading, setGoogleLoading] = useState(false);
+
+  const handleGoogleSignIn = async () => {
+    setGoogleLoading(true);
+    try {
+      const result = await lovable.auth.signInWithOAuth('google', {
+        redirect_uri: window.location.origin,
+      });
+      if (result.error) {
+        toast({ title: 'Google sign-in failed', description: String(result.error), variant: 'destructive' });
+        return;
+      }
+      if (result.redirected) return;
+      navigate('/');
+    } catch (err: any) {
+      toast({ title: 'Google sign-in failed', description: err.message, variant: 'destructive' });
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
+
     e.preventDefault();
     setLoading(true);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
