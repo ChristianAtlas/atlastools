@@ -153,7 +153,7 @@ export default function CommunicationWizard() {
         scheduled_at: scheduledAt,
         sent_at: sendMode === 'now' ? new Date().toISOString() : null,
         timezone,
-        creator_name: userName || null,
+        creator_name: creatorName,
       } as any);
 
       await insertRecipients.mutateAsync(
@@ -582,7 +582,7 @@ export default function CommunicationWizard() {
                       reply_to: replyTo || null,
                       status: 'draft',
                       recipient_count: recipients.length,
-                      creator_name: userName || null,
+                      creator_name: creatorName,
                     } as any);
                     toast.success('Draft saved!');
                     navigate('/communications');
