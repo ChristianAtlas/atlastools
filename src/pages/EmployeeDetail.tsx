@@ -33,12 +33,13 @@ function InfoRow({ label, value, icon: Icon }: { label: string; value: string; i
   );
 }
 
-function ProfileTab({ emp }: { emp: EmployeeRow }) {
+function ProfileTab({ emp, onEdit }: { emp: EmployeeRow; onEdit?: () => void }) {
   return (
     <div className="grid gap-5 md:grid-cols-2 animate-in-up">
       <Card>
-        <CardHeader className="pb-3">
+        <CardHeader className="pb-3 flex-row items-center justify-between space-y-0">
           <CardTitle className="text-base">Personal Information</CardTitle>
+          {onEdit && <CardEditButton onClick={onEdit} />}
         </CardHeader>
         <CardContent className="space-y-1">
           <InfoRow icon={Mail} label="Email" value={emp.email} />
@@ -52,8 +53,9 @@ function ProfileTab({ emp }: { emp: EmployeeRow }) {
         </CardContent>
       </Card>
       <Card>
-        <CardHeader className="pb-3">
+        <CardHeader className="pb-3 flex-row items-center justify-between space-y-0">
           <CardTitle className="text-base">Employment Details</CardTitle>
+          {onEdit && <CardEditButton onClick={onEdit} />}
         </CardHeader>
         <CardContent className="space-y-1">
           <InfoRow icon={Building2} label="Company" value={emp.companies?.name ?? '—'} />
@@ -62,12 +64,13 @@ function ProfileTab({ emp }: { emp: EmployeeRow }) {
           <InfoRow icon={Calendar} label="Start Date" value={
             new Date(emp.start_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
           } />
-          <InfoRow label="Employee ID" value={emp.id.substring(0, 8).toUpperCase()} />
+          <InfoRow label="Employee ID" value={emp.mid} />
         </CardContent>
       </Card>
       <Card className="md:col-span-2">
-        <CardHeader className="pb-3">
+        <CardHeader className="pb-3 flex-row items-center justify-between space-y-0">
           <CardTitle className="text-base">Emergency Contact</CardTitle>
+          {onEdit && <CardEditButton onClick={onEdit} />}
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 sm:grid-cols-3">
