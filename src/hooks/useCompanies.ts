@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 export interface CompanyRow {
   id: string;
+  cid: string;
   name: string;
   legal_name: string | null;
   ein: string;
