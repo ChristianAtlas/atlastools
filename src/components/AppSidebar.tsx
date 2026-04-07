@@ -61,18 +61,43 @@ const superAdminNavGroups: NavGroup[] = [
   },
 ];
 
-// Client admin flat nav items
-const clientAdminNavItems: NavItem[] = [
-  { label: 'Dashboard', to: '/', icon: LayoutDashboard },
-  { label: 'Employees', to: '/employees', icon: Users },
-  { label: 'Onboarding', to: '/onboarding', icon: UserPlus },
-  { label: 'Payroll', to: '/payroll', icon: DollarSign },
-  { label: 'Timecards', to: '/timecards', icon: Clock },
-  { label: 'PTO', to: '/pto', icon: CalendarDays },
-  { label: 'Invoices', to: '/invoices', icon: CreditCard },
-  { label: 'Documents', to: '/documents', icon: FileText },
-  { label: 'Tax Management', to: '/client-tax', icon: Landmark },
-  { label: 'Reports', to: '/reports', icon: BarChart3 },
+// Client admin grouped nav
+const clientAdminNavGroups: NavGroup[] = [
+  {
+    label: 'Operations',
+    items: [
+      { label: 'Dashboard', to: '/', icon: LayoutDashboard },
+      { label: 'Employees', to: '/employees', icon: Users },
+      { label: 'Onboarding', to: '/onboarding', icon: UserPlus },
+    ],
+  },
+  {
+    label: 'Payroll',
+    items: [
+      { label: 'Timecards', to: '/timecards', icon: Clock },
+      { label: 'Payroll', to: '/payroll', icon: DollarSign },
+    ],
+  },
+  {
+    label: 'HR & People',
+    items: [
+      { label: 'PTO', to: '/pto', icon: CalendarDays },
+    ],
+  },
+  {
+    label: 'Finance & Admin',
+    items: [
+      { label: 'Invoices', to: '/invoices', icon: CreditCard },
+      { label: 'Reports', to: '/reports', icon: BarChart3 },
+    ],
+  },
+  {
+    label: 'Tax & Compliance',
+    items: [
+      { label: 'Tax Management', to: '/client-tax', icon: Landmark },
+      { label: 'Documents', to: '/documents', icon: FileText },
+    ],
+  },
 ];
 
 // Employee-only nav items
