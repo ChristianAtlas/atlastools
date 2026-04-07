@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils';
 import {
   LayoutDashboard, Users, Building2, CreditCard, FileText, Workflow,
   ClipboardCheck, ScrollText, BarChart3, Settings, DollarSign,
-  CalendarDays, UserPlus, ShieldCheck, Clock, Heart, User, Landmark, Banknote
+  CalendarDays, UserPlus, ShieldCheck, Clock, Heart, User, Landmark, Banknote, Mail
 } from 'lucide-react';
 import type { AppRole } from '@/contexts/AuthContext';
 import logoImg from '@/assets/logo.png';
@@ -19,6 +19,7 @@ interface NavItem {
 const adminNavItems: NavItem[] = [
   { label: 'Dashboard', to: '/', icon: LayoutDashboard },
   { label: 'Companies', to: '/companies', icon: Building2, roles: ['super_admin'] },
+  { label: 'Communications', to: '/communications', icon: Mail, roles: ['super_admin'] },
   { label: 'Employees', to: '/employees', icon: Users, roles: ['super_admin', 'client_admin'] },
   { label: 'Onboarding', to: '/onboarding', icon: UserPlus, roles: ['super_admin', 'client_admin'] },
   { label: 'Payroll', to: '/payroll', icon: DollarSign, roles: ['super_admin', 'client_admin'] },

@@ -30,6 +30,9 @@ import WorkersComp from "@/pages/WorkersComp";
 import Timecards from "@/pages/Timecards";
 import TaxManagement from "@/pages/TaxManagement";
 import AchTool from "@/pages/AchTool";
+import Communications from "@/pages/Communications";
+import CommunicationWizard from "@/pages/CommunicationWizard";
+import CommunicationDetail from "@/pages/CommunicationDetail";
 import NotFound from "@/pages/NotFound";
 
 // Employee portal pages
@@ -86,6 +89,9 @@ const App = () => (
               <Route path="/compliance" element={<Compliance />} />
               <Route path="/tax-management" element={<TaxManagement />} />
               <Route path="/ach-tool" element={<AchTool />} />
+              <Route path="/communications" element={<Communications />} />
+              <Route path="/communications/new" element={<CommunicationWizard />} />
+              <Route path="/communications/:id" element={<CommunicationDetail />} />
               <Route path="/audit-log" element={<AuditLog />} />
               <Route path="/reports" element={<Reports />} />
               <Route path="/settings" element={<SettingsPage />} />
