@@ -356,7 +356,9 @@ export default function Payroll() {
           <Clock className="h-4 w-4 text-warning shrink-0" />
           <div>
             <p className="font-medium text-xs">Bi-Weekly Cutoff</p>
-            <p className="text-xs text-muted-foreground">Timecards: Mon 10:00 AM EST · Approval: Tue 5:00 PM EST · Wire: Thu 1:00 PM EST</p>
+            <p className="text-xs text-muted-foreground whitespace-pre-line">
+              {"Timecard Approval: Mon 10:00 AM EST\nPayroll Approval: Tue 5:00 PM EST\nWire (if late): Thurs 1:00 PM EST"}
+            </p>
           </div>
         </div>
         <div className="flex items-center gap-2.5 rounded-lg border border-primary/30 bg-primary/5 px-4 py-3">
