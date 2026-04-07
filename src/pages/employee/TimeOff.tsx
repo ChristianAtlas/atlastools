@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { CalendarDays, Plus, Loader2 } from 'lucide-react';
+import { CalendarDays, Plus, Loader2, PartyPopper } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -12,10 +12,12 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { PageHeader } from '@/components/PageHeader';
 import { useCurrentEmployee } from '@/hooks/useCurrentEmployee';
 import { usePTOBalances, usePTORequests, usePTOPolicies, hoursToDays, type PTOBalance, type PTORequest } from '@/hooks/usePTO';
-import { format, eachDayOfInterval, isWeekend, parseISO } from 'date-fns';
+import { useCompanyHolidays } from '@/hooks/useCompanyHolidays';
+import { format, eachDayOfInterval, isWeekend, parseISO, isAfter, isBefore } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 
 const statusColors: Record<string, string> = {
   pending: 'bg-warning/10 text-warning border-warning/30',
