@@ -256,8 +256,41 @@ function NsfDetailDialog({ nsfCase, open, onClose }: { nsfCase: NsfEventRow | nu
   );
 }
 
+// ─── Wire Instructions Card (Client Admin) ───
+function WireInstructionsCard() {
+  return (
+    <Card className="shadow-sm border-amber-200 dark:border-amber-800">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-base flex items-center gap-2">
+          <Building2 className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+          Wire Instructions for Late Payroll Funding
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3 text-sm">
+        <p className="text-muted-foreground">
+          If your payroll submission was late, you may be required to fund via wire transfer. Use the details below:
+        </p>
+        <div className="grid grid-cols-2 gap-x-6 gap-y-2 bg-muted/50 rounded-lg p-4">
+          <div><span className="text-muted-foreground">Bank Name</span><p className="font-medium">First National Bank</p></div>
+          <div><span className="text-muted-foreground">Routing Number</span><p className="font-mono font-medium">021000021</p></div>
+          <div><span className="text-muted-foreground">Account Number</span><p className="font-mono font-medium">•••••7890</p></div>
+          <div><span className="text-muted-foreground">Account Name</span><p className="font-medium">AtlasOne Payroll Trust</p></div>
+          <div className="col-span-2">
+            <span className="text-muted-foreground">Reference</span>
+            <p className="font-medium">Include your Company ID and payroll period in the wire memo</p>
+          </div>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Wire transfers typically settle same-day if initiated before 2:00 PM EST. Contact your account manager for questions.
+        </p>
+      </CardContent>
+    </Card>
+  );
+}
+
 // ─── Main Page ───
 export default function Invoices() {
+  const { isSuperAdmin } = useAuth();
   const { data: invoices = [], isLoading } = useInvoices();
   const { data: nsfEvents = [] } = useNsfEvents();
   const { data: billingProfiles = [] } = useBillingProfiles();
@@ -304,12 +337,16 @@ export default function Invoices() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Billing & Invoices" description="Invoice generation, payment tracking, and collections management" actions={
-        <Button onClick={handleGenerateMonthly} disabled={generateMonthly.isPending}>
-          <CalendarDays className="h-4 w-4 mr-2" />
-          {generateMonthly.isPending ? 'Generating...' : 'Generate Monthly Invoices'}
-        </Button>
-      } />
+      <PageHeader
+        title={isSuperAdmin ? "Billing & Invoices" : "My Invoices"}
+        description={isSuperAdmin ? "Invoice generation, payment tracking, and collections management" : "View your company invoices and payment history"}
+        actions={isSuperAdmin ? (
+          <Button onClick={handleGenerateMonthly} disabled={generateMonthly.isPending}>
+            <CalendarDays className="h-4 w-4 mr-2" />
+            {generateMonthly.isPending ? 'Generating...' : 'Generate Monthly Invoices'}
+          </Button>
+        ) : undefined}
+      />
 
       {/* KPI Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
