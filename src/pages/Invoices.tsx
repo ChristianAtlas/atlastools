@@ -69,7 +69,7 @@ function StatCard({ icon: Icon, label, value, iconColor }: { icon: React.Element
 }
 
 // ─── Invoice Detail Dialog ───
-function InvoiceDetailDialog({ invoice, open, onClose }: { invoice: InvoiceRow | null; open: boolean; onClose: () => void }) {
+function InvoiceDetailDialog({ invoice, open, onClose, isSuperAdmin }: { invoice: InvoiceRow | null; open: boolean; onClose: () => void; isSuperAdmin: boolean }) {
   const { data: lineItems } = useInvoiceLineItems(invoice?.id);
   const updateStatus = useUpdateInvoiceStatus();
 
