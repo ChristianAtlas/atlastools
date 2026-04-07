@@ -329,7 +329,7 @@ export type Database = {
           address_line1?: string | null
           address_line2?: string | null
           business_description?: string | null
-          cid: string
+          cid?: string
           city?: string | null
           created_at?: string
           date_of_incorporation?: string | null
@@ -1267,7 +1267,7 @@ export type Database = {
           id?: string
           last_name: string
           manager_id?: string | null
-          mid: string
+          mid?: string
           pay_frequency?: Database["public"]["Enums"]["pay_frequency"]
           pay_type?: Database["public"]["Enums"]["pay_type"]
           personal_email?: string | null
