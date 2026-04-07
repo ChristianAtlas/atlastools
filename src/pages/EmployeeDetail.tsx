@@ -175,13 +175,16 @@ function CompensationTab({ emp, history, onEdit }: { emp: EmployeeRow; history: 
   );
 }
 
-function TaxInfoTab() {
+function TaxInfoTab({ onEdit }: { onEdit?: () => void }) {
   return (
     <div className="grid gap-5 md:grid-cols-2 animate-in-up">
       <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base">Federal W-4</CardTitle>
-          <CardDescription>Last updated Jan 15, 2025</CardDescription>
+        <CardHeader className="pb-3 flex-row items-center justify-between space-y-0">
+          <div>
+            <CardTitle className="text-base">Federal W-4</CardTitle>
+            <CardDescription>Last updated Jan 15, 2025</CardDescription>
+          </div>
+          {onEdit && <CardEditButton onClick={onEdit} />}
         </CardHeader>
         <CardContent className="space-y-1">
           <InfoRow label="Filing Status" value="Married Filing Jointly" />
@@ -191,9 +194,12 @@ function TaxInfoTab() {
         </CardContent>
       </Card>
       <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base">State Tax</CardTitle>
-          <CardDescription>Texas — no state income tax</CardDescription>
+        <CardHeader className="pb-3 flex-row items-center justify-between space-y-0">
+          <div>
+            <CardTitle className="text-base">State Tax</CardTitle>
+            <CardDescription>Texas — no state income tax</CardDescription>
+          </div>
+          {onEdit && <CardEditButton onClick={onEdit} />}
         </CardHeader>
         <CardContent className="space-y-1">
           <InfoRow label="Work State" value="Texas" />
@@ -224,13 +230,16 @@ function TaxInfoTab() {
   );
 }
 
-function DirectDepositTab() {
+function DirectDepositTab({ onEdit }: { onEdit?: () => void }) {
   return (
     <div className="grid gap-5 md:grid-cols-2 animate-in-up">
       <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base">Primary Account</CardTitle>
-          <CardDescription>Checking — receives remainder</CardDescription>
+        <CardHeader className="pb-3 flex-row items-center justify-between space-y-0">
+          <div>
+            <CardTitle className="text-base">Primary Account</CardTitle>
+            <CardDescription>Checking — receives remainder</CardDescription>
+          </div>
+          {onEdit && <CardEditButton onClick={onEdit} />}
         </CardHeader>
         <CardContent className="space-y-1">
           <InfoRow icon={CreditCard} label="Bank" value="Chase Bank" />
@@ -241,9 +250,12 @@ function DirectDepositTab() {
         </CardContent>
       </Card>
       <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base">Secondary Account</CardTitle>
-          <CardDescription>Savings — fixed amount</CardDescription>
+        <CardHeader className="pb-3 flex-row items-center justify-between space-y-0">
+          <div>
+            <CardTitle className="text-base">Secondary Account</CardTitle>
+            <CardDescription>Savings — fixed amount</CardDescription>
+          </div>
+          {onEdit && <CardEditButton onClick={onEdit} />}
         </CardHeader>
         <CardContent className="space-y-1">
           <InfoRow icon={CreditCard} label="Bank" value="Ally Bank" />
