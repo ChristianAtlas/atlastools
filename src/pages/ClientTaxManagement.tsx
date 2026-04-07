@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { PageHeader } from '@/components/PageHeader';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -73,6 +73,24 @@ export default function ClientTaxManagement() {
     },
   });
 
+  // Realtime: auto-refresh employees and SUI rates on changes
+  useEffect(() => {
+    if (!companyId) return;
+    const empChannel = supabase
+      .channel('client-tax-employees')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'employees', filter: `company_id=eq.${companyId}` },
+        () => qc.invalidateQueries({ queryKey: ['company_employees_states', companyId] })
+      )
+      .subscribe();
+    const rateChannel = supabase
+      .channel('client-tax-rates')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'client_sui_rates', filter: `company_id=eq.${companyId}` },
+        () => qc.invalidateQueries({ queryKey: ['client_sui_rates', companyId] })
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(empChannel); supabase.removeChannel(rateChannel); };
+  }, [companyId, qc]);
+
   // Compute current rates (most recent per state)
   const today = new Date().toISOString().slice(0, 10);
   const currentRates: Record<string, ClientSuiRateRow> = {};
@@ -80,6 +98,14 @@ export default function ClientTaxManagement() {
     if (!currentRates[r.state_code] || r.effective_date > currentRates[r.state_code].effective_date) {
       currentRates[r.state_code] = r;
     }
+  }
+
+  // Per-state employee counts
+  const employeesByState: Record<string, number> = {};
+  for (const emp of employees) {
+    if (!emp.state) continue;
+    const st = emp.state.toUpperCase();
+    employeesByState[st] = (employeesByState[st] || 0) + 1;
   }
 
   // Detect states with employees but no SUI rate (only client-reporting states)
@@ -210,7 +236,16 @@ export default function ClientTaxManagement() {
       )}
 
       {/* Summary Cards */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-4">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardDescription>Total Employees</CardDescription>
+            <CardTitle className="text-2xl">{employees.length}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-xs text-muted-foreground">Active &amp; onboarding — updates live</p>
+          </CardContent>
+        </Card>
         <Card>
           <CardHeader className="pb-2">
             <CardDescription>Active SUI Accounts</CardDescription>
@@ -289,37 +324,44 @@ export default function ClientTaxManagement() {
                   <TableHead>State</TableHead>
                   <TableHead>Account Number</TableHead>
                   <TableHead>Rate</TableHead>
+                  <TableHead>Employees</TableHead>
                   <TableHead>Effective Date</TableHead>
                   <TableHead>Rate Notice</TableHead>
                   <TableHead>Notes</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {displayRates.map(r => (
-                  <TableRow key={r.id}>
-                    <TableCell className="font-medium">
-                      {r.state_code}
-                      <span className="text-muted-foreground text-xs ml-1">— {STATE_NAMES[r.state_code]}</span>
-                    </TableCell>
-                    <TableCell className="font-mono text-sm">{r.account_number || '—'}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{(r.rate * 100).toFixed(3)}%</Badge>
-                    </TableCell>
-                    <TableCell className="text-sm">{r.effective_date}</TableCell>
-                    <TableCell>
-                      {r.rate_notice_path ? (
-                        <Badge className="text-xs bg-emerald-100 text-emerald-700 border-emerald-300 gap-1">
-                          <CheckCircle2 className="h-3 w-3" /> Uploaded
-                        </Badge>
-                      ) : (
-                        <Badge variant="secondary" className="text-xs">None</Badge>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">
-                      {r.notes || '—'}
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {displayRates.map(r => {
+                  const empCount = employeesByState[r.state_code] || 0;
+                  return (
+                    <TableRow key={r.id}>
+                      <TableCell className="font-medium">
+                        {r.state_code}
+                        <span className="text-muted-foreground text-xs ml-1">— {STATE_NAMES[r.state_code]}</span>
+                      </TableCell>
+                      <TableCell className="font-mono text-sm">{r.account_number || '—'}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{(r.rate * 100).toFixed(3)}%</Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="secondary" className="text-xs tabular-nums">{empCount}</Badge>
+                      </TableCell>
+                      <TableCell className="text-sm">{r.effective_date}</TableCell>
+                      <TableCell>
+                        {r.rate_notice_path ? (
+                          <Badge className="text-xs bg-emerald-100 text-emerald-700 border-emerald-300 gap-1">
+                            <CheckCircle2 className="h-3 w-3" /> Uploaded
+                          </Badge>
+                        ) : (
+                          <Badge variant="secondary" className="text-xs">None</Badge>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">
+                        {r.notes || '—'}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           )}
