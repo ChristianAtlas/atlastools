@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { CalendarDays, Plus, Loader2 } from 'lucide-react';
+import { CalendarDays, Plus, Loader2, PartyPopper } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -12,10 +12,12 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { PageHeader } from '@/components/PageHeader';
 import { useCurrentEmployee } from '@/hooks/useCurrentEmployee';
 import { usePTOBalances, usePTORequests, usePTOPolicies, hoursToDays, type PTOBalance, type PTORequest } from '@/hooks/usePTO';
-import { format, eachDayOfInterval, isWeekend, parseISO } from 'date-fns';
+import { useCompanyHolidays } from '@/hooks/useCompanyHolidays';
+import { format, eachDayOfInterval, isWeekend, parseISO, isAfter, isBefore } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 
 const statusColors: Record<string, string> = {
   pending: 'bg-warning/10 text-warning border-warning/30',
@@ -44,6 +46,7 @@ export default function TimeOff() {
   const { data: balances = [] } = usePTOBalances(employee?.id, employee?.company_id);
   const { data: requests = [] } = usePTORequests({ employeeId: employee?.id });
   const { data: policies = [] } = usePTOPolicies(employee?.company_id);
+  const { data: holidays = [] } = useCompanyHolidays(employee?.company_id);
   const [open, setOpen] = useState(false);
   const qc = useQueryClient();
 
@@ -218,6 +221,43 @@ export default function TimeOff() {
           )}
         </CardContent>
       </Card>
+      {/* Company Holidays */}
+      {holidays.length > 0 && (
+        <Card className="animate-in-up stagger-3">
+          <CardHeader>
+            <CardTitle className="text-sm flex items-center gap-2">
+              <PartyPopper className="h-4 w-4 text-warning" />
+              Company Observed Holidays
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="divide-y">
+              {holidays
+                .filter(h => {
+                  const d = parseISO(h.date);
+                  return d.getFullYear() === new Date().getFullYear();
+                })
+                .map(h => {
+                  const d = parseISO(h.date);
+                  const isPast = isBefore(d, new Date());
+                  return (
+                    <div key={h.id} className={cn('flex items-center justify-between py-3', isPast && 'opacity-50')}>
+                      <div>
+                        <p className="text-sm font-medium">{h.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {format(d, 'EEEE, MMMM d, yyyy')}
+                        </p>
+                      </div>
+                      <Badge variant={h.is_paid ? 'default' : 'outline'} className="text-[10px]">
+                        {h.is_paid ? 'Paid' : 'Unpaid'}
+                      </Badge>
+                    </div>
+                  );
+                })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
