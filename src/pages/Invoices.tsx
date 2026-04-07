@@ -161,7 +161,7 @@ function InvoiceDetailDialog({ invoice, open, onClose, isSuperAdmin }: { invoice
           </div>
 
           {/* Internal markup details (super admin only) */}
-          {markupItems.length > 0 && (
+          {isSuperAdmin && markupItems.length > 0 && (
             <div className="border rounded-lg p-3 bg-muted/20">
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Internal Markup Details</p>
               <div className="space-y-1">
