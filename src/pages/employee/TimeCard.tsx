@@ -14,7 +14,7 @@ interface DayEntry {
   date: Date;
   start: string;
   end: string;
-  breakMin: string;
+  hours: string;
   notes: string;
 }
 
@@ -28,18 +28,28 @@ function buildWeek(): DayEntry[] {
       date: d,
       start: isWeekend ? '' : '09:00',
       end: isWeekend ? '' : '17:00',
-      breakMin: isWeekend ? '' : '30',
+      hours: isWeekend ? '' : '8',
       notes: '',
     };
   });
 }
 
-function calcHours(start: string, end: string, breakMin: string): number {
+function timeToMinutes(t: string): number {
+  if (!t) return 0;
+  const [h, m] = t.split(':').map(Number);
+  return h * 60 + (m || 0);
+}
+
+function minutesToTime(m: number): string {
+  const h = Math.floor(m / 60) % 24;
+  const min = m % 60;
+  return `${String(h).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
+}
+
+function calcHoursFromTimes(start: string, end: string): number {
   if (!start || !end) return 0;
-  const [sh, sm] = start.split(':').map(Number);
-  const [eh, em] = end.split(':').map(Number);
-  const hours = (eh * 60 + em - sh * 60 - sm - (parseInt(breakMin) || 0)) / 60;
-  return Math.max(0, hours);
+  const diff = (timeToMinutes(end) - timeToMinutes(start)) / 60;
+  return Math.max(0, Math.round(diff * 100) / 100);
 }
 
 export default function TimeCard() {
@@ -55,10 +65,37 @@ export default function TimeCard() {
   }
 
   const update = (i: number, field: keyof DayEntry, val: string) => {
-    setEntries(prev => prev.map((e, idx) => (idx === i ? { ...e, [field]: val } : e)));
+    setEntries(prev =>
+      prev.map((e, idx) => {
+        if (idx !== i) return e;
+        const updated = { ...e, [field]: val };
+
+        if (field === 'hours') {
+          // User typed total hours → auto-fill start/end from 9 AM
+          const hrs = parseFloat(val);
+          if (!isNaN(hrs) && hrs > 0) {
+            const startMin = updated.start ? timeToMinutes(updated.start) : 9 * 60;
+            updated.start = updated.start || '09:00';
+            updated.end = minutesToTime(startMin + Math.round(hrs * 60));
+          }
+        } else if (field === 'start' || field === 'end') {
+          // User changed a time → recalc hours
+          const h = calcHoursFromTimes(
+            field === 'start' ? val : updated.start,
+            field === 'end' ? val : updated.end
+          );
+          updated.hours = h > 0 ? String(h) : '';
+        }
+
+        return updated;
+      })
+    );
   };
 
-  const totalHours = entries.reduce((s, e) => s + calcHours(e.start, e.end, e.breakMin), 0);
+  const totalHours = entries.reduce((s, e) => {
+    const h = parseFloat(e.hours);
+    return s + (isNaN(h) ? 0 : h);
+  }, 0);
   const regularHours = Math.min(totalHours, 40);
   const overtimeHours = Math.max(0, totalHours - 40);
 
@@ -112,36 +149,39 @@ export default function TimeCard() {
                   <th className="text-left py-2 pr-3 font-medium">Day</th>
                   <th className="text-left py-2 px-2 font-medium">Start</th>
                   <th className="text-left py-2 px-2 font-medium">End</th>
-                  <th className="text-left py-2 px-2 font-medium">Break (min)</th>
-                  <th className="text-right py-2 px-2 font-medium">Total</th>
+                  <th className="text-left py-2 px-2 font-medium">Total Hours</th>
                   <th className="text-left py-2 pl-3 font-medium">Notes</th>
                 </tr>
               </thead>
               <tbody>
-                {entries.map((e, i) => {
-                  const hrs = calcHours(e.start, e.end, e.breakMin);
-                  return (
-                    <tr key={i} className="border-b last:border-0">
-                      <td className="py-2 pr-3">
-                        <span className="font-medium">{e.day}</span>
-                        <span className="text-xs text-muted-foreground ml-1.5">{format(e.date, 'M/d')}</span>
-                      </td>
-                      <td className="py-2 px-2">
-                        <Input type="time" value={e.start} onChange={ev => update(i, 'start', ev.target.value)} className="h-8 w-[110px] text-xs" />
-                      </td>
-                      <td className="py-2 px-2">
-                        <Input type="time" value={e.end} onChange={ev => update(i, 'end', ev.target.value)} className="h-8 w-[110px] text-xs" />
-                      </td>
-                      <td className="py-2 px-2">
-                        <Input type="number" value={e.breakMin} onChange={ev => update(i, 'breakMin', ev.target.value)} className="h-8 w-[70px] text-xs" />
-                      </td>
-                      <td className="py-2 px-2 text-right tabular-nums font-medium">{hrs.toFixed(1)}</td>
-                      <td className="py-2 pl-3">
-                        <Input value={e.notes} onChange={ev => update(i, 'notes', ev.target.value)} placeholder="—" className="h-8 text-xs" />
-                      </td>
-                    </tr>
-                  );
-                })}
+                {entries.map((e, i) => (
+                  <tr key={i} className="border-b last:border-0">
+                    <td className="py-2 pr-3">
+                      <span className="font-medium">{e.day}</span>
+                      <span className="text-xs text-muted-foreground ml-1.5">{format(e.date, 'M/d')}</span>
+                    </td>
+                    <td className="py-2 px-2">
+                      <Input type="time" value={e.start} onChange={ev => update(i, 'start', ev.target.value)} className="h-8 w-[110px] text-xs" />
+                    </td>
+                    <td className="py-2 px-2">
+                      <Input type="time" value={e.end} onChange={ev => update(i, 'end', ev.target.value)} className="h-8 w-[110px] text-xs" />
+                    </td>
+                    <td className="py-2 px-2">
+                      <Input
+                        type="number"
+                        step="0.5"
+                        min="0"
+                        max="24"
+                        value={e.hours}
+                        onChange={ev => update(i, 'hours', ev.target.value)}
+                        className="h-8 w-[80px] text-xs"
+                      />
+                    </td>
+                    <td className="py-2 pl-3">
+                      <Input value={e.notes} onChange={ev => update(i, 'notes', ev.target.value)} placeholder="—" className="h-8 text-xs" />
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
