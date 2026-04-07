@@ -427,6 +427,7 @@ export default function EmployeeDetail() {
   const { data: emp, isLoading, error } = useEmployee(id);
   const { data: compHistory = [] } = useCompensationRecords(id);
   const [editOpen, setEditOpen] = useState(false);
+  const [editTab, setEditTab] = useState('profile');
   const { user, profile, role } = useAuth();
   const { data: rawNotes = [] } = useInternalNotes('employee', id);
   const addNote = useAddInternalNote();
