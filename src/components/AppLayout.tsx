@@ -4,12 +4,13 @@ import { NotificationBell, type Notification } from '@/components/workflow/Notif
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { LogOut, Menu } from 'lucide-react';
+import { LogOut, Menu, Building2 } from 'lucide-react';
 import { ImpersonationProvider } from '@/contexts/ImpersonationContext';
 import { ImpersonationBanner } from '@/components/ImpersonationBanner';
 import { ImpersonationSelector } from '@/components/ImpersonationSelector';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useCompanies } from '@/hooks/useCompanies';
 
 const initialNotifications: Notification[] = [
   { id: 'n1', title: 'Payroll approval due', message: 'Meridian Construction payroll needs approval by Tuesday 6 PM EST.', type: 'warning', read: false, timestamp: new Date(Date.now() - 1800000).toISOString(), actionUrl: '/payroll/pr1' },
