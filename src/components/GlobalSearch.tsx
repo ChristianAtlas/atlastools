@@ -64,7 +64,7 @@ export function GlobalSearch() {
     const ilike = `%${trimmed}%`;
 
     try {
-      const promises: Promise<void>[] = [];
+      const promises: PromiseLike<void>[] = [];
 
       if (canSearchCompanies) {
         promises.push(
