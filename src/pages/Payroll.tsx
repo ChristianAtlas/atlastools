@@ -197,7 +197,7 @@ export default function Payroll() {
   const [quickFilter, setQuickFilter] = useState<QuickFilter>('all');
   const [companyFilter, setCompanyFilter] = useState('all');
   const [frequencyFilter, setFrequencyFilter] = useState('all');
-  const [statusFilter, setStatusFilter] = useState('all');
+  
   const [fundingFilter, setFundingFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -208,7 +208,7 @@ export default function Payroll() {
     if (quickFilter !== 'all') result = result.filter(r => matchesQuickFilter(r, quickFilter));
     if (companyFilter !== 'all') result = result.filter(r => r.company_id === companyFilter);
     if (frequencyFilter !== 'all') result = result.filter(r => r.pay_frequency === frequencyFilter);
-    if (statusFilter !== 'all') result = result.filter(r => r.status === statusFilter);
+    
     if (fundingFilter !== 'all') result = result.filter(r => r.funding_status === fundingFilter);
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
@@ -219,7 +219,7 @@ export default function Payroll() {
       );
     }
     return result;
-  }, [runs, quickFilter, companyFilter, frequencyFilter, statusFilter, fundingFilter, searchQuery]);
+  }, [runs, quickFilter, companyFilter, frequencyFilter, fundingFilter, searchQuery]);
 
   const tabCounts = useMemo(() => {
     const counts: Record<string, number> = {};
