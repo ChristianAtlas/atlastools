@@ -59,7 +59,13 @@ export function useCompanies(search?: string) {
   const qc = useQueryClient();
 
   useEffect(() => {
-    const channelName = `companies-live-${search ?? 'all'}`;
+    const channelName = `companies-list-${search ?? 'all'}`;
+    // Remove any existing channel with the same name first to avoid duplicate subscription errors
+    const existing = supabase.getChannels().find(c => c.topic === `realtime:${channelName}`);
+    if (existing) {
+      supabase.removeChannel(existing);
+    }
+
     const channel = supabase
       .channel(channelName)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'companies' }, () => {
@@ -86,8 +92,14 @@ export function useCompany(id: string | undefined) {
   useEffect(() => {
     if (!id) return;
 
+    const channelName = `company-detail-${id}`;
+    const existing = supabase.getChannels().find(c => c.topic === `realtime:${channelName}`);
+    if (existing) {
+      supabase.removeChannel(existing);
+    }
+
     const channel = supabase
-      .channel(`company-${id}`)
+      .channel(channelName)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'companies', filter: `id=eq.${id}` }, () => {
         qc.invalidateQueries({ queryKey: ['companies', id] });
         qc.invalidateQueries({ queryKey: ['companies'] });
