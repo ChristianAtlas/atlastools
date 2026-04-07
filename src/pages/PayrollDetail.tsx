@@ -392,7 +392,7 @@ function SummaryCards({ run, eligibleCount, blockedCount }: { run: PayrollRunRow
             <s.icon className="h-4 w-4 shrink-0" />
             <span className="text-xs font-medium">{s.label}</span>
           </div>
-          <p className="text-2xl font-bold tabular-nums">{s.value}</p>
+          <p className="text-2xl font-bold tabular-nums whitespace-nowrap">{s.value}</p>
         </CardContent></Card>
       ))}
     </div>
