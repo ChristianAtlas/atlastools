@@ -394,6 +394,125 @@ export type Database = {
           },
         ]
       }
+      communication_recipients: {
+        Row: {
+          communication_id: string
+          created_at: string
+          delivery_status: string
+          email: string
+          entity_id: string
+          entity_label: string
+          entity_type: string
+          id: string
+        }
+        Insert: {
+          communication_id: string
+          created_at?: string
+          delivery_status?: string
+          email: string
+          entity_id: string
+          entity_label: string
+          entity_type: string
+          id?: string
+        }
+        Update: {
+          communication_id?: string
+          created_at?: string
+          delivery_status?: string
+          email?: string
+          entity_id?: string
+          entity_label?: string
+          entity_type?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "communication_recipients_communication_id_fkey"
+            columns: ["communication_id"]
+            isOneToOne: false
+            referencedRelation: "communications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      communications: {
+        Row: {
+          attachments: Json | null
+          audience_type: string
+          body_html: string
+          cancelled_at: string | null
+          contact_type: string
+          created_at: string
+          created_by: string | null
+          creator_name: string | null
+          from_name: string
+          id: string
+          lock_minutes: number
+          recipient_count: number
+          reply_to: string | null
+          scheduled_at: string | null
+          segment_id: string | null
+          segment_name: string | null
+          selection_method: string
+          sent_at: string | null
+          status: string
+          subject: string
+          timezone: string
+          updated_at: string
+          upload_summary: Json | null
+        }
+        Insert: {
+          attachments?: Json | null
+          audience_type: string
+          body_html?: string
+          cancelled_at?: string | null
+          contact_type?: string
+          created_at?: string
+          created_by?: string | null
+          creator_name?: string | null
+          from_name?: string
+          id?: string
+          lock_minutes?: number
+          recipient_count?: number
+          reply_to?: string | null
+          scheduled_at?: string | null
+          segment_id?: string | null
+          segment_name?: string | null
+          selection_method?: string
+          sent_at?: string | null
+          status?: string
+          subject?: string
+          timezone?: string
+          updated_at?: string
+          upload_summary?: Json | null
+        }
+        Update: {
+          attachments?: Json | null
+          audience_type?: string
+          body_html?: string
+          cancelled_at?: string | null
+          contact_type?: string
+          created_at?: string
+          created_by?: string | null
+          creator_name?: string | null
+          from_name?: string
+          id?: string
+          lock_minutes?: number
+          recipient_count?: number
+          reply_to?: string | null
+          scheduled_at?: string | null
+          segment_id?: string | null
+          segment_name?: string | null
+          selection_method?: string
+          sent_at?: string | null
+          status?: string
+          subject?: string
+          timezone?: string
+          updated_at?: string
+          upload_summary?: Json | null
+        }
+        Relationships: []
+      }
       companies: {
         Row: {
           address_line1: string | null
@@ -3024,6 +3143,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      saved_segments: {
+        Row: {
+          category: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          filters: Json
+          id: string
+          is_system: boolean
+          name: string
+          recipient_count_cache: number | null
+          target_type: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          filters?: Json
+          id?: string
+          is_system?: boolean
+          name: string
+          recipient_count_cache?: number | null
+          target_type: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          filters?: Json
+          id?: string
+          is_system?: boolean
+          name?: string
+          recipient_count_cache?: number | null
+          target_type?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       setting_audit_logs: {
         Row: {
