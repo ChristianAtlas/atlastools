@@ -747,6 +747,7 @@ export default function ClientBenefitsAdmin() {
               </>
             )}
           </div>
+        </TabsContent>
       </Tabs>
     </div>
   );
