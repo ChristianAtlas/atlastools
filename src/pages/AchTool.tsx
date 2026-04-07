@@ -54,13 +54,22 @@ export default function AchTool() {
   const [collectionDate, setCollectionDate] = useState('');
   const [internalNote, setInternalNote] = useState('');
 
-  if (role && role !== 'super_admin') {
-    return <Navigate to="/" replace />;
-  }
-
   const settleDate = collectionDate ? calculateSettleDate(collectionDate) : '';
 
   const entityLabel = useMemo(() => {
+    if (!entityId) return '';
+    if (entityType === 'company') {
+      const c = companies.find(co => co.id === entityId);
+      return c ? `${c.cid} – ${c.name}` : '';
+    } else {
+      const e = employees.find(em => em.id === entityId);
+      return e ? `${e.mid} – ${e.first_name} ${e.last_name}` : '';
+    }
+  }, [entityId, entityType, companies, employees]);
+
+  if (role && role !== 'super_admin') {
+    return <Navigate to="/" replace />;
+  }
     if (!entityId) return '';
     if (entityType === 'company') {
       const c = companies.find(co => co.id === entityId);
