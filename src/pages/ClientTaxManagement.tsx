@@ -103,6 +103,11 @@ export default function ClientTaxManagement() {
   const [submitting, setSubmitting] = useState(false);
   const [search, setSearch] = useState('');
 
+  // Role guard — must be after all hooks
+  if (role && role !== 'client_admin') {
+    return <Navigate to="/" replace />;
+  }
+
   const resetForm = () => {
     setFormState('');
     setFormRate('');
