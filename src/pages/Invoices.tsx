@@ -20,8 +20,9 @@ import { toast } from 'sonner';
 import {
   DollarSign, FileText, TrendingUp, AlertTriangle, Clock, Send,
   Download, CheckCircle, XCircle, RefreshCw, Search, Filter,
-  CreditCard, Ban, CalendarDays, Users, ArrowUpRight, Eye,
+  CreditCard, Ban, CalendarDays, Users, ArrowUpRight, Eye, Building2,
 } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 const fmt = (cents: number) => centsToUSD(cents);
 const fmtDate = (d: string) => d ? new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—';
