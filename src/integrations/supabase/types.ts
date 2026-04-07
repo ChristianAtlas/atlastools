@@ -316,6 +316,7 @@ export type Database = {
           mailing_zip: string | null
           naics_code: string | null
           name: string
+          premier_date: string | null
           primary_contact_email: string | null
           primary_contact_name: string
           primary_contact_phone: string | null
@@ -347,6 +348,7 @@ export type Database = {
           mailing_zip?: string | null
           naics_code?: string | null
           name: string
+          premier_date?: string | null
           primary_contact_email?: string | null
           primary_contact_name: string
           primary_contact_phone?: string | null
@@ -378,6 +380,7 @@ export type Database = {
           mailing_zip?: string | null
           naics_code?: string | null
           name?: string
+          premier_date?: string | null
           primary_contact_email?: string | null
           primary_contact_name?: string
           primary_contact_phone?: string | null
@@ -1483,6 +1486,113 @@ export type Database = {
           value?: Json
         }
         Relationships: []
+      }
+      form_8973_filings: {
+        Row: {
+          client_address_line1: string | null
+          client_address_line2: string | null
+          client_city: string | null
+          client_contact_email: string | null
+          client_contact_name: string | null
+          client_contact_phone: string | null
+          client_ein: string | null
+          client_legal_name: string | null
+          client_state: string | null
+          client_zip: string | null
+          company_id: string
+          contract_begin_date: string
+          contract_end_date: string | null
+          cpeo_ein: string
+          cpeo_name: string
+          created_at: string
+          created_by: string | null
+          id: string
+          irs_confirmation_number: string | null
+          irs_response_date: string | null
+          is_new_contract: boolean
+          notes: string | null
+          signature_requested_at: string | null
+          signature_requested_by: string | null
+          signed_at: string | null
+          signer_name: string | null
+          signer_title: string | null
+          status: string
+          submitted_to_irs_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          client_address_line1?: string | null
+          client_address_line2?: string | null
+          client_city?: string | null
+          client_contact_email?: string | null
+          client_contact_name?: string | null
+          client_contact_phone?: string | null
+          client_ein?: string | null
+          client_legal_name?: string | null
+          client_state?: string | null
+          client_zip?: string | null
+          company_id: string
+          contract_begin_date: string
+          contract_end_date?: string | null
+          cpeo_ein?: string
+          cpeo_name?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          irs_confirmation_number?: string | null
+          irs_response_date?: string | null
+          is_new_contract?: boolean
+          notes?: string | null
+          signature_requested_at?: string | null
+          signature_requested_by?: string | null
+          signed_at?: string | null
+          signer_name?: string | null
+          signer_title?: string | null
+          status?: string
+          submitted_to_irs_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          client_address_line1?: string | null
+          client_address_line2?: string | null
+          client_city?: string | null
+          client_contact_email?: string | null
+          client_contact_name?: string | null
+          client_contact_phone?: string | null
+          client_ein?: string | null
+          client_legal_name?: string | null
+          client_state?: string | null
+          client_zip?: string | null
+          company_id?: string
+          contract_begin_date?: string
+          contract_end_date?: string | null
+          cpeo_ein?: string
+          cpeo_name?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          irs_confirmation_number?: string | null
+          irs_response_date?: string | null
+          is_new_contract?: boolean
+          notes?: string | null
+          signature_requested_at?: string | null
+          signature_requested_by?: string | null
+          signed_at?: string | null
+          signer_name?: string | null
+          signer_title?: string | null
+          status?: string
+          submitted_to_irs_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "form_8973_filings_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       funding_events: {
         Row: {
