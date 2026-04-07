@@ -160,9 +160,9 @@ export function AppSidebar({ userName, userInitials, roleLabel, role, onNavClick
 
       {/* Nav */}
       <nav className="flex-1 overflow-y-auto py-3 px-3 scrollbar-thin">
-        {isSuperAdmin ? (
+        {(isSuperAdmin || isClientAdmin) ? (
           <div className="space-y-4">
-            {superAdminNavGroups.map((group) => (
+            {(isSuperAdmin ? superAdminNavGroups : clientAdminNavGroups).map((group) => (
               <div key={group.label}>
                 <p className="px-2.5 pb-1.5 text-[11px] font-semibold uppercase tracking-wider text-sidebar-muted">
                   {group.label}
@@ -175,7 +175,7 @@ export function AppSidebar({ userName, userInitials, roleLabel, role, onNavClick
           </div>
         ) : (
           <ul className="space-y-0.5">
-            {flatItems.map(renderNavItem)}
+            {employeeNavItems.map(renderNavItem)}
           </ul>
         )}
       </nav>
