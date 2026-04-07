@@ -428,6 +428,42 @@ export type Database = {
           },
         ]
       }
+      company_holidays: {
+        Row: {
+          company_id: string
+          created_at: string
+          created_by: string | null
+          date: string
+          id: string
+          is_paid: boolean
+          name: string
+          notes: string | null
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          date: string
+          id?: string
+          is_paid?: boolean
+          name: string
+          notes?: string | null
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          date?: string
+          id?: string
+          is_paid?: boolean
+          name?: string
+          notes?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       company_plans: {
         Row: {
           company_id: string
