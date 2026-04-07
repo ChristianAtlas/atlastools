@@ -387,12 +387,12 @@ function SummaryCards({ run, eligibleCount, blockedCount }: { run: PayrollRunRow
         { label: 'Eligible', value: String(eligibleCount), icon: CheckCircle2, color: 'text-success' },
         { label: 'Blocked', value: String(blockedCount), icon: ShieldAlert, color: blockedCount > 0 ? 'text-destructive' : 'text-success' },
       ].map(s => (
-        <Card key={s.label} className="flex-1 min-w-[140px]"><CardContent className="flex items-center gap-3 py-3 px-4">
-          <s.icon className={`h-5 w-5 shrink-0 ${(s as any).color ?? 'text-muted-foreground'}`} />
-          <div className="flex items-baseline gap-2 min-w-0">
-            <span className="text-xs text-muted-foreground whitespace-nowrap">{s.label}</span>
-            <span className="text-lg font-semibold tabular-nums whitespace-nowrap">{s.value}</span>
+        <Card key={s.label} className="flex-1 min-w-[130px]"><CardContent className="pt-4 pb-3 px-4">
+          <div className={`flex items-center gap-1.5 mb-1 ${(s as any).color ?? 'text-muted-foreground'}`}>
+            <s.icon className="h-4 w-4 shrink-0" />
+            <span className="text-xs font-medium">{s.label}</span>
           </div>
+          <p className="text-2xl font-bold tabular-nums">{s.value}</p>
         </CardContent></Card>
       ))}
     </div>
