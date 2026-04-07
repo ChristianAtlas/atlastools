@@ -24,7 +24,14 @@ export function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { profile, role, signOut } = useAuth();
   const isMobile = useIsMobile();
+  const isClientAdmin = role === 'client_admin';
+  const isEmployeeRole = role === 'employee';
 
+  // Fetch company info for client admins and employees
+  const { data: companies = [] } = useCompanies();
+  const userCompany = (isClientAdmin || isEmployeeRole) && profile?.company_id
+    ? companies.find(c => c.id === profile.company_id)
+    : null;
   const handleMarkRead = (id: string) => {
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
   };
