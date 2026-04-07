@@ -32,6 +32,7 @@ import TaxManagement from "@/pages/TaxManagement";
 import AchTool from "@/pages/AchTool";
 import BenefitsAdmin from "@/pages/BenefitsAdmin";
 import ClientTaxManagement from "@/pages/ClientTaxManagement";
+import ClientBenefitsAdmin from "@/pages/ClientBenefitsAdmin";
 import Communications from "@/pages/Communications";
 import CommunicationWizard from "@/pages/CommunicationWizard";
 import CommunicationDetail from "@/pages/CommunicationDetail";

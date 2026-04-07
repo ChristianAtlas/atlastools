@@ -87,6 +87,28 @@ export default function ClientBenefitsAdmin() {
   const [planTypeFilter, setPlanTypeFilter] = useState('all');
   const [qleStatusFilter, setQleStatusFilter] = useState('all');
 
+  const filteredEnrollments = useMemo(() => {
+    return MOCK_ENROLLED_EMPLOYEES.filter(e => {
+      if (planTypeFilter !== 'all' && e.planType !== planTypeFilter) return false;
+      if (search) {
+        const q = search.toLowerCase();
+        return e.name.toLowerCase().includes(q) || e.mid.toLowerCase().includes(q) || e.department.toLowerCase().includes(q);
+      }
+      return true;
+    });
+  }, [search, planTypeFilter]);
+
+  const filteredQLEs = useMemo(() => {
+    return MOCK_QLES.filter(q => {
+      if (qleStatusFilter !== 'all' && q.status !== qleStatusFilter) return false;
+      if (search) {
+        const s = search.toLowerCase();
+        return q.employeeName.toLowerCase().includes(s) || q.mid.toLowerCase().includes(s);
+      }
+      return true;
+    });
+  }, [search, qleStatusFilter]);
+
   if (role && role !== 'client_admin') return <Navigate to="/" replace />;
 
   // Summary metrics
