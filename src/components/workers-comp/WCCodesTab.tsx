@@ -7,7 +7,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useWCCodes } from '@/hooks/useWorkersComp';
 import { useCompanies } from '@/hooks/useCompanies';
 import { WCCodeDrawer } from './WCCodeDrawer';
-import { Search, Plus, Pencil } from 'lucide-react';
+import { WCBulkUploadDialog } from './WCBulkUploadDialog';
+import { Search, Plus, Pencil, Upload } from 'lucide-react';
 import { format } from 'date-fns';
 import type { WCCode } from '@/hooks/useWorkersComp';
 
