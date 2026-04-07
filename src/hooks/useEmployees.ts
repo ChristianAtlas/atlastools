@@ -37,6 +37,7 @@ export interface EmployeeRow {
   emergency_contact_relationship: string | null;
   provider_employee_id: string | null;
   avatar_url: string | null;
+  ssn_encrypted: string | null;
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
