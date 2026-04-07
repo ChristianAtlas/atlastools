@@ -70,15 +70,8 @@ export default function AchTool() {
   if (role && role !== 'super_admin') {
     return <Navigate to="/" replace />;
   }
-    if (!entityId) return '';
-    if (entityType === 'company') {
-      const c = companies.find(co => co.id === entityId);
-      return c ? `${c.cid} – ${c.name}` : '';
-    } else {
-      const e = employees.find(em => em.id === entityId);
-      return e ? `${e.mid} – ${e.first_name} ${e.last_name}` : '';
-    }
-  }, [entityId, entityType, companies, employees]);
+
+
 
   const handleSubmit = async () => {
     const amountCents = Math.round(parseFloat(amountStr) * 100);
