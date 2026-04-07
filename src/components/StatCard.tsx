@@ -1,6 +1,7 @@
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 import type { LucideIcon } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface StatCardProps {
   title: string;
@@ -11,12 +12,13 @@ interface StatCardProps {
   className?: string;
   delay?: number;
   href?: string;
+  breakdown?: { label: string; count: number }[];
 }
 
-export function StatCard({ title, value, change, changeType = 'neutral', icon: Icon, className, delay = 0, href }: StatCardProps) {
+export function StatCard({ title, value, change, changeType = 'neutral', icon: Icon, className, delay = 0, href, breakdown }: StatCardProps) {
   const navigate = useNavigate();
 
-  return (
+  const card = (
     <div
       className={cn(
         'rounded-lg border bg-card p-5 shadow-sm transition-shadow duration-200 hover:shadow-md animate-in-up',
@@ -48,4 +50,24 @@ export function StatCard({ title, value, change, changeType = 'neutral', icon: I
       </div>
     </div>
   );
+
+  if (breakdown && breakdown.length > 0) {
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>{card}</TooltipTrigger>
+        <TooltipContent side="bottom" className="max-w-xs">
+          <ul className="space-y-1 text-xs">
+            {breakdown.map(b => (
+              <li key={b.label} className="flex justify-between gap-4">
+                <span>{b.label}</span>
+                <span className="font-semibold tabular-nums">{b.count}</span>
+              </li>
+            ))}
+          </ul>
+        </TooltipContent>
+      </Tooltip>
+    );
+  }
+
+  return card;
 }
