@@ -398,7 +398,7 @@ export default function ClientBenefitsAdmin() {
                         <Label>Employee</Label>
                         <Select><SelectTrigger><SelectValue placeholder="Select employee" /></SelectTrigger>
                           <SelectContent>
-                            {MOCK_ELIGIBLE_EMPLOYEES.map(e => <SelectItem key={e.id} value={e.mid}>{e.name} ({e.mid})</SelectItem>)}
+                            {activeEmployees.map(e => <SelectItem key={e.id} value={e.mid}>{e.first_name} {e.last_name} ({e.mid})</SelectItem>)}
                           </SelectContent>
                         </Select>
                       </div>
