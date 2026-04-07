@@ -14,6 +14,7 @@ import { ComplianceCalendar } from '@/components/compliance/ComplianceCalendar';
 import { RiskDashboard } from '@/components/compliance/RiskDashboard';
 import { ComplianceItemDialog } from '@/components/compliance/ComplianceItemDialog';
 import { LicenseDialog } from '@/components/compliance/LicenseDialog';
+import { Form8973Tab } from '@/components/compliance/Form8973Tab';
 import { computeComplianceScore } from '@/hooks/useCompliance';
 
 const ENTERPRISE_CATEGORIES = ['PEO Licensing', 'CPEO Status', 'Annual Filings', 'SUI Registration', 'Business Entity', 'Workers Comp', 'Compliance Calendar'];
