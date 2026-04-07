@@ -28,6 +28,7 @@ import Signup from "@/pages/Signup";
 import WorkflowDemo from "@/pages/WorkflowDemo";
 import WorkersComp from "@/pages/WorkersComp";
 import Timecards from "@/pages/Timecards";
+import TaxManagement from "@/pages/TaxManagement";
 import NotFound from "@/pages/NotFound";
 
 // Employee portal pages
@@ -82,6 +83,7 @@ const App = () => (
               <Route path="/invoices" element={<Invoices />} />
               <Route path="/documents" element={<Documents />} />
               <Route path="/compliance" element={<Compliance />} />
+              <Route path="/tax-management" element={<TaxManagement />} />
               <Route path="/audit-log" element={<AuditLog />} />
               <Route path="/reports" element={<Reports />} />
               <Route path="/settings" element={<SettingsPage />} />

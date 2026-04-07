@@ -293,6 +293,56 @@ export type Database = {
           },
         ]
       }
+      client_sui_rates: {
+        Row: {
+          company_id: string
+          created_at: string
+          created_by: string | null
+          effective_date: string
+          end_date: string | null
+          id: string
+          notes: string | null
+          rate: number
+          state_code: string
+          updated_at: string
+          uploaded_via: string | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          effective_date: string
+          end_date?: string | null
+          id?: string
+          notes?: string | null
+          rate: number
+          state_code: string
+          updated_at?: string
+          uploaded_via?: string | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          effective_date?: string
+          end_date?: string | null
+          id?: string
+          notes?: string | null
+          rate?: number
+          state_code?: string
+          updated_at?: string
+          uploaded_via?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_sui_rates_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       companies: {
         Row: {
           address_line1: string | null
@@ -2623,6 +2673,42 @@ export type Database = {
           },
         ]
       }
+      peo_sui_rates: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          effective_date: string
+          end_date: string | null
+          id: string
+          notes: string | null
+          rate: number
+          state_code: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          effective_date: string
+          end_date?: string | null
+          id?: string
+          notes?: string | null
+          rate: number
+          state_code: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          effective_date?: string
+          end_date?: string | null
+          id?: string
+          notes?: string | null
+          rate?: number
+          state_code?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       pricing_tiers: {
         Row: {
           created_at: string
@@ -2928,6 +3014,74 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "setting_audit_logs_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sui_adjustments: {
+        Row: {
+          adjustment_cents: number
+          adjustment_type: string
+          company_id: string
+          created_at: string
+          created_by: string | null
+          effective_date: string
+          id: string
+          invoice_id: string | null
+          new_rate: number
+          notes: string | null
+          old_rate: number
+          period_end: string
+          period_start: string
+          state_code: string
+          status: string
+          taxable_wages_cents: number
+          updated_at: string
+        }
+        Insert: {
+          adjustment_cents?: number
+          adjustment_type: string
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          effective_date: string
+          id?: string
+          invoice_id?: string | null
+          new_rate: number
+          notes?: string | null
+          old_rate: number
+          period_end: string
+          period_start: string
+          state_code: string
+          status?: string
+          taxable_wages_cents?: number
+          updated_at?: string
+        }
+        Update: {
+          adjustment_cents?: number
+          adjustment_type?: string
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          effective_date?: string
+          id?: string
+          invoice_id?: string | null
+          new_rate?: number
+          notes?: string | null
+          old_rate?: number
+          period_end?: string
+          period_start?: string
+          state_code?: string
+          status?: string
+          taxable_wages_cents?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sui_adjustments_company_id_fkey"
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
