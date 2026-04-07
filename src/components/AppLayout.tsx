@@ -12,15 +12,15 @@ import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useCompanies } from '@/hooks/useCompanies';
 
-const initialNotifications: Notification[] = [
-  { id: 'n1', title: 'Payroll approval due', message: 'Meridian Construction payroll needs approval by Tuesday 6 PM EST.', type: 'warning', read: false, timestamp: new Date(Date.now() - 1800000).toISOString(), actionUrl: '/payroll/pr1' },
-  { id: 'n2', title: 'Onboarding started', message: 'Priya Sharma has been added to the Standard Employee Onboarding workflow.', type: 'info', read: false, timestamp: new Date(Date.now() - 7200000).toISOString(), actionUrl: '/onboarding' },
-  { id: 'n3', title: 'Invoice overdue', message: 'Summit Logistics monthly invoice is 10 days past due.', type: 'error', read: false, timestamp: new Date(Date.now() - 86400000).toISOString(), actionUrl: '/invoices' },
-  { id: 'n4', title: 'Compliance task completed', message: 'TX SUI Rate Update for Meridian Construction has been resolved.', type: 'success', read: true, timestamp: new Date(Date.now() - 172800000).toISOString(), actionUrl: '/compliance' },
+const initialNotifications: (Notification & { companyId?: string })[] = [
+  { id: 'n1', title: 'Payroll approval due', message: 'Meridian Construction payroll needs approval by Tuesday 6 PM EST.', type: 'warning', read: false, timestamp: new Date(Date.now() - 1800000).toISOString(), actionUrl: '/payroll/pr1', companyId: 'demo-company-1' },
+  { id: 'n2', title: 'Onboarding started', message: 'Priya Sharma has been added to the Standard Employee Onboarding workflow.', type: 'info', read: false, timestamp: new Date(Date.now() - 7200000).toISOString(), actionUrl: '/onboarding', companyId: 'demo-company-1' },
+  { id: 'n3', title: 'Invoice overdue', message: 'Summit Logistics monthly invoice is 10 days past due.', type: 'error', read: false, timestamp: new Date(Date.now() - 86400000).toISOString(), actionUrl: '/invoices', companyId: 'demo-company-2' },
+  { id: 'n4', title: 'Compliance task completed', message: 'TX SUI Rate Update for Meridian Construction has been resolved.', type: 'success', read: true, timestamp: new Date(Date.now() - 172800000).toISOString(), actionUrl: '/compliance', companyId: 'demo-company-1' },
 ];
 
 export function AppLayout() {
-  const [notifications, setNotifications] = useState(initialNotifications);
+  const [allNotifications, setAllNotifications] = useState(initialNotifications);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { profile, role, signOut } = useAuth();
   const isMobile = useIsMobile();
@@ -32,16 +32,21 @@ export function AppLayout() {
   const userCompany = (isClientAdmin || isEmployeeRole) && profile?.company_id
     ? companies.find(c => c.id === profile.company_id)
     : null;
+  // Filter notifications by company for client admins and employees
+  const notifications = (isClientAdmin || isEmployeeRole) && profile?.company_id
+    ? allNotifications.filter(n => !n.companyId || n.companyId === profile.company_id)
+    : allNotifications;
+
   const handleMarkRead = (id: string) => {
-    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+    setAllNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
   };
 
   const handleMarkAllRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    setAllNotifications(prev => prev.map(n => ({ ...n, read: true })));
   };
 
   const handleDismiss = (id: string) => {
-    setNotifications(prev => prev.filter(n => n.id !== id));
+    setAllNotifications(prev => prev.filter(n => n.id !== id));
   };
 
   const initials = profile?.full_name
