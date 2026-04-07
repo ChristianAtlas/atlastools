@@ -14,7 +14,7 @@ import {
   empCentsToUSD, getInitials,
   type EmployeeRow, type CompensationRecordRow,
 } from '@/hooks/useEmployees';
-import { EditEmployeeDialog } from '@/components/employees/EditEmployeeDialog';
+import { EditEmployeeDialog, CardEditButton } from '@/components/employees/EditEmployeeDialog';
 import { usePTOBalances, usePTORequests, hoursToDays, type PTOBalance, type PTORequest } from '@/hooks/usePTO';
 import { useAuth } from '@/contexts/AuthContext';
 import { useInternalNotes, useAddInternalNote } from '@/hooks/useInternalNotes';
