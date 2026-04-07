@@ -441,7 +441,7 @@ export default function Invoices() {
                   {isLoading ? (
                     <tr><td colSpan={9} className="px-4 py-8 text-center text-muted-foreground">Loading invoices...</td></tr>
                   ) : filtered.length === 0 ? (
-                    <tr><td colSpan={9} className="px-4 py-8 text-center text-muted-foreground">No invoices found. Click "Generate Monthly Invoices" to create invoices for all active clients.</td></tr>
+                    <tr><td colSpan={isSuperAdmin ? 9 : 8} className="px-4 py-8 text-center text-muted-foreground">{isSuperAdmin ? 'No invoices found. Click "Generate Monthly Invoices" to create invoices for all active clients.' : 'No invoices found.'}</td></tr>
                   ) : filtered.map(inv => (
                     <tr key={inv.id} className="hover:bg-muted/30 transition-colors">
                       <td className="px-4 py-3 font-medium text-xs">{inv.invoice_number}</td>
