@@ -38,6 +38,8 @@ export interface WCCode {
   description: string;
   state: string;
   rate_per_hundred: number;
+  rate_basis: 'per_hundred' | 'per_hour';
+  internal_markup_rate: number;
   effective_date: string;
   expiration_date: string | null;
   is_active: boolean;
