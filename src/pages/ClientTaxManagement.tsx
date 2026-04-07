@@ -1,4 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { SuiAgencyDirectory } from '@/components/tax-management/SuiAgencyDirectory';
 import { PageHeader } from '@/components/PageHeader';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -204,6 +206,13 @@ export default function ClientTaxManagement() {
         description="Manage your SUI account numbers and rates for client-reporting states"
       />
 
+      <Tabs defaultValue="rates" className="space-y-6">
+        <TabsList>
+          <TabsTrigger value="rates">SUI Rates & Accounts</TabsTrigger>
+          <TabsTrigger value="directory">Agency Directory</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="rates" className="space-y-6">
       {/* Missing State Registrations Alert */}
       {missingStates.length > 0 && (
         <Alert variant="destructive">
@@ -511,6 +520,12 @@ export default function ClientTaxManagement() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+        </TabsContent>
+
+        <TabsContent value="directory">
+          <SuiAgencyDirectory />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
