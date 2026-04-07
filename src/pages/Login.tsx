@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowRight, Shield, Building2, User, Mail, Lock } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
+import { lovable } from '@/integrations/lovable/index';
 import logoImg from '@/assets/logo.png';
 
 interface DemoAccount {
