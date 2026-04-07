@@ -29,7 +29,27 @@ import WorkflowDemo from "@/pages/WorkflowDemo";
 import WorkersComp from "@/pages/WorkersComp";
 import NotFound from "@/pages/NotFound";
 
+// Employee portal pages
+import EmployeeDashboard from "@/pages/employee/EmployeeDashboard";
+import MyPay from "@/pages/employee/MyPay";
+import TimeOff from "@/pages/employee/TimeOff";
+import TimeCard from "@/pages/employee/TimeCard";
+import Benefits from "@/pages/employee/Benefits";
+import MyDocuments from "@/pages/employee/MyDocuments";
+import MyProfile from "@/pages/employee/MyProfile";
+import VerificationLetter from "@/pages/employee/VerificationLetter";
+
 const queryClient = new QueryClient();
+
+/**
+ * Role-aware dashboard wrapper: renders employee dashboard for employee role,
+ * admin dashboard otherwise. We use a small wrapper to keep the router declarative.
+ */
+import { useAuth } from "@/contexts/AuthContext";
+function RoleDashboard() {
+  const { role } = useAuth();
+  return role === 'employee' ? <EmployeeDashboard /> : <Dashboard />;
+}
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -45,7 +65,7 @@ const App = () => (
 
             {/* Protected routes */}
             <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
-              <Route path="/" element={<Dashboard />} />
+              <Route path="/" element={<RoleDashboard />} />
               <Route path="/companies" element={<Companies />} />
               <Route path="/companies/:id" element={<CompanyDetail />} />
               <Route path="/employees" element={<Employees />} />
@@ -64,6 +84,15 @@ const App = () => (
               <Route path="/reports" element={<Reports />} />
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="/workflow-demo" element={<WorkflowDemo />} />
+
+              {/* Employee portal routes */}
+              <Route path="/my-pay" element={<MyPay />} />
+              <Route path="/time-off" element={<TimeOff />} />
+              <Route path="/time-card" element={<TimeCard />} />
+              <Route path="/benefits" element={<Benefits />} />
+              <Route path="/my-documents" element={<MyDocuments />} />
+              <Route path="/my-profile" element={<MyProfile />} />
+              <Route path="/verification-letter" element={<VerificationLetter />} />
             </Route>
 
             <Route path="*" element={<NotFound />} />

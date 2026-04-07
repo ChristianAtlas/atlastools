@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils';
 import {
   LayoutDashboard, Users, Building2, CreditCard, FileText, Workflow,
   ClipboardCheck, ScrollText, BarChart3, Settings, DollarSign,
-  CalendarDays, UserPlus, ShieldCheck
+  CalendarDays, UserPlus, ShieldCheck, Clock, Heart, User
 } from 'lucide-react';
 import type { AppRole } from '@/contexts/AuthContext';
 import logoImg from '@/assets/logo.png';
@@ -15,21 +15,33 @@ interface NavItem {
   roles?: AppRole[];
 }
 
-const navItems: NavItem[] = [
+// Admin / shared nav items
+const adminNavItems: NavItem[] = [
   { label: 'Dashboard', to: '/', icon: LayoutDashboard },
   { label: 'Companies', to: '/companies', icon: Building2, roles: ['super_admin'] },
   { label: 'Employees', to: '/employees', icon: Users, roles: ['super_admin', 'client_admin'] },
   { label: 'Onboarding', to: '/onboarding', icon: UserPlus, roles: ['super_admin', 'client_admin'] },
   { label: 'Payroll', to: '/payroll', icon: DollarSign, roles: ['super_admin', 'client_admin'] },
-  { label: 'PTO', to: '/pto', icon: CalendarDays, roles: ['client_admin', 'employee'] },
+  { label: 'PTO', to: '/pto', icon: CalendarDays, roles: ['client_admin'] },
   { label: 'Workers\' Comp', to: '/workers-comp', icon: ShieldCheck, roles: ['super_admin'] },
   { label: 'Invoices', to: '/invoices', icon: CreditCard, roles: ['super_admin', 'client_admin'] },
-  { label: 'Documents', to: '/documents', icon: FileText },
+  { label: 'Documents', to: '/documents', icon: FileText, roles: ['super_admin', 'client_admin'] },
   { label: 'Compliance', to: '/compliance', icon: ClipboardCheck, roles: ['super_admin'] },
   { label: 'Audit Log', to: '/audit-log', icon: ScrollText, roles: ['super_admin'] },
   { label: 'Reports', to: '/reports', icon: BarChart3, roles: ['super_admin', 'client_admin'] },
   { label: 'Settings', to: '/settings', icon: Settings, roles: ['super_admin'] },
   { label: 'Workflow Demo', to: '/workflow-demo', icon: Workflow, roles: ['super_admin'] },
+];
+
+// Employee-only nav items
+const employeeNavItems: NavItem[] = [
+  { label: 'Dashboard', to: '/', icon: LayoutDashboard, roles: ['employee'] },
+  { label: 'My Pay', to: '/my-pay', icon: DollarSign, roles: ['employee'] },
+  { label: 'Time Off', to: '/time-off', icon: CalendarDays, roles: ['employee'] },
+  { label: 'Time Card', to: '/time-card', icon: Clock, roles: ['employee'] },
+  { label: 'Benefits', to: '/benefits', icon: Heart, roles: ['employee'] },
+  { label: 'Documents', to: '/my-documents', icon: FileText, roles: ['employee'] },
+  { label: 'Profile', to: '/my-profile', icon: User, roles: ['employee'] },
 ];
 
 interface AppSidebarProps {
@@ -43,6 +55,7 @@ interface AppSidebarProps {
 export function AppSidebar({ userName, userInitials, roleLabel, role, onNavClick }: AppSidebarProps) {
   const location = useLocation();
 
+  const navItems = role === 'employee' ? employeeNavItems : adminNavItems;
   const visibleItems = navItems.filter(item => !item.roles || (role && item.roles.includes(role)));
 
   return (
