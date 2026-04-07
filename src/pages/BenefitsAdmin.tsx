@@ -129,10 +129,10 @@ export default function BenefitsAdmin() {
 
       {/* Summary Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard title="Pending Enrollments" value={pendingEnrollments} icon={<Users className="h-5 w-5 text-primary" />} />
-        <StatCard title="Open QLEs" value={pendingQLEs} icon={<AlertTriangle className="h-5 w-5 text-amber-500" />} />
-        <StatCard title="COBRA Active/Pending" value={cobraActive} icon={<Shield className="h-5 w-5 text-primary" />} />
-        <StatCard title="Carrier File Errors" value={carrierErrors} icon={<AlertTriangle className="h-5 w-5 text-destructive" />} />
+        <StatCard title="Pending Enrollments" value={String(pendingEnrollments)} icon={Users} />
+        <StatCard title="Open QLEs" value={String(pendingQLEs)} icon={AlertTriangle} />
+        <StatCard title="COBRA Active/Pending" value={String(cobraActive)} icon={Shield} />
+        <StatCard title="Carrier File Errors" value={String(carrierErrors)} icon={AlertTriangle} />
       </div>
 
       {/* Filters */}
