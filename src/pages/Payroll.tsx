@@ -27,41 +27,29 @@ import {
 import { format, parseISO, isBefore, differenceInHours } from 'date-fns';
 
 // ── Quick filter presets ───────────────────────────────────
-type QuickFilter = 'all' | 'ready' | 'blocked_compliance' | 'needs_review' | 'off_cycle' | 'no_invoice'
-  | 'upcoming' | 'open' | 'approvals' | 'late' | 'expedited' | 'manual_check' | 'processing' | 'completed' | 'blocked';
+type QuickFilter = 'all' | 'ready' | 'needs_review' | 'in_progress' | 'off_cycle' | 'issues' | 'completed';
 
-const QUICK_FILTERS: Array<{ key: QuickFilter; label: string; color?: string }> = [
-  { key: 'all', label: 'All' },
-  { key: 'ready', label: 'Ready to Process' },
-  { key: 'blocked_compliance', label: 'Blocked by Compliance', color: 'text-destructive' },
-  { key: 'needs_review', label: 'Needs Review' },
-  { key: 'off_cycle', label: 'Off-Cycle Pending' },
-  { key: 'no_invoice', label: 'Invoice Not Generated' },
-  { key: 'upcoming', label: 'Upcoming' },
-  { key: 'approvals', label: 'Approvals' },
-  { key: 'late', label: 'Late', color: 'text-destructive' },
-  { key: 'expedited', label: 'Expedited', color: 'text-warning' },
-  { key: 'manual_check', label: 'Manual Checks', color: 'text-destructive' },
-  { key: 'processing', label: 'Processing' },
-  { key: 'completed', label: 'Completed' },
+const QUICK_FILTERS: Array<{ key: QuickFilter; label: string; icon: typeof Clock }> = [
+  { key: 'all', label: 'Active', icon: ListChecks },
+  { key: 'ready', label: 'Ready to Process', icon: CheckCircle2 },
+  { key: 'needs_review', label: 'Needs Review', icon: FileCheck },
+  { key: 'in_progress', label: 'In Progress', icon: Loader2 },
+  { key: 'off_cycle', label: 'Off-Cycle', icon: RotateCcw },
+  { key: 'issues', label: 'Issues', icon: AlertTriangle },
+  { key: 'completed', label: 'Completed', icon: CheckCircle2 },
 ];
+
+const COMPLETED_STATUSES = ['completed', 'paid', 'voided', 'reversed', 'failed'];
 
 function matchesQuickFilter(run: PayrollRunRow, filter: QuickFilter): boolean {
   switch (filter) {
-    case 'all': return true;
+    case 'all': return !COMPLETED_STATUSES.includes(run.status);
     case 'ready': return ['client_approved', 'admin_approved', 'auto_approved'].includes(run.status) && run.exception_count === 0;
-    case 'blocked_compliance': return run.exception_count > 0;
-    case 'needs_review': return ['awaiting_approval', 'pending_client_approval', 'pending_admin_approval', 'awaiting_timecard_approval'].includes(run.status);
-    case 'off_cycle': return run.run_type === 'off_cycle';
-    case 'no_invoice': return run.invoice_status === 'none' && ['completed', 'paid', 'processing'].includes(run.status);
-    case 'upcoming': return run.status === 'upcoming';
-    case 'approvals': return ['awaiting_timecard_approval', 'awaiting_approval', 'pending_client_approval', 'pending_admin_approval'].includes(run.status);
-    case 'late': return run.status === 'late_submission';
-    case 'expedited': return ['expedited_funding_required', 'expedited_processing'].includes(run.status);
-    case 'manual_check': return run.status === 'manual_check_required';
-    case 'processing': return ['processing', 'submitting', 'submitted', 'funding', 'funded'].includes(run.status);
-    case 'completed': return ['completed', 'paid'].includes(run.status);
-    case 'blocked': return ['blocked', 'failed', 'voided'].includes(run.status);
+    case 'needs_review': return ['awaiting_approval', 'pending_client_approval', 'pending_admin_approval', 'awaiting_timecard_approval', 'time_review', 'editing', 'preview'].includes(run.status);
+    case 'in_progress': return ['processing', 'submitting', 'submitted', 'funding', 'funded'].includes(run.status);
+    case 'off_cycle': return run.run_type === 'off_cycle' && !COMPLETED_STATUSES.includes(run.status);
+    case 'issues': return (run.exception_count > 0 || run.status === 'late_submission' || run.status === 'blocked' || run.status === 'manual_check_required' || ['expedited_funding_required', 'expedited_processing'].includes(run.status)) && !COMPLETED_STATUSES.includes(run.status);
+    case 'completed': return COMPLETED_STATUSES.includes(run.status);
     default: return true;
   }
 }
@@ -209,7 +197,7 @@ export default function Payroll() {
   const [quickFilter, setQuickFilter] = useState<QuickFilter>('all');
   const [companyFilter, setCompanyFilter] = useState('all');
   const [frequencyFilter, setFrequencyFilter] = useState('all');
-  const [statusFilter, setStatusFilter] = useState('all');
+  
   const [fundingFilter, setFundingFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -220,7 +208,7 @@ export default function Payroll() {
     if (quickFilter !== 'all') result = result.filter(r => matchesQuickFilter(r, quickFilter));
     if (companyFilter !== 'all') result = result.filter(r => r.company_id === companyFilter);
     if (frequencyFilter !== 'all') result = result.filter(r => r.pay_frequency === frequencyFilter);
-    if (statusFilter !== 'all') result = result.filter(r => r.status === statusFilter);
+    
     if (fundingFilter !== 'all') result = result.filter(r => r.funding_status === fundingFilter);
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
@@ -231,7 +219,7 @@ export default function Payroll() {
       );
     }
     return result;
-  }, [runs, quickFilter, companyFilter, frequencyFilter, statusFilter, fundingFilter, searchQuery]);
+  }, [runs, quickFilter, companyFilter, frequencyFilter, fundingFilter, searchQuery]);
 
   const tabCounts = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -326,10 +314,6 @@ export default function Payroll() {
     }
   };
 
-  const allStatuses = useMemo(() => {
-    const set = new Set(runs.map(r => r.status));
-    return Array.from(set).sort();
-  }, [runs]);
 
   return (
     <div className="space-y-5">
@@ -375,16 +359,31 @@ export default function Payroll() {
         <KPICards runs={runs} />
       </RoleGate>
 
+      {/* Quick filter tabs */}
+      <Tabs value={quickFilter} onValueChange={v => { setQuickFilter(v as QuickFilter); setSelectedIds(new Set()); }}>
+        <TabsList className="h-auto gap-1 p-1">
+          {QUICK_FILTERS.map(tab => (
+            <TabsTrigger key={tab.key} value={tab.key} className="text-xs gap-1.5 px-3 py-1.5">
+              <tab.icon className="h-3.5 w-3.5" />
+              {tab.label}
+              {tabCounts[tab.key] > 0 && (
+                <Badge variant="secondary" className="h-4 min-w-4 px-1 text-[10px] leading-none">{tabCounts[tab.key]}</Badge>
+              )}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+      </Tabs>
+
       {/* Filters */}
-      <div className="flex items-center gap-3 flex-wrap">
-        <div className="relative flex-1 min-w-[200px] max-w-sm">
+      <div className="flex items-center gap-2 flex-wrap">
+        <div className="relative flex-1 min-w-[200px] max-w-xs">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Search company name or ID..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-9 h-9" />
+          <Input placeholder="Search company or ID..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-9 h-8 text-xs" />
         </div>
         <RoleGate allowedRoles={['super_admin']}>
           <Select value={companyFilter} onValueChange={setCompanyFilter}>
-            <SelectTrigger className="w-[200px] h-9">
-              <Building2 className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" /><SelectValue placeholder="All Companies" />
+            <SelectTrigger className="w-[170px] h-8 text-xs">
+              <Building2 className="h-3 w-3 mr-1 text-muted-foreground" /><SelectValue placeholder="All Companies" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Companies</SelectItem>
@@ -395,24 +394,15 @@ export default function Payroll() {
           </Select>
         </RoleGate>
         <Select value={frequencyFilter} onValueChange={setFrequencyFilter}>
-          <SelectTrigger className="w-[150px] h-9"><Filter className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" /><SelectValue placeholder="Frequency" /></SelectTrigger>
+          <SelectTrigger className="w-[130px] h-8 text-xs"><SelectValue placeholder="Frequency" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Frequencies</SelectItem>
             <SelectItem value="semimonthly">Semi-Monthly</SelectItem>
             <SelectItem value="biweekly">Bi-Weekly</SelectItem>
           </SelectContent>
         </Select>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-[160px] h-9"><ListChecks className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" /><SelectValue placeholder="Status" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Statuses</SelectItem>
-            {allStatuses.map(s => (
-              <SelectItem key={s} value={s} className="capitalize">{s.replace(/_/g, ' ')}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
         <Select value={fundingFilter} onValueChange={setFundingFilter}>
-          <SelectTrigger className="w-[140px] h-9"><DollarSign className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" /><SelectValue placeholder="Funding" /></SelectTrigger>
+          <SelectTrigger className="w-[120px] h-8 text-xs"><SelectValue placeholder="Funding" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Funding</SelectItem>
             <SelectItem value="pending">Pending</SelectItem>
@@ -420,20 +410,6 @@ export default function Payroll() {
           </SelectContent>
         </Select>
       </div>
-
-      {/* Quick filter tabs */}
-      <Tabs value={quickFilter} onValueChange={v => { setQuickFilter(v as QuickFilter); setSelectedIds(new Set()); }}>
-        <TabsList className="flex-wrap h-auto gap-1">
-          {QUICK_FILTERS.map(tab => (
-            <TabsTrigger key={tab.key} value={tab.key} className="text-xs gap-1">
-              <span className={tab.color}>{tab.label}</span>
-              {tabCounts[tab.key] > 0 && (
-                <Badge variant="secondary" className="h-4 min-w-4 px-1 text-[10px] leading-none">{tabCounts[tab.key]}</Badge>
-              )}
-            </TabsTrigger>
-          ))}
-        </TabsList>
-      </Tabs>
 
       {/* Bulk actions bar */}
       {selectedIds.size > 0 && (
