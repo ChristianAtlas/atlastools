@@ -18,7 +18,7 @@ export default function TaxManagement() {
     <div className="space-y-6">
       <PageHeader
         title="Tax Management"
-        subtitle="Manage PEO & client SUI rates, bulk uploads, and SUI adjustments"
+        description="Manage PEO & client SUI rates, bulk uploads, and SUI adjustments"
       />
 
       <Tabs defaultValue="peo_rates" className="space-y-4">

@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils';
 import {
   LayoutDashboard, Users, Building2, CreditCard, FileText, Workflow,
   ClipboardCheck, ScrollText, BarChart3, Settings, DollarSign,
-  CalendarDays, UserPlus, ShieldCheck, Clock, Heart, User
+  CalendarDays, UserPlus, ShieldCheck, Clock, Heart, User, Landmark
 } from 'lucide-react';
 import type { AppRole } from '@/contexts/AuthContext';
 import logoImg from '@/assets/logo.png';
@@ -27,6 +27,7 @@ const adminNavItems: NavItem[] = [
   { label: 'Workers\' Comp', to: '/workers-comp', icon: ShieldCheck, roles: ['super_admin'] },
   { label: 'Invoices', to: '/invoices', icon: CreditCard, roles: ['super_admin', 'client_admin'] },
   { label: 'Documents', to: '/documents', icon: FileText, roles: ['super_admin', 'client_admin'] },
+  { label: 'Tax Management', to: '/tax-management', icon: Landmark, roles: ['super_admin'] },
   { label: 'Compliance', to: '/compliance', icon: ClipboardCheck, roles: ['super_admin'] },
   { label: 'Audit Log', to: '/audit-log', icon: ScrollText, roles: ['super_admin'] },
   { label: 'Reports', to: '/reports', icon: BarChart3, roles: ['super_admin', 'client_admin'] },
