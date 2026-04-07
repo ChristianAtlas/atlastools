@@ -59,7 +59,7 @@ export function useCompanies(search?: string) {
   const qc = useQueryClient();
 
   useEffect(() => {
-    const channelName = `companies-live-${search ?? 'all'}-${Date.now()}`;
+    const channelName = `companies-live-${search ?? 'all'}`;
     const channel = supabase
       .channel(channelName)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'companies' }, () => {
