@@ -18,7 +18,8 @@ export interface TimecardRow {
   notes: string | null;
   created_at: string;
   updated_at: string;
-  employees?: { first_name: string; last_name: string; title: string | null } | null;
+  employees?: { first_name: string; last_name: string; title: string | null; email: string } | null;
+  payroll_runs?: { pay_period_start: string; pay_period_end: string; pay_date: string; status: string } | null;
 }
 
 export function useTimecards(payrollRunId: string | undefined) {
@@ -37,6 +38,26 @@ export function useTimecards(payrollRunId: string | undefined) {
   });
 }
 
+/** Fetch all timecards for a company, optionally filtered by payroll run or status */
+export function useCompanyTimecards(companyId: string | undefined, filters?: { payrollRunId?: string; status?: string }) {
+  return useQuery({
+    queryKey: ['company_timecards', companyId, filters],
+    queryFn: async () => {
+      let query = supabase
+        .from('timecards' as any)
+        .select('*, employees(first_name, last_name, title, email), payroll_runs:payroll_run_id(pay_period_start, pay_period_end, pay_date, status)' as any)
+        .eq('company_id', companyId!)
+        .order('submitted_at', { ascending: false, nullsFirst: false });
+      if (filters?.payrollRunId) query = query.eq('payroll_run_id', filters.payrollRunId);
+      if (filters?.status && filters.status !== 'all') query = query.eq('approval_status', filters.status);
+      const { data, error } = await query;
+      if (error) throw error;
+      return (data ?? []) as unknown as TimecardRow[];
+    },
+    enabled: !!companyId,
+  });
+}
+
 export function useUpdateTimecard() {
   const qc = useQueryClient();
   return useMutation({
@@ -50,8 +71,9 @@ export function useUpdateTimecard() {
       if (error) throw error;
       return data;
     },
-    onSuccess: (_, vars) => {
+    onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['timecards'] });
+      qc.invalidateQueries({ queryKey: ['company_timecards'] });
     },
   });
 }
@@ -70,6 +92,9 @@ export function useApproveTimecards() {
         .in('id', ids);
       if (error) throw error;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['timecards'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['timecards'] });
+      qc.invalidateQueries({ queryKey: ['company_timecards'] });
+    },
   });
 }
