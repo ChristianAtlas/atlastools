@@ -126,6 +126,8 @@ export default function CommunicationWizard() {
 
   const selectedSegment = segments.find(s => s.id === selectedSegmentId);
 
+  if (role && role !== 'super_admin') return <Navigate to="/" replace />;
+
   const handleSubmit = async () => {
     if (!subject.trim()) { toast.error('Subject is required'); return; }
     if (!bodyHtml.trim()) { toast.error('Email body is required'); return; }
