@@ -9,9 +9,11 @@ import { ClientSuiUploadTab } from '@/components/tax-management/ClientSuiUploadT
 import { SuiAdjustmentsTab } from '@/components/tax-management/SuiAdjustmentsTab';
 import { SuiClaimsTab } from '@/components/tax-management/SuiClaimsTab';
 import { FutaCreditReductionTab } from '@/components/tax-management/FutaCreditReductionTab';
+import { SuiAgencyDirectory } from '@/components/tax-management/SuiAgencyDirectory';
+import { StateIncomeTaxDirectory } from '@/components/tax-management/StateIncomeTaxDirectory';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { FileWarning, FileText, FileCheck, Receipt, Shield, Landmark } from 'lucide-react';
+import { FileWarning, FileText, FileCheck, Receipt, Shield, Landmark, Building2 } from 'lucide-react';
 
 export default function TaxManagement() {
   const { role } = useAuth();
@@ -35,7 +37,7 @@ export default function TaxManagement() {
           <TabsTrigger value="1099"><Receipt className="h-3.5 w-3.5 mr-1" />1099 / 1099C</TabsTrigger>
           <TabsTrigger value="sui"><Shield className="h-3.5 w-3.5 mr-1" />SUI Rates & Claims</TabsTrigger>
           <TabsTrigger value="futa"><Landmark className="h-3.5 w-3.5 mr-1" />FUTA Credit Reduction</TabsTrigger>
-        </TabsList>
+          <TabsTrigger value="directories"><Building2 className="h-3.5 w-3.5 mr-1" />State Directories</TabsTrigger>
 
         <TabsContent value="notices">
           <TaxNoticesTab />
@@ -70,6 +72,17 @@ export default function TaxManagement() {
 
         <TabsContent value="futa">
           <FutaCreditReductionTab />
+        </TabsContent>
+
+        <TabsContent value="directories">
+          <Tabs defaultValue="sui_directory" className="space-y-4">
+            <TabsList>
+              <TabsTrigger value="sui_directory">SUI Agencies</TabsTrigger>
+              <TabsTrigger value="income_tax_directory">Income Tax Withholding Agencies</TabsTrigger>
+            </TabsList>
+            <TabsContent value="sui_directory"><SuiAgencyDirectory /></TabsContent>
+            <TabsContent value="income_tax_directory"><StateIncomeTaxDirectory /></TabsContent>
+          </Tabs>
         </TabsContent>
       </Tabs>
     </div>
