@@ -323,9 +323,18 @@ export default function Payroll() {
         actions={
           <div className="flex items-center gap-2">
             <RoleGate allowedRoles={['super_admin']}>
-              <Button variant="outline" size="sm" onClick={handleAutoGenerate}>
-                <Zap className="h-4 w-4 mr-1.5" />Auto-Generate Runs
-              </Button>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="outline" size="sm" onClick={handleAutoGenerate}>
+                      <Zap className="h-4 w-4 mr-1.5" />Auto-Generate Runs
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" className="max-w-xs text-center">
+                    <p>Scans all active companies for upcoming pay dates and automatically creates draft payroll runs based on their schedules and frequencies.</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </RoleGate>
             <Button size="sm" onClick={() => setNewRunOpen(true)}>
               <Plus className="h-4 w-4 mr-1.5" />New Payroll Run
