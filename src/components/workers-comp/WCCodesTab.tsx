@@ -51,6 +51,9 @@ export function WCCodesTab() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input placeholder="Search codes…" className="pl-9" value={search} onChange={e => setSearch(e.target.value)} />
         </div>
+        <Button variant="outline" size="sm" onClick={() => setBulkOpen(true)}>
+          <Upload className="h-4 w-4 mr-1.5" />Bulk Upload
+        </Button>
         <Button size="sm" onClick={handleAdd}>
           <Plus className="h-4 w-4 mr-1.5" />Add Code
         </Button>
