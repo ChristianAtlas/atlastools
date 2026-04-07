@@ -89,6 +89,15 @@ export function AppLayout() {
                   <Menu className="h-5 w-5" />
                 </Button>
               )}
+              {userCompany && (
+                <div className="flex items-center gap-2">
+                  <Building2 className="h-4 w-4 text-primary" />
+                  <div className="leading-tight">
+                    <span className="font-semibold text-sm">{userCompany.name}</span>
+                    <span className="ml-2 text-xs font-mono text-muted-foreground bg-muted px-1.5 py-0.5 rounded">{userCompany.cid}</span>
+                  </div>
+                </div>
+              )}
             </div>
             <div className="flex items-center gap-2">
               <ImpersonationSelector />
