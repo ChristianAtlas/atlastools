@@ -27,6 +27,7 @@ import Login from "@/pages/Login";
 import Signup from "@/pages/Signup";
 import WorkflowDemo from "@/pages/WorkflowDemo";
 import WorkersComp from "@/pages/WorkersComp";
+import Timecards from "@/pages/Timecards";
 import NotFound from "@/pages/NotFound";
 
 // Employee portal pages
@@ -77,6 +78,7 @@ const App = () => (
               <Route path="/onboarding/:id" element={<OnboardingDetail />} />
               <Route path="/onboarding/client/:id" element={<ClientOnboardingWizard />} />
               <Route path="/workers-comp" element={<WorkersComp />} />
+              <Route path="/timecards" element={<Timecards />} />
               <Route path="/invoices" element={<Invoices />} />
               <Route path="/documents" element={<Documents />} />
               <Route path="/compliance" element={<Compliance />} />
