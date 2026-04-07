@@ -15,28 +15,64 @@ interface NavItem {
   roles?: AppRole[];
 }
 
-// Admin / shared nav items
-const adminNavItems: NavItem[] = [
+interface NavGroup {
+  label: string;
+  items: NavItem[];
+}
+
+// Super-admin grouped nav
+const superAdminNavGroups: NavGroup[] = [
+  {
+    label: 'Operations',
+    items: [
+      { label: 'Dashboard', to: '/', icon: LayoutDashboard },
+      { label: 'Companies', to: '/companies', icon: Building2 },
+      { label: 'Communications', to: '/communications', icon: Mail },
+      { label: 'Employees', to: '/employees', icon: Users },
+      { label: 'Onboarding', to: '/onboarding', icon: UserPlus },
+      { label: 'Payroll', to: '/payroll', icon: DollarSign },
+      { label: 'Workers\' Comp', to: '/workers-comp', icon: ShieldCheck },
+      { label: 'Benefits Admin', to: '/benefits-admin', icon: Heart },
+    ],
+  },
+  {
+    label: 'Finance & Admin',
+    items: [
+      { label: 'Invoices', to: '/invoices', icon: CreditCard },
+      { label: 'ACH Tool', to: '/ach-tool', icon: Banknote },
+      { label: 'Documents', to: '/documents', icon: FileText },
+      { label: 'Reports', to: '/reports', icon: BarChart3 },
+    ],
+  },
+  {
+    label: 'Tax & Compliance',
+    items: [
+      { label: 'Tax Management', to: '/tax-management', icon: Landmark },
+      { label: 'Compliance', to: '/compliance', icon: ClipboardCheck },
+    ],
+  },
+  {
+    label: 'Settings',
+    items: [
+      { label: 'Audit Log', to: '/audit-log', icon: ScrollText },
+      { label: 'Settings', to: '/settings', icon: Settings },
+      { label: 'Workflow Demo', to: '/workflow-demo', icon: Workflow },
+    ],
+  },
+];
+
+// Client admin flat nav items
+const clientAdminNavItems: NavItem[] = [
   { label: 'Dashboard', to: '/', icon: LayoutDashboard },
-  { label: 'Companies', to: '/companies', icon: Building2, roles: ['super_admin'] },
-  { label: 'Communications', to: '/communications', icon: Mail, roles: ['super_admin'] },
-  { label: 'Employees', to: '/employees', icon: Users, roles: ['super_admin', 'client_admin'] },
-  { label: 'Onboarding', to: '/onboarding', icon: UserPlus, roles: ['super_admin', 'client_admin'] },
-  { label: 'Payroll', to: '/payroll', icon: DollarSign, roles: ['super_admin', 'client_admin'] },
-  { label: 'Timecards', to: '/timecards', icon: Clock, roles: ['client_admin'] },
-  { label: 'PTO', to: '/pto', icon: CalendarDays, roles: ['client_admin'] },
-  { label: 'Workers\' Comp', to: '/workers-comp', icon: ShieldCheck, roles: ['super_admin'] },
-  { label: 'Benefits Admin', to: '/benefits-admin', icon: Heart, roles: ['super_admin'] },
-  { label: 'Invoices', to: '/invoices', icon: CreditCard, roles: ['super_admin', 'client_admin'] },
-  { label: 'Documents', to: '/documents', icon: FileText, roles: ['super_admin', 'client_admin'] },
-  { label: 'Tax Management', to: '/tax-management', icon: Landmark, roles: ['super_admin'] },
-  { label: 'ACH Tool', to: '/ach-tool', icon: Banknote, roles: ['super_admin'] },
-  { label: 'Compliance', to: '/compliance', icon: ClipboardCheck, roles: ['super_admin'] },
-  { label: 'Audit Log', to: '/audit-log', icon: ScrollText, roles: ['super_admin'] },
-  { label: 'Tax Management', to: '/client-tax', icon: Landmark, roles: ['client_admin'] },
-  { label: 'Reports', to: '/reports', icon: BarChart3, roles: ['super_admin', 'client_admin'] },
-  { label: 'Settings', to: '/settings', icon: Settings, roles: ['super_admin'] },
-  { label: 'Workflow Demo', to: '/workflow-demo', icon: Workflow, roles: ['super_admin'] },
+  { label: 'Employees', to: '/employees', icon: Users },
+  { label: 'Onboarding', to: '/onboarding', icon: UserPlus },
+  { label: 'Payroll', to: '/payroll', icon: DollarSign },
+  { label: 'Timecards', to: '/timecards', icon: Clock },
+  { label: 'PTO', to: '/pto', icon: CalendarDays },
+  { label: 'Invoices', to: '/invoices', icon: CreditCard },
+  { label: 'Documents', to: '/documents', icon: FileText },
+  { label: 'Tax Management', to: '/client-tax', icon: Landmark },
+  { label: 'Reports', to: '/reports', icon: BarChart3 },
 ];
 
 // Employee-only nav items
