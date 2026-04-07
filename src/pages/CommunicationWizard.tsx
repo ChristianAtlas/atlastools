@@ -63,11 +63,11 @@ export default function CommunicationWizard() {
 
   const creatorName = profile?.full_name || null;
 
-  // Build recipient list
-  const recipients: RecipientItem[] = useMemo(() => {
+  // Build recipient list and CSV errors together
+  const { recipients, csvParseErrors } = useMemo(() => {
     if (selectionMethod === 'upload' && csvText) {
       const lines = csvText.split('\n').map(l => l.trim()).filter(Boolean);
-      const cids = lines.slice(1); // skip header
+      const cids = lines.slice(1);
       const errors: string[] = [];
       const results: RecipientItem[] = [];
       cids.forEach(cid => {
@@ -83,8 +83,7 @@ export default function CommunicationWizard() {
           errors.push(cid.trim());
         }
       });
-      setCsvErrors(errors);
-      return results;
+      return { recipients: results, csvParseErrors: errors };
     }
 
     if (audienceType === 'company') {
