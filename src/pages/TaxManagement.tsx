@@ -38,6 +38,7 @@ export default function TaxManagement() {
           <TabsTrigger value="sui"><Shield className="h-3.5 w-3.5 mr-1" />SUI Rates & Claims</TabsTrigger>
           <TabsTrigger value="futa"><Landmark className="h-3.5 w-3.5 mr-1" />FUTA Credit Reduction</TabsTrigger>
           <TabsTrigger value="directories"><Building2 className="h-3.5 w-3.5 mr-1" />State Directories</TabsTrigger>
+        </TabsList>
 
         <TabsContent value="notices">
           <TaxNoticesTab />
