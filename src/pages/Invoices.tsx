@@ -445,7 +445,7 @@ export default function Invoices() {
                   ) : filtered.map(inv => (
                     <tr key={inv.id} className="hover:bg-muted/30 transition-colors">
                       <td className="px-4 py-3 font-medium text-xs">{inv.invoice_number}</td>
-                      <td className="px-4 py-3">{inv.company_name}</td>
+                      {isSuperAdmin && <td className="px-4 py-3">{inv.company_name}</td>}
                       <td className="px-4 py-3">
                         <Badge variant={inv.invoice_type === 'payroll' ? 'default' : 'secondary'} className="text-xs capitalize">
                           {inv.invoice_type}
@@ -467,7 +467,7 @@ export default function Invoices() {
                           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setSelectedInvoice(inv)}>
                             <Eye className="h-3.5 w-3.5" />
                           </Button>
-                          {inv.status !== 'paid' && (
+                          {isSuperAdmin && inv.status !== 'paid' && (
                             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => {
                               updateStatus.mutate({ id: inv.id, status: 'paid' }, {
                                 onSuccess: () => toast.success('Marked as paid'),
