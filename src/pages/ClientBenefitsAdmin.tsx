@@ -65,7 +65,17 @@ const MOCK_CONTRIBUTION_REPORTS = [
   { id: '4', month: '2025-12', totalPremiumsCents: 470000, erContributionsCents: 335000, eeDeductionsCents: 135000, enrolledCount: 40, avgEeCostCents: 3375 },
 ];
 
-// ─── Helpers ──────────────────────────────────────────────────
+// Mock active employees for external benefits entry
+const MOCK_ACTIVE_EMPLOYEES = [
+  { id: '1', mid: 'M5', name: 'John Smith', department: 'Engineering', eeDeductionCents: 31250, erContributionCents: 93750, carrierName: 'Anthem Blue Cross', planType: 'Medical - PPO' },
+  { id: '2', mid: 'M6', name: 'Sarah Johnson', department: 'Marketing', eeDeductionCents: 16250, erContributionCents: 48750, carrierName: 'Anthem Blue Cross', planType: 'Medical - PPO' },
+  { id: '3', mid: 'M7', name: 'Mike Davis', department: 'Sales', eeDeductionCents: 23750, erContributionCents: 71250, carrierName: 'Kaiser', planType: 'Medical - HMO' },
+  { id: '4', mid: 'M8', name: 'Lisa Chen', department: 'Engineering', eeDeductionCents: 12500, erContributionCents: 37500, carrierName: 'Anthem Blue Cross', planType: 'Medical - PPO' },
+  { id: '5', mid: 'M9', name: 'Tom Wilson', department: 'Operations', eeDeductionCents: 18000, erContributionCents: 54000, carrierName: 'United Healthcare', planType: 'Medical - HDHP' },
+  { id: '6', mid: 'M10', name: 'Amy Brown', department: 'HR', eeDeductionCents: 0, erContributionCents: 0, carrierName: '', planType: '' },
+  { id: '7', mid: 'M11', name: 'James Lee', department: 'Finance', eeDeductionCents: 0, erContributionCents: 0, carrierName: '', planType: '' },
+];
+
 
 const fmt = (cents: number) =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(cents / 100);
