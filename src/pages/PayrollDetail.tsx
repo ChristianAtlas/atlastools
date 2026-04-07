@@ -379,7 +379,7 @@ function EmployeeRoster({
 // ── Summary Cards ───────────────────────────────────────────
 function SummaryCards({ run, eligibleCount, blockedCount }: { run: PayrollRunRow; eligibleCount: number; blockedCount: number }) {
   return (
-    <div className="flex gap-3 flex-wrap">
+    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
       {[
         { label: 'Gross Pay', value: fmtCurrency(run.gross_pay_cents), icon: DollarSign },
         { label: 'Employer Taxes', value: fmtCurrency(run.employer_taxes_cents), icon: FileText },
@@ -387,12 +387,12 @@ function SummaryCards({ run, eligibleCount, blockedCount }: { run: PayrollRunRow
         { label: 'Eligible', value: String(eligibleCount), icon: CheckCircle2, color: 'text-success' },
         { label: 'Blocked', value: String(blockedCount), icon: ShieldAlert, color: blockedCount > 0 ? 'text-destructive' : 'text-success' },
       ].map(s => (
-        <Card key={s.label} className="flex-1 min-w-[130px]"><CardContent className="pt-4 pb-3 px-4">
+        <Card key={s.label} className="min-w-0"><CardContent className="pt-4 pb-3 px-4">
           <div className={`flex items-center gap-1.5 mb-1 ${(s as any).color ?? 'text-muted-foreground'}`}>
             <s.icon className="h-4 w-4 shrink-0" />
             <span className="text-xs font-medium">{s.label}</span>
           </div>
-          <p className="text-2xl font-bold tabular-nums whitespace-nowrap">{s.value}</p>
+          <p className="text-xl xl:text-2xl font-bold tabular-nums whitespace-nowrap leading-none">{s.value}</p>
         </CardContent></Card>
       ))}
     </div>
