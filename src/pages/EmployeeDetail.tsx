@@ -489,6 +489,7 @@ export default function EmployeeDetail() {
           </div>
           <div>
             <div className="flex items-center gap-2">
+              <span className="inline-flex items-center rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-bold text-primary tabular-nums">{emp.mid}</span>
               <h1 className="text-xl font-semibold">{emp.first_name} {emp.last_name}</h1>
               <StatusBadge status={emp.status} />
             </div>
