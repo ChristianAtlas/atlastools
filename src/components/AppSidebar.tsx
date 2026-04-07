@@ -148,7 +148,7 @@ export function AppSidebar({ userName, userInitials, roleLabel, role, onNavClick
 
   const isSuperAdmin = role === 'super_admin';
   const isEmployee = role === 'employee';
-  const flatItems = isEmployee ? employeeNavItems : clientAdminNavItems;
+  const isClientAdmin = !isSuperAdmin && !isEmployee;
 
   return (
     <aside className="fixed inset-y-0 left-0 z-30 flex w-60 flex-col bg-sidebar border-r border-sidebar-border">
