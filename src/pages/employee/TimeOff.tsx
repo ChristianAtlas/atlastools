@@ -46,6 +46,7 @@ export default function TimeOff() {
   const { data: balances = [] } = usePTOBalances(employee?.id, employee?.company_id);
   const { data: requests = [] } = usePTORequests({ employeeId: employee?.id });
   const { data: policies = [] } = usePTOPolicies(employee?.company_id);
+  const { data: holidays = [] } = useCompanyHolidays(employee?.company_id);
   const [open, setOpen] = useState(false);
   const qc = useQueryClient();
 
