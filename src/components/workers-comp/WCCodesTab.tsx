@@ -7,7 +7,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useWCCodes } from '@/hooks/useWorkersComp';
 import { useCompanies } from '@/hooks/useCompanies';
 import { WCCodeDrawer } from './WCCodeDrawer';
-import { Search, Plus, Pencil } from 'lucide-react';
+import { WCBulkUploadDialog } from './WCBulkUploadDialog';
+import { Search, Plus, Pencil, Upload } from 'lucide-react';
 import { format } from 'date-fns';
 import type { WCCode } from '@/hooks/useWorkersComp';
 
@@ -19,6 +20,7 @@ export function WCCodesTab() {
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editingCode, setEditingCode] = useState<WCCode | null>(null);
+  const [bulkOpen, setBulkOpen] = useState(false);
 
   const filtered = codes.filter(c =>
     !search ||
@@ -49,6 +51,9 @@ export function WCCodesTab() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input placeholder="Search codes…" className="pl-9" value={search} onChange={e => setSearch(e.target.value)} />
         </div>
+        <Button variant="outline" size="sm" onClick={() => setBulkOpen(true)}>
+          <Upload className="h-4 w-4 mr-1.5" />Bulk Upload
+        </Button>
         <Button size="sm" onClick={handleAdd}>
           <Plus className="h-4 w-4 mr-1.5" />Add Code
         </Button>
@@ -111,6 +116,13 @@ export function WCCodesTab() {
         open={drawerOpen}
         onOpenChange={setDrawerOpen}
         code={editingCode}
+        policyId={defaultPolicyId}
+        companyId={defaultCompanyId}
+      />
+
+      <WCBulkUploadDialog
+        open={bulkOpen}
+        onOpenChange={setBulkOpen}
         policyId={defaultPolicyId}
         companyId={defaultCompanyId}
       />
