@@ -15,8 +15,12 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Heart, Search, Users, AlertTriangle, DollarSign, FileText, CheckCircle2,
-  Clock, Eye, Plus, Upload, Download, Calendar
+  Clock, Eye, Plus, Upload, Download, Calendar, ExternalLink, ShieldOff,
+  Info, Save
 } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Separator } from '@/components/ui/separator';
 
 // ─── Mock data (scoped to a single company) ─────────────────
 
@@ -61,7 +65,17 @@ const MOCK_CONTRIBUTION_REPORTS = [
   { id: '4', month: '2025-12', totalPremiumsCents: 470000, erContributionsCents: 335000, eeDeductionsCents: 135000, enrolledCount: 40, avgEeCostCents: 3375 },
 ];
 
-// ─── Helpers ──────────────────────────────────────────────────
+// Mock active employees for external benefits entry
+const MOCK_ACTIVE_EMPLOYEES = [
+  { id: '1', mid: 'M5', name: 'John Smith', department: 'Engineering', eeDeductionCents: 31250, erContributionCents: 93750, carrierName: 'Anthem Blue Cross', planType: 'Medical - PPO' },
+  { id: '2', mid: 'M6', name: 'Sarah Johnson', department: 'Marketing', eeDeductionCents: 16250, erContributionCents: 48750, carrierName: 'Anthem Blue Cross', planType: 'Medical - PPO' },
+  { id: '3', mid: 'M7', name: 'Mike Davis', department: 'Sales', eeDeductionCents: 23750, erContributionCents: 71250, carrierName: 'Kaiser', planType: 'Medical - HMO' },
+  { id: '4', mid: 'M8', name: 'Lisa Chen', department: 'Engineering', eeDeductionCents: 12500, erContributionCents: 37500, carrierName: 'Anthem Blue Cross', planType: 'Medical - PPO' },
+  { id: '5', mid: 'M9', name: 'Tom Wilson', department: 'Operations', eeDeductionCents: 18000, erContributionCents: 54000, carrierName: 'United Healthcare', planType: 'Medical - HDHP' },
+  { id: '6', mid: 'M10', name: 'Amy Brown', department: 'HR', eeDeductionCents: 0, erContributionCents: 0, carrierName: '', planType: '' },
+  { id: '7', mid: 'M11', name: 'James Lee', department: 'Finance', eeDeductionCents: 0, erContributionCents: 0, carrierName: '', planType: '' },
+];
+
 
 const fmt = (cents: number) =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(cents / 100);
@@ -86,6 +100,17 @@ export default function ClientBenefitsAdmin() {
   const [search, setSearch] = useState('');
   const [planTypeFilter, setPlanTypeFilter] = useState('all');
   const [qleStatusFilter, setQleStatusFilter] = useState('all');
+  const [hasExternalBenefits, setHasExternalBenefits] = useState(false);
+  const [externalEmployeeData, setExternalEmployeeData] = useState(
+    MOCK_ACTIVE_EMPLOYEES.map(e => ({
+      ...e,
+      eeDeductionCents: e.eeDeductionCents,
+      erContributionCents: e.erContributionCents,
+      carrierName: e.carrierName,
+      planType: e.planType,
+      verified: e.erContributionCents > 0,
+    }))
+  );
 
   const filteredEnrollments = useMemo(() => {
     return MOCK_ENROLLED_EMPLOYEES.filter(e => {
@@ -140,6 +165,7 @@ export default function ClientBenefitsAdmin() {
           <TabsTrigger value="eligible"><CheckCircle2 className="h-3.5 w-3.5 mr-1" />Eligible Employees</TabsTrigger>
           <TabsTrigger value="qle"><AlertTriangle className="h-3.5 w-3.5 mr-1" />QLE Submissions</TabsTrigger>
           <TabsTrigger value="contributions"><DollarSign className="h-3.5 w-3.5 mr-1" />Contribution Reports</TabsTrigger>
+          <TabsTrigger value="external"><ExternalLink className="h-3.5 w-3.5 mr-1" />External Benefits</TabsTrigger>
         </TabsList>
 
         {/* ──── Tab 1: Plans Offered ──── */}
@@ -523,6 +549,204 @@ export default function ClientBenefitsAdmin() {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* ──── Tab 6: External Benefits ──── */}
+        <TabsContent value="external">
+          <div className="space-y-4">
+            {/* Opt-out toggle */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <ShieldOff className="h-5 w-5 text-muted-foreground" />
+                      External Benefits Opt-Out
+                    </CardTitle>
+                    <CardDescription>
+                      If your company manages benefits through an external provider, toggle this on to report
+                      employee and employer contributions for W-2 Box 12 Code DD reporting purposes.
+                    </CardDescription>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Label htmlFor="external-toggle" className="text-sm font-medium">
+                      {hasExternalBenefits ? 'External Benefits Active' : 'Using PEO Benefits'}
+                    </Label>
+                    <Switch
+                      id="external-toggle"
+                      checked={hasExternalBenefits}
+                      onCheckedChange={setHasExternalBenefits}
+                    />
+                  </div>
+                </div>
+              </CardHeader>
+              {!hasExternalBenefits && (
+                <CardContent>
+                  <Alert>
+                    <Info className="h-4 w-4" />
+                    <AlertDescription>
+                      Your company is currently enrolled in PEO-sponsored benefits. Toggle the switch above if you manage
+                      benefits externally and need to report contributions for W-2 purposes.
+                    </AlertDescription>
+                  </Alert>
+                </CardContent>
+              )}
+            </Card>
+
+            {/* External benefits data entry */}
+            {hasExternalBenefits && (
+              <>
+                <Alert className="border-amber-200 bg-amber-50 dark:bg-amber-950/20">
+                  <AlertTriangle className="h-4 w-4 text-amber-600" />
+                  <AlertDescription className="text-amber-800 dark:text-amber-200">
+                    <strong>Important:</strong> Employer contributions for external benefits will <strong>not</strong> be invoiced.
+                    They are recorded for W-2 Box 12 Code DD reporting only (aggregate cost of employer-sponsored health coverage).
+                    Employee deductions entered here will be applied to payroll.
+                  </AlertDescription>
+                </Alert>
+
+                <Card>
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <CardTitle className="text-lg">Employee Contribution Deductions</CardTitle>
+                        <CardDescription>
+                          Enter monthly employee deduction amounts and verify employer contributions for all active employees.
+                          These values are used for payroll deductions and W-2 Box 12 DD reporting.
+                        </CardDescription>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button variant="outline" size="sm"><Upload className="h-4 w-4 mr-1" /> Bulk Upload</Button>
+                        <Button size="sm"><Save className="h-4 w-4 mr-1" /> Save All</Button>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>MID</TableHead>
+                          <TableHead>Employee</TableHead>
+                          <TableHead>Department</TableHead>
+                          <TableHead>External Carrier</TableHead>
+                          <TableHead>Plan Type</TableHead>
+                          <TableHead>EE Monthly Deduction</TableHead>
+                          <TableHead>ER Monthly Contribution</TableHead>
+                          <TableHead className="text-center">ER Verified</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {externalEmployeeData.map((emp, idx) => (
+                          <TableRow key={emp.id}>
+                            <TableCell className="font-mono text-xs">{emp.mid}</TableCell>
+                            <TableCell className="font-medium">{emp.name}</TableCell>
+                            <TableCell>{emp.department}</TableCell>
+                            <TableCell>
+                              <Input
+                                value={emp.carrierName}
+                                placeholder="Carrier name"
+                                className="h-8 w-36 text-xs"
+                                onChange={e => {
+                                  const updated = [...externalEmployeeData];
+                                  updated[idx] = { ...updated[idx], carrierName: e.target.value };
+                                  setExternalEmployeeData(updated);
+                                }}
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <Input
+                                value={emp.planType}
+                                placeholder="e.g. Medical - PPO"
+                                className="h-8 w-36 text-xs"
+                                onChange={e => {
+                                  const updated = [...externalEmployeeData];
+                                  updated[idx] = { ...updated[idx], planType: e.target.value };
+                                  setExternalEmployeeData(updated);
+                                }}
+                              />
+                            </TableCell>
+                            <TableCell>
+                              <div className="relative">
+                                <span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">$</span>
+                                <Input
+                                  type="number"
+                                  value={(emp.eeDeductionCents / 100).toFixed(2)}
+                                  className="h-8 w-28 pl-5 text-xs tabular-nums"
+                                  min={0}
+                                  step={0.01}
+                                  onChange={e => {
+                                    const updated = [...externalEmployeeData];
+                                    updated[idx] = { ...updated[idx], eeDeductionCents: Math.round(parseFloat(e.target.value || '0') * 100) };
+                                    setExternalEmployeeData(updated);
+                                  }}
+                                />
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="relative">
+                                <span className="absolute left-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">$</span>
+                                <Input
+                                  type="number"
+                                  value={(emp.erContributionCents / 100).toFixed(2)}
+                                  className="h-8 w-28 pl-5 text-xs tabular-nums"
+                                  min={0}
+                                  step={0.01}
+                                  onChange={e => {
+                                    const updated = [...externalEmployeeData];
+                                    updated[idx] = { ...updated[idx], erContributionCents: Math.round(parseFloat(e.target.value || '0') * 100) };
+                                    setExternalEmployeeData(updated);
+                                  }}
+                                />
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <Switch
+                                checked={emp.verified}
+                                onCheckedChange={checked => {
+                                  const updated = [...externalEmployeeData];
+                                  updated[idx] = { ...updated[idx], verified: checked };
+                                  setExternalEmployeeData(updated);
+                                }}
+                              />
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+
+                    {/* Summary */}
+                    <Separator className="my-4" />
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                      <div>
+                        <p className="text-muted-foreground text-xs">Total EE Deductions / mo</p>
+                        <p className="font-semibold text-base">{fmt(externalEmployeeData.reduce((s, e) => s + e.eeDeductionCents, 0))}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground text-xs">Total ER Contributions / mo</p>
+                        <p className="font-semibold text-base">{fmt(externalEmployeeData.reduce((s, e) => s + e.erContributionCents, 0))}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">W-2 Box 12 DD only — not invoiced</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground text-xs">Employees with Data</p>
+                        <p className="font-semibold text-base">{externalEmployeeData.filter(e => e.eeDeductionCents > 0 || e.erContributionCents > 0).length} / {externalEmployeeData.length}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground text-xs">ER Contributions Verified</p>
+                        <p className="font-semibold text-base">
+                          {externalEmployeeData.filter(e => e.verified).length} / {externalEmployeeData.filter(e => e.erContributionCents > 0).length}
+                          {externalEmployeeData.filter(e => e.erContributionCents > 0 && !e.verified).length > 0 && (
+                            <Badge variant="outline" className="ml-2 border-amber-500 text-amber-600 text-xs">
+                              {externalEmployeeData.filter(e => e.erContributionCents > 0 && !e.verified).length} pending
+                            </Badge>
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </>
+            )}
+          </div>
         </TabsContent>
       </Tabs>
     </div>
