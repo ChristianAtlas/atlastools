@@ -683,7 +683,10 @@ export default function ClientBenefitsAdmin() {
                       </div>
                       <div className="flex gap-2">
                         <Button variant="outline" size="sm"><Upload className="h-4 w-4 mr-1" /> Bulk Upload</Button>
-                        <Button size="sm"><Save className="h-4 w-4 mr-1" /> Save All</Button>
+                        <Button size="sm" onClick={handleSaveAll} disabled={saveAllMutation.isPending}>
+                          {saveAllMutation.isPending ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Save className="h-4 w-4 mr-1" />}
+                          Save All
+                        </Button>
                       </div>
                     </div>
                   </CardHeader>
