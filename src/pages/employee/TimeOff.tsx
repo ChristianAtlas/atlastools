@@ -221,6 +221,43 @@ export default function TimeOff() {
           )}
         </CardContent>
       </Card>
+      {/* Company Holidays */}
+      {holidays.length > 0 && (
+        <Card className="animate-in-up stagger-3">
+          <CardHeader>
+            <CardTitle className="text-sm flex items-center gap-2">
+              <PartyPopper className="h-4 w-4 text-warning" />
+              Company Observed Holidays
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="divide-y">
+              {holidays
+                .filter(h => {
+                  const d = parseISO(h.date);
+                  return d.getFullYear() === new Date().getFullYear();
+                })
+                .map(h => {
+                  const d = parseISO(h.date);
+                  const isPast = isBefore(d, new Date());
+                  return (
+                    <div key={h.id} className={cn('flex items-center justify-between py-3', isPast && 'opacity-50')}>
+                      <div>
+                        <p className="text-sm font-medium">{h.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {format(d, 'EEEE, MMMM d, yyyy')}
+                        </p>
+                      </div>
+                      <Badge variant={h.is_paid ? 'default' : 'outline'} className="text-[10px]">
+                        {h.is_paid ? 'Paid' : 'Unpaid'}
+                      </Badge>
+                    </div>
+                  );
+                })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
