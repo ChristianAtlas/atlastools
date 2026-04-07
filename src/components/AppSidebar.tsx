@@ -33,6 +33,7 @@ const adminNavItems: NavItem[] = [
   { label: 'ACH Tool', to: '/ach-tool', icon: Banknote, roles: ['super_admin'] },
   { label: 'Compliance', to: '/compliance', icon: ClipboardCheck, roles: ['super_admin'] },
   { label: 'Audit Log', to: '/audit-log', icon: ScrollText, roles: ['super_admin'] },
+  { label: 'Tax Management', to: '/client-tax', icon: Landmark, roles: ['client_admin'] },
   { label: 'Reports', to: '/reports', icon: BarChart3, roles: ['super_admin', 'client_admin'] },
   { label: 'Settings', to: '/settings', icon: Settings, roles: ['super_admin'] },
   { label: 'Workflow Demo', to: '/workflow-demo', icon: Workflow, roles: ['super_admin'] },

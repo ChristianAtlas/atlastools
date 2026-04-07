@@ -346,6 +346,7 @@ export type Database = {
       }
       client_sui_rates: {
         Row: {
+          account_number: string | null
           company_id: string
           created_at: string
           created_by: string | null
@@ -354,11 +355,13 @@ export type Database = {
           id: string
           notes: string | null
           rate: number
+          rate_notice_path: string | null
           state_code: string
           updated_at: string
           uploaded_via: string | null
         }
         Insert: {
+          account_number?: string | null
           company_id: string
           created_at?: string
           created_by?: string | null
@@ -367,11 +370,13 @@ export type Database = {
           id?: string
           notes?: string | null
           rate: number
+          rate_notice_path?: string | null
           state_code: string
           updated_at?: string
           uploaded_via?: string | null
         }
         Update: {
+          account_number?: string | null
           company_id?: string
           created_at?: string
           created_by?: string | null
@@ -380,6 +385,7 @@ export type Database = {
           id?: string
           notes?: string | null
           rate?: number
+          rate_notice_path?: string | null
           state_code?: string
           updated_at?: string
           uploaded_via?: string | null
