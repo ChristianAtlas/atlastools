@@ -314,10 +314,6 @@ export default function Payroll() {
     }
   };
 
-  const allStatuses = useMemo(() => {
-    const set = new Set(runs.map(r => r.status));
-    return Array.from(set).sort();
-  }, [runs]);
 
   return (
     <div className="space-y-5">
