@@ -15,8 +15,12 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Heart, Search, Users, AlertTriangle, DollarSign, FileText, CheckCircle2,
-  Clock, Eye, Plus, Upload, Download, Calendar
+  Clock, Eye, Plus, Upload, Download, Calendar, ExternalLink, ShieldOff,
+  Info, Save
 } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Separator } from '@/components/ui/separator';
 
 // ─── Mock data (scoped to a single company) ─────────────────
 
