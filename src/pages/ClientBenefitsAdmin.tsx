@@ -352,74 +352,48 @@ export default function ClientBenefitsAdmin() {
           </Card>
         </TabsContent>
 
-        {/* ──── Tab 3: Eligible Employees ──── */}
+        {/* ──── Tab 3: Eligible Employees (live data) ──── */}
         <TabsContent value="eligible">
           <Card>
             <CardHeader>
               <CardTitle className="text-lg">Eligible Employees</CardTitle>
-              <CardDescription>All employees eligible for benefit enrollment based on eligibility rules</CardDescription>
+              <CardDescription>
+                Active and onboarding employees from your company — {allEligibleEmployees.length} total
+              </CardDescription>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>MID</TableHead>
-                    <TableHead>Employee</TableHead>
-                    <TableHead>Department</TableHead>
-                    <TableHead>Start Date</TableHead>
-                    <TableHead>Eligible Date</TableHead>
-                    <TableHead>Enrolled Plans</TableHead>
-                    <TableHead>Waived Plans</TableHead>
-                    <TableHead>Status</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {MOCK_ELIGIBLE_EMPLOYEES.map(e => {
-                    const isFullyEnrolled = e.enrolledPlans.length > 0 && e.waivedPlans.length === 0;
-                    const notEnrolled = e.enrolledPlans.length === 0 && e.waivedPlans.length === 0;
-                    return (
-                      <TableRow key={e.id}>
-                        <TableCell className="font-mono text-xs">{e.mid}</TableCell>
-                        <TableCell className="font-medium">{e.name}</TableCell>
-                        <TableCell>{e.department}</TableCell>
-                        <TableCell>{e.startDate}</TableCell>
-                        <TableCell>{e.eligibleDate}</TableCell>
-                        <TableCell>
-                          {e.enrolledPlans.length > 0 ? (
-                            <div className="flex gap-1 flex-wrap">
-                              {e.enrolledPlans.map(p => (
-                                <Badge key={p} variant="outline" className="border-emerald-500 text-emerald-600 text-xs">{p}</Badge>
-                              ))}
-                            </div>
-                          ) : (
-                            <span className="text-muted-foreground text-xs">—</span>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          {e.waivedPlans.length > 0 ? (
-                            <div className="flex gap-1 flex-wrap">
-                              {e.waivedPlans.map(p => (
-                                <Badge key={p} variant="outline" className="border-muted-foreground text-muted-foreground text-xs">{p}</Badge>
-                              ))}
-                            </div>
-                          ) : (
-                            <span className="text-muted-foreground text-xs">—</span>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          {notEnrolled ? (
-                            <Badge variant="outline" className="border-amber-500 text-amber-600">Pending Election</Badge>
-                          ) : isFullyEnrolled ? (
-                            <Badge variant="outline" className="border-emerald-500 text-emerald-600">Enrolled</Badge>
-                          ) : (
-                            <Badge variant="outline" className="border-blue-500 text-blue-600">Partial</Badge>
-                          )}
-                        </TableCell>
+              {loadingEmployees ? (
+                <div className="flex items-center justify-center py-12 text-muted-foreground">
+                  <Loader2 className="h-5 w-5 animate-spin mr-2" /> Loading employees…
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>MID</TableHead>
+                      <TableHead>Employee</TableHead>
+                      <TableHead>Department</TableHead>
+                      <TableHead>Start Date</TableHead>
+                      <TableHead>Pay Type</TableHead>
+                      <TableHead>Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {allEligibleEmployees.length === 0 ? (
+                      <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">No eligible employees found</TableCell></TableRow>
+                    ) : allEligibleEmployees.map(emp => (
+                      <TableRow key={emp.id}>
+                        <TableCell className="font-mono text-xs">{emp.mid}</TableCell>
+                        <TableCell className="font-medium">{emp.first_name} {emp.last_name}</TableCell>
+                        <TableCell>{emp.department ?? '—'}</TableCell>
+                        <TableCell>{emp.start_date}</TableCell>
+                        <TableCell className="capitalize">{emp.pay_type}</TableCell>
+                        <TableCell>{statusBadge(emp.status)}</TableCell>
                       </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
