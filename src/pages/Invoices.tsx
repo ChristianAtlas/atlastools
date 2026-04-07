@@ -185,7 +185,7 @@ function InvoiceDetailDialog({ invoice, open, onClose, isSuperAdmin }: { invoice
         </div>
 
         <DialogFooter className="gap-2">
-          {invoice.status !== 'paid' && (
+          {isSuperAdmin && invoice.status !== 'paid' && (
             <>
               <Button variant="outline" size="sm" onClick={handleSend} disabled={invoice.status === 'sent'}>
                 <Send className="h-4 w-4 mr-1" /> Send
@@ -657,7 +657,7 @@ export default function Invoices() {
       </Tabs>
 
       {/* Dialogs */}
-      <InvoiceDetailDialog invoice={selectedInvoice} open={!!selectedInvoice} onClose={() => setSelectedInvoice(null)} />
+      <InvoiceDetailDialog invoice={selectedInvoice} open={!!selectedInvoice} onClose={() => setSelectedInvoice(null)} isSuperAdmin={isSuperAdmin} />
       <NsfDetailDialog nsfCase={selectedNsf} open={!!selectedNsf} onClose={() => setSelectedNsf(null)} />
     </div>
   );
