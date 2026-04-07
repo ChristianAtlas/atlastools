@@ -100,6 +100,17 @@ export default function ClientBenefitsAdmin() {
   const [search, setSearch] = useState('');
   const [planTypeFilter, setPlanTypeFilter] = useState('all');
   const [qleStatusFilter, setQleStatusFilter] = useState('all');
+  const [hasExternalBenefits, setHasExternalBenefits] = useState(false);
+  const [externalEmployeeData, setExternalEmployeeData] = useState(
+    MOCK_ACTIVE_EMPLOYEES.map(e => ({
+      ...e,
+      eeDeductionCents: e.eeDeductionCents,
+      erContributionCents: e.erContributionCents,
+      carrierName: e.carrierName,
+      planType: e.planType,
+      verified: e.erContributionCents > 0,
+    }))
+  );
 
   const filteredEnrollments = useMemo(() => {
     return MOCK_ENROLLED_EMPLOYEES.filter(e => {
@@ -154,6 +165,7 @@ export default function ClientBenefitsAdmin() {
           <TabsTrigger value="eligible"><CheckCircle2 className="h-3.5 w-3.5 mr-1" />Eligible Employees</TabsTrigger>
           <TabsTrigger value="qle"><AlertTriangle className="h-3.5 w-3.5 mr-1" />QLE Submissions</TabsTrigger>
           <TabsTrigger value="contributions"><DollarSign className="h-3.5 w-3.5 mr-1" />Contribution Reports</TabsTrigger>
+          <TabsTrigger value="external"><ExternalLink className="h-3.5 w-3.5 mr-1" />External Benefits</TabsTrigger>
         </TabsList>
 
         {/* ──── Tab 1: Plans Offered ──── */}
