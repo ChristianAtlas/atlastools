@@ -1,4 +1,4 @@
-import { Building2, Users, DollarSign, AlertTriangle, ArrowRight, Loader2 } from 'lucide-react';
+import { Building2, Users, DollarSign, ClipboardList, ArrowRight, Loader2 } from 'lucide-react';
 import { StatCard } from '@/components/StatCard';
 import { PageHeader } from '@/components/PageHeader';
 import { StatusBadge } from '@/components/StatusBadge';
@@ -8,6 +8,9 @@ import { useEmployees } from '@/hooks/useEmployees';
 import { usePayrollRuns } from '@/hooks/usePayrollRuns';
 import { useAuditLogs } from '@/hooks/useAuditLogs';
 import { useComplianceItems } from '@/hooks/useCompliance';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { CLIENT_REPORTING_STATES } from '@/hooks/useTaxManagement';
 
 const formatCurrency = (n: number) =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(n);
@@ -26,10 +29,61 @@ export default function Dashboard() {
   const { data: auditLogs = [], isLoading: loadingAudit } = useAuditLogs({ limit: 5 });
   const { data: complianceItems = [] } = useComplianceItems();
 
+  // Fetch client SUI rates to detect missing state registrations
+  const { data: clientSuiRates = [] } = useQuery({
+    queryKey: ['client_sui_rates_all'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('client_sui_rates')
+        .select('company_id, state_code, effective_date');
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
   const activeCompanies = companies.filter(c => c.status === 'active').length;
   const activeEmployees = employees.filter(e => e.status === 'active').length;
   const pendingPayrolls = payrollRuns.filter(p => PENDING_STATUSES.includes(p.status)).length;
-  const overdueCompliance = complianceItems.filter(t => t.status === 'overdue').length;
+
+  // === Task calculations ===
+  const openComplianceTasks = complianceItems.filter(
+    t => t.status === 'pending' || t.status === 'overdue' || t.status === 'in_progress'
+  ).length;
+
+  // Employees still onboarding
+  const onboardingEmployees = employees.filter(e => e.status === 'onboarding').length;
+
+  // Employees missing SSN
+  const missingSsnCount = employees.filter(
+    e => (e.status === 'active' || e.status === 'onboarding') && !e.ssn_encrypted
+  ).length;
+
+  // SUI missing registrations: companies with employees in client-reporting states but no rate on file
+  const today = new Date().toISOString().slice(0, 10);
+  const coveredPairs = new Set(
+    clientSuiRates
+      .filter(r => r.effective_date <= today)
+      .map(r => `${r.company_id}_${r.state_code}`)
+  );
+  const missingPairs = new Set<string>();
+  for (const emp of employees) {
+    if (!emp.state || !emp.company_id) continue;
+    if (emp.status !== 'active' && emp.status !== 'onboarding') continue;
+    const st = emp.state.toUpperCase();
+    if (!CLIENT_REPORTING_STATES.includes(st as any)) continue;
+    const key = `${emp.company_id}_${st}`;
+    if (!coveredPairs.has(key)) missingPairs.add(key);
+  }
+  const missingSuiCount = missingPairs.size;
+
+  const totalTasks = openComplianceTasks + onboardingEmployees + missingSsnCount + missingSuiCount;
+
+  const taskBreakdown = [
+    { label: 'Compliance tasks', count: openComplianceTasks },
+    { label: 'Employees onboarding', count: onboardingEmployees },
+    { label: 'Missing SSN', count: missingSsnCount },
+    { label: 'Missing SUI registrations', count: missingSuiCount },
+  ].filter(b => b.count > 0);
 
   const activeRuns = payrollRuns
     .filter(p => p.status !== 'completed' && p.status !== 'voided')
@@ -46,13 +100,14 @@ export default function Dashboard() {
         <StatCard icon={Users} title="Total Employees" value={isLoading ? '…' : String(activeEmployees)} delay={60} href="/employees" />
         <StatCard icon={DollarSign} title="Pending Payrolls" value={isLoading ? '…' : String(pendingPayrolls)} delay={120} href="/payroll" />
         <StatCard
-          icon={AlertTriangle}
-          title="Overdue Tasks"
-          value={isLoading ? '…' : String(overdueCompliance)}
-          changeType={overdueCompliance > 0 ? 'negative' : 'neutral'}
-          change={overdueCompliance > 0 ? 'Requires attention' : 'All clear'}
+          icon={ClipboardList}
+          title="Open Tasks"
+          value={isLoading ? '…' : String(totalTasks)}
+          changeType={totalTasks > 0 ? 'negative' : 'neutral'}
+          change={totalTasks > 0 ? 'Requires attention' : 'All clear'}
           delay={180}
           href="/compliance"
+          breakdown={taskBreakdown}
         />
       </div>
 
