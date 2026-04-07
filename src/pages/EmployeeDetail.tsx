@@ -510,10 +510,10 @@ export default function EmployeeDetail() {
           <TabsTrigger value="pto" className="gap-1.5"><PalmtreeIcon className="h-3.5 w-3.5" />PTO</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="profile"><ProfileTab emp={emp} /></TabsContent>
-        <TabsContent value="compensation"><CompensationTab emp={emp} history={compHistory} /></TabsContent>
-        <TabsContent value="tax"><TaxInfoTab /></TabsContent>
-        <TabsContent value="deposit"><DirectDepositTab /></TabsContent>
+        <TabsContent value="profile"><ProfileTab emp={emp} onEdit={isSuperAdmin ? () => openEdit('profile') : undefined} /></TabsContent>
+        <TabsContent value="compensation"><CompensationTab emp={emp} history={compHistory} onEdit={isSuperAdmin ? () => openEdit('compensation') : undefined} /></TabsContent>
+        <TabsContent value="tax"><TaxInfoTab onEdit={isSuperAdmin ? () => openEdit('tax') : undefined} /></TabsContent>
+        <TabsContent value="deposit"><DirectDepositTab onEdit={isSuperAdmin ? () => openEdit('deposit') : undefined} /></TabsContent>
         <TabsContent value="documents"><DocumentsTab /></TabsContent>
         <TabsContent value="pto"><PTOTab employeeId={emp.id} companyId={emp.company_id} /></TabsContent>
       </Tabs>
