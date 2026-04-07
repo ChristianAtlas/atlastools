@@ -14,6 +14,57 @@ export type Database = {
   }
   public: {
     Tables: {
+      ach_transactions: {
+        Row: {
+          amount_cents: number
+          collection_date: string
+          created_at: string
+          created_by: string | null
+          direction: string
+          entity_id: string
+          entity_label: string
+          entity_type: string
+          id: string
+          internal_note: string | null
+          nacha_generated_at: string | null
+          settle_date: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount_cents: number
+          collection_date: string
+          created_at?: string
+          created_by?: string | null
+          direction: string
+          entity_id: string
+          entity_label: string
+          entity_type: string
+          id?: string
+          internal_note?: string | null
+          nacha_generated_at?: string | null
+          settle_date: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount_cents?: number
+          collection_date?: string
+          created_at?: string
+          created_by?: string | null
+          direction?: string
+          entity_id?: string
+          entity_label?: string
+          entity_type?: string
+          id?: string
+          internal_note?: string | null
+          nacha_generated_at?: string | null
+          settle_date?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       audit_logs: {
         Row: {
           action: string
