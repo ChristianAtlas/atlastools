@@ -1,11 +1,17 @@
 import { PageHeader } from '@/components/PageHeader';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { TaxNoticesTab } from '@/components/tax-management/TaxNoticesTab';
+import { AmendmentsTab } from '@/components/tax-management/AmendmentsTab';
+import { W2Tab } from '@/components/tax-management/W2Tab';
+import { Form1099Tab } from '@/components/tax-management/Form1099Tab';
 import { PeoSuiRatesTab } from '@/components/tax-management/PeoSuiRatesTab';
 import { ClientSuiUploadTab } from '@/components/tax-management/ClientSuiUploadTab';
 import { SuiAdjustmentsTab } from '@/components/tax-management/SuiAdjustmentsTab';
-import { RoleGate } from '@/components/RoleGate';
+import { SuiClaimsTab } from '@/components/tax-management/SuiClaimsTab';
+import { FutaCreditReductionTab } from '@/components/tax-management/FutaCreditReductionTab';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { FileWarning, FileText, FileCheck, Receipt, Shield, Landmark } from 'lucide-react';
 
 export default function TaxManagement() {
   const { role } = useAuth();
@@ -17,27 +23,53 @@ export default function TaxManagement() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Tax Management"
-        description="Manage PEO & client SUI rates, bulk uploads, and SUI adjustments"
+        title="Tax Console"
+        description="Manage tax notices, amendments, W-2/1099 filing, SUI rates & claims, and FUTA credit reductions"
       />
 
-      <Tabs defaultValue="peo_rates" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="peo_rates">PEO SUI Rates</TabsTrigger>
-          <TabsTrigger value="client_upload">Client SUI Upload</TabsTrigger>
-          <TabsTrigger value="adjustments">SUI Adjustments</TabsTrigger>
+      <Tabs defaultValue="notices" className="space-y-4">
+        <TabsList className="flex-wrap h-auto gap-1">
+          <TabsTrigger value="notices"><FileWarning className="h-3.5 w-3.5 mr-1" />Tax Notices</TabsTrigger>
+          <TabsTrigger value="amendments"><FileText className="h-3.5 w-3.5 mr-1" />Amendments</TabsTrigger>
+          <TabsTrigger value="w2"><FileCheck className="h-3.5 w-3.5 mr-1" />W-2 / W-2C</TabsTrigger>
+          <TabsTrigger value="1099"><Receipt className="h-3.5 w-3.5 mr-1" />1099 / 1099C</TabsTrigger>
+          <TabsTrigger value="sui"><Shield className="h-3.5 w-3.5 mr-1" />SUI Rates & Claims</TabsTrigger>
+          <TabsTrigger value="futa"><Landmark className="h-3.5 w-3.5 mr-1" />FUTA Credit Reduction</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="peo_rates">
-          <PeoSuiRatesTab />
+        <TabsContent value="notices">
+          <TaxNoticesTab />
         </TabsContent>
 
-        <TabsContent value="client_upload">
-          <ClientSuiUploadTab />
+        <TabsContent value="amendments">
+          <AmendmentsTab />
         </TabsContent>
 
-        <TabsContent value="adjustments">
-          <SuiAdjustmentsTab />
+        <TabsContent value="w2">
+          <W2Tab />
+        </TabsContent>
+
+        <TabsContent value="1099">
+          <Form1099Tab />
+        </TabsContent>
+
+        <TabsContent value="sui">
+          <Tabs defaultValue="peo_rates" className="space-y-4">
+            <TabsList>
+              <TabsTrigger value="peo_rates">PEO SUI Rates</TabsTrigger>
+              <TabsTrigger value="client_upload">Client SUI Upload</TabsTrigger>
+              <TabsTrigger value="adjustments">SUI Adjustments</TabsTrigger>
+              <TabsTrigger value="claims">SUI Claims</TabsTrigger>
+            </TabsList>
+            <TabsContent value="peo_rates"><PeoSuiRatesTab /></TabsContent>
+            <TabsContent value="client_upload"><ClientSuiUploadTab /></TabsContent>
+            <TabsContent value="adjustments"><SuiAdjustmentsTab /></TabsContent>
+            <TabsContent value="claims"><SuiClaimsTab /></TabsContent>
+          </Tabs>
+        </TabsContent>
+
+        <TabsContent value="futa">
+          <FutaCreditReductionTab />
         </TabsContent>
       </Tabs>
     </div>
