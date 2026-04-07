@@ -32,6 +32,7 @@ import TaxManagement from "@/pages/TaxManagement";
 import AchTool from "@/pages/AchTool";
 import BenefitsAdmin from "@/pages/BenefitsAdmin";
 import ClientTaxManagement from "@/pages/ClientTaxManagement";
+import ClientBenefitsAdmin from "@/pages/ClientBenefitsAdmin";
 import Communications from "@/pages/Communications";
 import CommunicationWizard from "@/pages/CommunicationWizard";
 import CommunicationDetail from "@/pages/CommunicationDetail";
@@ -93,6 +94,7 @@ const App = () => (
               <Route path="/client-tax" element={<ClientTaxManagement />} />
               <Route path="/ach-tool" element={<AchTool />} />
               <Route path="/benefits-admin" element={<BenefitsAdmin />} />
+              <Route path="/client-benefits" element={<ClientBenefitsAdmin />} />
               <Route path="/communications" element={<Communications />} />
               <Route path="/communications/new" element={<CommunicationWizard />} />
               <Route path="/communications/:id" element={<CommunicationDetail />} />

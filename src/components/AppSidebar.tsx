@@ -82,6 +82,7 @@ const clientAdminNavGroups: NavGroup[] = [
     label: 'HR & People',
     items: [
       { label: 'PTO', to: '/pto', icon: CalendarDays },
+      { label: 'Benefits Admin', to: '/client-benefits', icon: Heart },
     ],
   },
   {
