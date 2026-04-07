@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { CalendarDays, Plus, Clock, Loader2 } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { CalendarDays, Plus, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -8,10 +8,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
 import { PageHeader } from '@/components/PageHeader';
 import { useCurrentEmployee } from '@/hooks/useCurrentEmployee';
 import { usePTOBalances, usePTORequests, usePTOPolicies, hoursToDays, type PTOBalance, type PTORequest } from '@/hooks/usePTO';
-import { format } from 'date-fns';
+import { format, eachDayOfInterval, isWeekend, parseISO } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -24,6 +25,20 @@ const statusColors: Record<string, string> = {
   taken: 'bg-primary/10 text-primary border-primary/30',
 };
 
+function countDays(start: string, end: string) {
+  if (!start || !end) return { weekdays: 0, weekendDays: 0 };
+  try {
+    const s = parseISO(start);
+    const e = parseISO(end);
+    if (e < s) return { weekdays: 0, weekendDays: 0 };
+    const days = eachDayOfInterval({ start: s, end: e });
+    const weekendDays = days.filter(d => isWeekend(d)).length;
+    return { weekdays: days.length - weekendDays, weekendDays };
+  } catch {
+    return { weekdays: 0, weekendDays: 0 };
+  }
+}
+
 export default function TimeOff() {
   const { data: employee, isLoading } = useCurrentEmployee();
   const { data: balances = [] } = usePTOBalances(employee?.id, employee?.company_id);
@@ -32,7 +47,16 @@ export default function TimeOff() {
   const [open, setOpen] = useState(false);
   const qc = useQueryClient();
 
-  const [form, setForm] = useState({ policyId: '', startDate: '', endDate: '', hours: '8', reason: '' });
+  const [form, setForm] = useState({ policyId: '', startDate: '', endDate: '', reason: '' });
+  const [includeWeekends, setIncludeWeekends] = useState(false);
+
+  const { weekdays, weekendDays } = useMemo(
+    () => countDays(form.startDate, form.endDate),
+    [form.startDate, form.endDate]
+  );
+
+  const hasWeekendDays = weekendDays > 0;
+  const totalHours = (weekdays + (includeWeekends ? weekendDays : 0)) * 8;
 
   if (isLoading) {
     return (
@@ -43,14 +67,14 @@ export default function TimeOff() {
   }
 
   const handleSubmit = async () => {
-    if (!employee || !form.policyId || !form.startDate || !form.endDate) return;
+    if (!employee || !form.policyId || !form.startDate || !form.endDate || totalHours === 0) return;
     const { error } = await supabase.from('pto_requests').insert({
       employee_id: employee.id,
       company_id: employee.company_id,
       policy_id: form.policyId,
       start_date: form.startDate,
       end_date: form.endDate,
-      hours: parseFloat(form.hours),
+      hours: totalHours,
       reason: form.reason || null,
       status: 'pending',
     } as any);
@@ -62,7 +86,8 @@ export default function TimeOff() {
     qc.invalidateQueries({ queryKey: ['pto_requests'] });
     qc.invalidateQueries({ queryKey: ['pto_balances'] });
     setOpen(false);
-    setForm({ policyId: '', startDate: '', endDate: '', hours: '8', reason: '' });
+    setForm({ policyId: '', startDate: '', endDate: '', reason: '' });
+    setIncludeWeekends(false);
   };
 
   return (
@@ -97,10 +122,33 @@ export default function TimeOff() {
                   <Input type="date" value={form.endDate} onChange={e => setForm(f => ({ ...f, endDate: e.target.value }))} />
                 </div>
               </div>
+
+              {/* Auto-calculated hours */}
               <div>
                 <Label>Hours</Label>
-                <Input type="number" value={form.hours} onChange={e => setForm(f => ({ ...f, hours: e.target.value }))} />
+                <Input type="number" value={totalHours} readOnly className="bg-muted" />
+                {form.startDate && form.endDate && totalHours > 0 && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {weekdays} weekday{weekdays !== 1 ? 's' : ''} × 8 hrs
+                    {includeWeekends && weekendDays > 0 && ` + ${weekendDays} weekend day${weekendDays !== 1 ? 's' : ''} × 8 hrs`}
+                  </p>
+                )}
               </div>
+
+              {/* Weekend checkbox — only shown when range includes weekends */}
+              {hasWeekendDays && (
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id="include-weekends"
+                    checked={includeWeekends}
+                    onCheckedChange={(checked) => setIncludeWeekends(checked === true)}
+                  />
+                  <Label htmlFor="include-weekends" className="text-sm font-normal cursor-pointer">
+                    Include weekend days ({weekendDays} day{weekendDays !== 1 ? 's' : ''}, {weekendDays * 8} hrs)
+                  </Label>
+                </div>
+              )}
+
               <div>
                 <Label>Reason (optional)</Label>
                 <Textarea value={form.reason} onChange={e => setForm(f => ({ ...f, reason: e.target.value }))} rows={2} />
