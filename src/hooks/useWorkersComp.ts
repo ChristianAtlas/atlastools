@@ -184,6 +184,17 @@ export function useUpdateWCCode() {
   });
 }
 
+export function useDeleteWCCode() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('workers_comp_codes').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['wc_codes'] }),
+  });
+}
+
 // ── Assignments ──
 
 export function useWCAssignments(companyId?: string) {
