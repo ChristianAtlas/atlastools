@@ -427,14 +427,14 @@ export default function Invoices() {
                 <thead>
                   <tr className="border-b bg-muted/50">
                     <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Invoice #</th>
-                    <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Company</th>
+                    {isSuperAdmin && <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Company</th>}
                     <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Type</th>
                     <th className="px-4 py-2.5 text-right font-medium text-muted-foreground">Amount</th>
                     <th className="px-4 py-2.5 text-right font-medium text-muted-foreground">Balance</th>
                     <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Due Date</th>
                     <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">EEs</th>
                     <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Status</th>
-                    <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Actions</th>
+                    <th className="px-4 py-2.5 text-left font-medium text-muted-foreground"></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y">
