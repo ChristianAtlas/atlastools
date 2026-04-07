@@ -324,37 +324,44 @@ export default function ClientTaxManagement() {
                   <TableHead>State</TableHead>
                   <TableHead>Account Number</TableHead>
                   <TableHead>Rate</TableHead>
+                  <TableHead>Employees</TableHead>
                   <TableHead>Effective Date</TableHead>
                   <TableHead>Rate Notice</TableHead>
                   <TableHead>Notes</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {displayRates.map(r => (
-                  <TableRow key={r.id}>
-                    <TableCell className="font-medium">
-                      {r.state_code}
-                      <span className="text-muted-foreground text-xs ml-1">— {STATE_NAMES[r.state_code]}</span>
-                    </TableCell>
-                    <TableCell className="font-mono text-sm">{r.account_number || '—'}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{(r.rate * 100).toFixed(3)}%</Badge>
-                    </TableCell>
-                    <TableCell className="text-sm">{r.effective_date}</TableCell>
-                    <TableCell>
-                      {r.rate_notice_path ? (
-                        <Badge className="text-xs bg-emerald-100 text-emerald-700 border-emerald-300 gap-1">
-                          <CheckCircle2 className="h-3 w-3" /> Uploaded
-                        </Badge>
-                      ) : (
-                        <Badge variant="secondary" className="text-xs">None</Badge>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">
-                      {r.notes || '—'}
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {displayRates.map(r => {
+                  const empCount = employeesByState[r.state_code] || 0;
+                  return (
+                    <TableRow key={r.id}>
+                      <TableCell className="font-medium">
+                        {r.state_code}
+                        <span className="text-muted-foreground text-xs ml-1">— {STATE_NAMES[r.state_code]}</span>
+                      </TableCell>
+                      <TableCell className="font-mono text-sm">{r.account_number || '—'}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{(r.rate * 100).toFixed(3)}%</Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="secondary" className="text-xs tabular-nums">{empCount}</Badge>
+                      </TableCell>
+                      <TableCell className="text-sm">{r.effective_date}</TableCell>
+                      <TableCell>
+                        {r.rate_notice_path ? (
+                          <Badge className="text-xs bg-emerald-100 text-emerald-700 border-emerald-300 gap-1">
+                            <CheckCircle2 className="h-3 w-3" /> Uploaded
+                          </Badge>
+                        ) : (
+                          <Badge variant="secondary" className="text-xs">None</Badge>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">
+                        {r.notes || '—'}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           )}
