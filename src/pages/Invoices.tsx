@@ -349,30 +349,37 @@ export default function Invoices() {
       />
 
       {/* KPI Cards */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        <StatCard icon={DollarSign} label="Open AR" value={fmt(totalAR)} />
-        <StatCard icon={TrendingUp} label="Collected This Month" value={fmt(paidThisMonth)} iconColor="bg-green-100 dark:bg-green-900/30" />
+      <div className={`grid gap-4 sm:grid-cols-2 ${isSuperAdmin ? 'lg:grid-cols-5' : 'lg:grid-cols-3'}`}>
+        <StatCard icon={DollarSign} label="Outstanding Balance" value={fmt(totalAR)} />
+        <StatCard icon={TrendingUp} label="Paid This Month" value={fmt(paidThisMonth)} iconColor="bg-green-100 dark:bg-green-900/30" />
         <StatCard icon={AlertTriangle} label="Overdue" value={overdueInvoices.length} iconColor="bg-destructive/10" />
-        <StatCard icon={XCircle} label="NSF Cases Open" value={openNsf.length} iconColor="bg-red-100 dark:bg-red-900/30" />
-        <StatCard icon={FileText} label="Generated Today" value={invoicesToday.length} />
+        {isSuperAdmin && <StatCard icon={XCircle} label="NSF Cases Open" value={openNsf.length} iconColor="bg-red-100 dark:bg-red-900/30" />}
+        {isSuperAdmin && <StatCard icon={FileText} label="Generated Today" value={invoicesToday.length} />}
       </div>
+
+      {/* Wire Instructions for Client Admins */}
+      {!isSuperAdmin && <WireInstructionsCard />}
 
       <Tabs defaultValue="invoices">
         <TabsList>
           <TabsTrigger value="invoices">All Invoices</TabsTrigger>
-          <TabsTrigger value="overdue" className="relative">
-            Overdue / Failed
-            {overdueInvoices.length > 0 && (
-              <span className="ml-1.5 inline-flex items-center justify-center rounded-full bg-destructive text-destructive-foreground text-[10px] h-4 w-4">{overdueInvoices.length}</span>
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="nsf" className="relative">
-            NSF Cases
-            {openNsf.length > 0 && (
-              <span className="ml-1.5 inline-flex items-center justify-center rounded-full bg-destructive text-destructive-foreground text-[10px] h-4 w-4">{openNsf.length}</span>
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="ar">Client AR Summary</TabsTrigger>
+          {isSuperAdmin && (
+            <TabsTrigger value="overdue" className="relative">
+              Overdue / Failed
+              {overdueInvoices.length > 0 && (
+                <span className="ml-1.5 inline-flex items-center justify-center rounded-full bg-destructive text-destructive-foreground text-[10px] h-4 w-4">{overdueInvoices.length}</span>
+              )}
+            </TabsTrigger>
+          )}
+          {isSuperAdmin && (
+            <TabsTrigger value="nsf" className="relative">
+              NSF Cases
+              {openNsf.length > 0 && (
+                <span className="ml-1.5 inline-flex items-center justify-center rounded-full bg-destructive text-destructive-foreground text-[10px] h-4 w-4">{openNsf.length}</span>
+              )}
+            </TabsTrigger>
+          )}
+          {isSuperAdmin && <TabsTrigger value="ar">Client AR Summary</TabsTrigger>}
         </TabsList>
 
         {/* ─── All Invoices Tab ─── */}
