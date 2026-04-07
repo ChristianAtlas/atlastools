@@ -3076,8 +3076,10 @@ export type Database = {
           effective_date: string
           expiration_date: string | null
           id: string
+          internal_markup_rate: number
           is_active: boolean
           policy_id: string
+          rate_basis: string
           rate_per_hundred: number
           state: string
           updated_at: string
@@ -3090,8 +3092,10 @@ export type Database = {
           effective_date: string
           expiration_date?: string | null
           id?: string
+          internal_markup_rate?: number
           is_active?: boolean
           policy_id: string
+          rate_basis?: string
           rate_per_hundred?: number
           state: string
           updated_at?: string
@@ -3104,8 +3108,10 @@ export type Database = {
           effective_date?: string
           expiration_date?: string | null
           id?: string
+          internal_markup_rate?: number
           is_active?: boolean
           policy_id?: string
+          rate_basis?: string
           rate_per_hundred?: number
           state?: string
           updated_at?: string

@@ -38,6 +38,8 @@ export interface WCCode {
   description: string;
   state: string;
   rate_per_hundred: number;
+  rate_basis: 'per_hundred' | 'per_hour';
+  internal_markup_rate: number;
   effective_date: string;
   expiration_date: string | null;
   is_active: boolean;
@@ -177,6 +179,17 @@ export function useUpdateWCCode() {
       const { data, error } = await supabase.from('workers_comp_codes').update(updates as any).eq('id', id).select().single();
       if (error) throw error;
       return data;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['wc_codes'] }),
+  });
+}
+
+export function useDeleteWCCode() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('workers_comp_codes').delete().eq('id', id);
+      if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['wc_codes'] }),
   });
