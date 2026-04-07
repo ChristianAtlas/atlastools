@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { PageHeader } from '@/components/PageHeader';
@@ -16,11 +16,14 @@ import { Textarea } from '@/components/ui/textarea';
 import {
   Heart, Search, Users, AlertTriangle, DollarSign, FileText, CheckCircle2,
   Clock, Eye, Plus, Upload, Download, Calendar, ExternalLink, ShieldOff,
-  Info, Save
+  Info, Save, Loader2
 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
+import { useEmployees } from '@/hooks/useEmployees';
+import { useExternalBenefits, useSaveAllExternalBenefits } from '@/hooks/useExternalBenefits';
+import { toast } from 'sonner';
 
 // ─── Mock data (scoped to a single company) ─────────────────
 
