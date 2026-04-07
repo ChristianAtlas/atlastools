@@ -44,7 +44,7 @@ export default function CommunicationWizard() {
   const [selectionMethod, setSelectionMethod] = useState<'all' | 'segment' | 'upload'>('all');
   const [selectedSegmentId, setSelectedSegmentId] = useState('');
   const [csvText, setCsvText] = useState('');
-  const [csvErrors, setCsvErrors] = useState<string[]>([]);
+  
   const [fromName, setFromName] = useState('AtlasOne HR Support');
   const [replyTo, setReplyTo] = useState('');
   const [subject, setSubject] = useState('');
@@ -336,11 +336,11 @@ export default function CommunicationWizard() {
                 <Label>Upload CSV (column: CID)</Label>
                 <Input type="file" accept=".csv" onChange={handleCsvUpload} />
                 <p className="text-xs text-muted-foreground">CSV should have a single column header "CID" with company IDs below.</p>
-                {csvErrors.length > 0 && (
+                {csvParseErrors.length > 0 && (
                   <Alert variant="destructive">
                     <AlertTriangle className="h-4 w-4" />
                     <AlertDescription>
-                      {csvErrors.length} invalid CID(s): {csvErrors.slice(0, 5).join(', ')}{csvErrors.length > 5 ? '...' : ''}
+                      {csvParseErrors.length} invalid CID(s): {csvParseErrors.slice(0, 5).join(', ')}{csvParseErrors.length > 5 ? '...' : ''}
                     </AlertDescription>
                   </Alert>
                 )}
