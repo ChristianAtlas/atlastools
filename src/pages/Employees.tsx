@@ -18,7 +18,7 @@ export default function Employees() {
       <PageHeader
         title="Employees"
         description={`${employees.length} employees across all companies`}
-        actions={<Button size="sm"><Plus className="h-4 w-4 mr-1.5" />Add Employee</Button>}
+        actions={<Button size="sm" onClick={() => navigate('/onboarding')}><Plus className="h-4 w-4 mr-1.5" />Add Employee</Button>}
       />
 
       <div className="flex items-center gap-3 animate-in-up stagger-1">
