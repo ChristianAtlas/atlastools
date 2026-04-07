@@ -108,7 +108,13 @@ export function useEmployees(companyId?: string, search?: string) {
       }
       const { data, error } = await query;
       if (error) throw error;
-      return (data ?? []) as unknown as EmployeeRow[];
+      const rows = (data ?? []) as unknown as EmployeeRow[];
+      rows.sort((a, b) => {
+        const numA = parseInt(a.mid?.replace(/\D/g, '') || '0', 10);
+        const numB = parseInt(b.mid?.replace(/\D/g, '') || '0', 10);
+        return numA - numB;
+      });
+      return rows;
     },
   });
 }
