@@ -39,10 +39,6 @@ export default function ClientTaxManagement() {
   const { role, profile } = useAuth();
   const qc = useQueryClient();
 
-  if (role && role !== 'client_admin') {
-    return <Navigate to="/" replace />;
-  }
-
   const companyId = profile?.company_id;
 
   // Fetch client's SUI rates
