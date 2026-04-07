@@ -526,7 +526,7 @@ export default function EmployeeDetail() {
         />
       </RoleGate>
 
-      <EditEmployeeDialog employee={emp} open={editOpen} onOpenChange={setEditOpen} />
+      <EditEmployeeDialog employee={emp} open={editOpen} onOpenChange={setEditOpen} defaultTab={editTab} />
     </div>
   );
 }
