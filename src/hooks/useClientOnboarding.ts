@@ -170,6 +170,28 @@ export function useCreateOnboardingWizard() {
   });
 }
 
+export function useDeleteOnboardingWizard() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: async (wizardId: string) => {
+      const { error } = await supabase
+        .from('client_onboarding_wizards')
+        .delete()
+        .eq('id', wizardId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['client-onboarding-wizards'] });
+      toast({ title: 'Onboarding deleted', description: 'The client onboarding has been removed.' });
+    },
+    onError: (err: Error) => {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    },
+  });
+}
+
 export function useSaveWizardStep() {
   const queryClient = useQueryClient();
 
