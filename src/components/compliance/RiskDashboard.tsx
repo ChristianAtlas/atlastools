@@ -27,15 +27,6 @@ export function RiskDashboard({ items, licenses }: Props) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-start gap-6">
-        <ComplianceScoreBadge score={score} size="lg" />
-        <div className="flex-1 grid grid-cols-2 md:grid-cols-4 gap-3">
-          <ComplianceStatusCard title="Compliant" count={compliant} total={items.length} variant="compliant" />
-          <ComplianceStatusCard title="At Risk" count={atRisk} variant="at_risk" subtitle={expiring ? `${expiring} licenses expiring` : undefined} />
-          <ComplianceStatusCard title="Non-Compliant" count={nonCompliant} variant="non_compliant" subtitle={expired ? `${expired} licenses expired` : undefined} />
-          <ComplianceStatusCard title="Pending" count={pending} variant="pending" />
-        </div>
-      </div>
 
       {companyScores.size > 0 && (
         <div>
