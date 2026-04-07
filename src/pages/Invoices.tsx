@@ -20,8 +20,9 @@ import { toast } from 'sonner';
 import {
   DollarSign, FileText, TrendingUp, AlertTriangle, Clock, Send,
   Download, CheckCircle, XCircle, RefreshCw, Search, Filter,
-  CreditCard, Ban, CalendarDays, Users, ArrowUpRight, Eye,
+  CreditCard, Ban, CalendarDays, Users, ArrowUpRight, Eye, Building2,
 } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 const fmt = (cents: number) => centsToUSD(cents);
 const fmtDate = (d: string) => d ? new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—';
@@ -68,7 +69,7 @@ function StatCard({ icon: Icon, label, value, iconColor }: { icon: React.Element
 }
 
 // ─── Invoice Detail Dialog ───
-function InvoiceDetailDialog({ invoice, open, onClose }: { invoice: InvoiceRow | null; open: boolean; onClose: () => void }) {
+function InvoiceDetailDialog({ invoice, open, onClose, isSuperAdmin }: { invoice: InvoiceRow | null; open: boolean; onClose: () => void; isSuperAdmin: boolean }) {
   const { data: lineItems } = useInvoiceLineItems(invoice?.id);
   const updateStatus = useUpdateInvoiceStatus();
 
@@ -160,7 +161,7 @@ function InvoiceDetailDialog({ invoice, open, onClose }: { invoice: InvoiceRow |
           </div>
 
           {/* Internal markup details (super admin only) */}
-          {markupItems.length > 0 && (
+          {isSuperAdmin && markupItems.length > 0 && (
             <div className="border rounded-lg p-3 bg-muted/20">
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Internal Markup Details</p>
               <div className="space-y-1">
@@ -184,7 +185,7 @@ function InvoiceDetailDialog({ invoice, open, onClose }: { invoice: InvoiceRow |
         </div>
 
         <DialogFooter className="gap-2">
-          {invoice.status !== 'paid' && (
+          {isSuperAdmin && invoice.status !== 'paid' && (
             <>
               <Button variant="outline" size="sm" onClick={handleSend} disabled={invoice.status === 'sent'}>
                 <Send className="h-4 w-4 mr-1" /> Send
@@ -255,8 +256,41 @@ function NsfDetailDialog({ nsfCase, open, onClose }: { nsfCase: NsfEventRow | nu
   );
 }
 
+// ─── Wire Instructions Card (Client Admin) ───
+function WireInstructionsCard() {
+  return (
+    <Card className="shadow-sm border-amber-200 dark:border-amber-800">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-base flex items-center gap-2">
+          <Building2 className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+          Wire Instructions for Late Payroll Funding
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3 text-sm">
+        <p className="text-muted-foreground">
+          If your payroll submission was late, you may be required to fund via wire transfer. Use the details below:
+        </p>
+        <div className="grid grid-cols-2 gap-x-6 gap-y-2 bg-muted/50 rounded-lg p-4">
+          <div><span className="text-muted-foreground">Bank Name</span><p className="font-medium">First National Bank</p></div>
+          <div><span className="text-muted-foreground">Routing Number</span><p className="font-mono font-medium">021000021</p></div>
+          <div><span className="text-muted-foreground">Account Number</span><p className="font-mono font-medium">•••••7890</p></div>
+          <div><span className="text-muted-foreground">Account Name</span><p className="font-medium">AtlasOne Payroll Trust</p></div>
+          <div className="col-span-2">
+            <span className="text-muted-foreground">Reference</span>
+            <p className="font-medium">Include your Company ID and payroll period in the wire memo</p>
+          </div>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Wire transfers typically settle same-day if initiated before 2:00 PM EST. Contact your account manager for questions.
+        </p>
+      </CardContent>
+    </Card>
+  );
+}
+
 // ─── Main Page ───
 export default function Invoices() {
+  const { isSuperAdmin } = useAuth();
   const { data: invoices = [], isLoading } = useInvoices();
   const { data: nsfEvents = [] } = useNsfEvents();
   const { data: billingProfiles = [] } = useBillingProfiles();
@@ -303,38 +337,49 @@ export default function Invoices() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Billing & Invoices" description="Invoice generation, payment tracking, and collections management" actions={
-        <Button onClick={handleGenerateMonthly} disabled={generateMonthly.isPending}>
-          <CalendarDays className="h-4 w-4 mr-2" />
-          {generateMonthly.isPending ? 'Generating...' : 'Generate Monthly Invoices'}
-        </Button>
-      } />
+      <PageHeader
+        title={isSuperAdmin ? "Billing & Invoices" : "My Invoices"}
+        description={isSuperAdmin ? "Invoice generation, payment tracking, and collections management" : "View your company invoices and payment history"}
+        actions={isSuperAdmin ? (
+          <Button onClick={handleGenerateMonthly} disabled={generateMonthly.isPending}>
+            <CalendarDays className="h-4 w-4 mr-2" />
+            {generateMonthly.isPending ? 'Generating...' : 'Generate Monthly Invoices'}
+          </Button>
+        ) : undefined}
+      />
 
       {/* KPI Cards */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        <StatCard icon={DollarSign} label="Open AR" value={fmt(totalAR)} />
-        <StatCard icon={TrendingUp} label="Collected This Month" value={fmt(paidThisMonth)} iconColor="bg-green-100 dark:bg-green-900/30" />
+      <div className={`grid gap-4 sm:grid-cols-2 ${isSuperAdmin ? 'lg:grid-cols-5' : 'lg:grid-cols-3'}`}>
+        <StatCard icon={DollarSign} label="Outstanding Balance" value={fmt(totalAR)} />
+        <StatCard icon={TrendingUp} label="Paid This Month" value={fmt(paidThisMonth)} iconColor="bg-green-100 dark:bg-green-900/30" />
         <StatCard icon={AlertTriangle} label="Overdue" value={overdueInvoices.length} iconColor="bg-destructive/10" />
-        <StatCard icon={XCircle} label="NSF Cases Open" value={openNsf.length} iconColor="bg-red-100 dark:bg-red-900/30" />
-        <StatCard icon={FileText} label="Generated Today" value={invoicesToday.length} />
+        {isSuperAdmin && <StatCard icon={XCircle} label="NSF Cases Open" value={openNsf.length} iconColor="bg-red-100 dark:bg-red-900/30" />}
+        {isSuperAdmin && <StatCard icon={FileText} label="Generated Today" value={invoicesToday.length} />}
       </div>
+
+      {/* Wire Instructions for Client Admins */}
+      {!isSuperAdmin && <WireInstructionsCard />}
 
       <Tabs defaultValue="invoices">
         <TabsList>
           <TabsTrigger value="invoices">All Invoices</TabsTrigger>
-          <TabsTrigger value="overdue" className="relative">
-            Overdue / Failed
-            {overdueInvoices.length > 0 && (
-              <span className="ml-1.5 inline-flex items-center justify-center rounded-full bg-destructive text-destructive-foreground text-[10px] h-4 w-4">{overdueInvoices.length}</span>
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="nsf" className="relative">
-            NSF Cases
-            {openNsf.length > 0 && (
-              <span className="ml-1.5 inline-flex items-center justify-center rounded-full bg-destructive text-destructive-foreground text-[10px] h-4 w-4">{openNsf.length}</span>
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="ar">Client AR Summary</TabsTrigger>
+          {isSuperAdmin && (
+            <TabsTrigger value="overdue" className="relative">
+              Overdue / Failed
+              {overdueInvoices.length > 0 && (
+                <span className="ml-1.5 inline-flex items-center justify-center rounded-full bg-destructive text-destructive-foreground text-[10px] h-4 w-4">{overdueInvoices.length}</span>
+              )}
+            </TabsTrigger>
+          )}
+          {isSuperAdmin && (
+            <TabsTrigger value="nsf" className="relative">
+              NSF Cases
+              {openNsf.length > 0 && (
+                <span className="ml-1.5 inline-flex items-center justify-center rounded-full bg-destructive text-destructive-foreground text-[10px] h-4 w-4">{openNsf.length}</span>
+              )}
+            </TabsTrigger>
+          )}
+          {isSuperAdmin && <TabsTrigger value="ar">Client AR Summary</TabsTrigger>}
         </TabsList>
 
         {/* ─── All Invoices Tab ─── */}
@@ -363,15 +408,17 @@ export default function Invoices() {
                 ))}
               </SelectContent>
             </Select>
-            <Select value={companyFilter} onValueChange={setCompanyFilter}>
-              <SelectTrigger className="w-[180px]"><SelectValue placeholder="Company" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Companies</SelectItem>
-                {uniqueCompanies.map(([id, name]) => (
-                  <SelectItem key={id} value={id}>{name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {isSuperAdmin && (
+              <Select value={companyFilter} onValueChange={setCompanyFilter}>
+                <SelectTrigger className="w-[180px]"><SelectValue placeholder="Company" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Companies</SelectItem>
+                  {uniqueCompanies.map(([id, name]) => (
+                    <SelectItem key={id} value={id}>{name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
           </div>
 
           <Card className="shadow-sm">
@@ -380,25 +427,25 @@ export default function Invoices() {
                 <thead>
                   <tr className="border-b bg-muted/50">
                     <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Invoice #</th>
-                    <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Company</th>
+                    {isSuperAdmin && <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Company</th>}
                     <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Type</th>
                     <th className="px-4 py-2.5 text-right font-medium text-muted-foreground">Amount</th>
                     <th className="px-4 py-2.5 text-right font-medium text-muted-foreground">Balance</th>
                     <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Due Date</th>
                     <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">EEs</th>
                     <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Status</th>
-                    <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Actions</th>
+                    <th className="px-4 py-2.5 text-left font-medium text-muted-foreground"></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y">
                   {isLoading ? (
                     <tr><td colSpan={9} className="px-4 py-8 text-center text-muted-foreground">Loading invoices...</td></tr>
                   ) : filtered.length === 0 ? (
-                    <tr><td colSpan={9} className="px-4 py-8 text-center text-muted-foreground">No invoices found. Click "Generate Monthly Invoices" to create invoices for all active clients.</td></tr>
+                    <tr><td colSpan={isSuperAdmin ? 9 : 8} className="px-4 py-8 text-center text-muted-foreground">{isSuperAdmin ? 'No invoices found. Click "Generate Monthly Invoices" to create invoices for all active clients.' : 'No invoices found.'}</td></tr>
                   ) : filtered.map(inv => (
                     <tr key={inv.id} className="hover:bg-muted/30 transition-colors">
                       <td className="px-4 py-3 font-medium text-xs">{inv.invoice_number}</td>
-                      <td className="px-4 py-3">{inv.company_name}</td>
+                      {isSuperAdmin && <td className="px-4 py-3">{inv.company_name}</td>}
                       <td className="px-4 py-3">
                         <Badge variant={inv.invoice_type === 'payroll' ? 'default' : 'secondary'} className="text-xs capitalize">
                           {inv.invoice_type}
@@ -420,7 +467,7 @@ export default function Invoices() {
                           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setSelectedInvoice(inv)}>
                             <Eye className="h-3.5 w-3.5" />
                           </Button>
-                          {inv.status !== 'paid' && (
+                          {isSuperAdmin && inv.status !== 'paid' && (
                             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => {
                               updateStatus.mutate({ id: inv.id, status: 'paid' }, {
                                 onSuccess: () => toast.success('Marked as paid'),
@@ -610,7 +657,7 @@ export default function Invoices() {
       </Tabs>
 
       {/* Dialogs */}
-      <InvoiceDetailDialog invoice={selectedInvoice} open={!!selectedInvoice} onClose={() => setSelectedInvoice(null)} />
+      <InvoiceDetailDialog invoice={selectedInvoice} open={!!selectedInvoice} onClose={() => setSelectedInvoice(null)} isSuperAdmin={isSuperAdmin} />
       <NsfDetailDialog nsfCase={selectedNsf} open={!!selectedNsf} onClose={() => setSelectedNsf(null)} />
     </div>
   );
