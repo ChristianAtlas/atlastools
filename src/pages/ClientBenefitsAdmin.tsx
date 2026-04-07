@@ -703,7 +703,7 @@ export default function ClientBenefitsAdmin() {
                       </TableHeader>
                       <TableBody>
                         {externalEmployeeData.map((emp, idx) => (
-                          <TableRow key={emp.id}>
+                          <TableRow key={emp.employeeId}>
                             <TableCell className="font-mono text-xs">{emp.mid}</TableCell>
                             <TableCell className="font-medium">{emp.name}</TableCell>
                             <TableCell>{emp.department}</TableCell>
