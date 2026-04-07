@@ -188,7 +188,7 @@ export function useUpdateInvoiceStatus() {
         }
       }
       Object.assign(updates, extras);
-      const { data, error } = await supabase.from('invoices').update(updates).eq('id', id).select().single();
+      const { data, error } = await supabase.from('invoices').update(updates as any).eq('id', id).select().single();
       if (error) throw error;
       return data;
     },
@@ -257,7 +257,7 @@ export function useUpdateNsfCase() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, ...updates }: { id: string } & Record<string, unknown>) => {
-      const { data, error } = await supabase.from('nsf_events').update(updates).eq('id', id).select().single();
+      const { data, error } = await supabase.from('nsf_events').update(updates as any).eq('id', id).select().single();
       if (error) throw error;
       return data;
     },

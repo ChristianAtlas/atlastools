@@ -203,7 +203,7 @@ export function useSaveWizardStep() {
 
       const { data: updated, error } = await supabase
         .from('client_onboarding_wizards')
-        .update(updates)
+        .update(updates as any)
         .eq('id', wizardId)
         .select()
         .single();

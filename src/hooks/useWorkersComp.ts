@@ -134,7 +134,7 @@ export function useUpdateWCPolicy() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, ...updates }: { id: string } & Record<string, unknown>) => {
-      const { data, error } = await supabase.from('workers_comp_policies').update(updates).eq('id', id).select().single();
+      const { data, error } = await supabase.from('workers_comp_policies').update(updates as any).eq('id', id).select().single();
       if (error) throw error;
       return data;
     },
@@ -174,7 +174,7 @@ export function useUpdateWCCode() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, ...updates }: { id: string } & Record<string, unknown>) => {
-      const { data, error } = await supabase.from('workers_comp_codes').update(updates).eq('id', id).select().single();
+      const { data, error } = await supabase.from('workers_comp_codes').update(updates as any).eq('id', id).select().single();
       if (error) throw error;
       return data;
     },
@@ -213,7 +213,7 @@ export function useUpdateWCAssignment() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, ...updates }: { id: string } & Record<string, unknown>) => {
-      const { data, error } = await supabase.from('employee_wc_assignments').update(updates).eq('id', id).select().single();
+      const { data, error } = await supabase.from('employee_wc_assignments').update(updates as any).eq('id', id).select().single();
       if (error) throw error;
       return data;
     },
