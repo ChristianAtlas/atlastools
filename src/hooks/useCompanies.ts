@@ -35,7 +35,13 @@ async function fetchCompanies(search?: string): Promise<CompanyRow[]> {
   }
   const { data, error } = await query;
   if (error) throw error;
-  return (data ?? []) as unknown as CompanyRow[];
+  const rows = (data ?? []) as unknown as CompanyRow[];
+  rows.sort((a, b) => {
+    const numA = parseInt(a.cid?.replace(/\D/g, '') || '0', 10);
+    const numB = parseInt(b.cid?.replace(/\D/g, '') || '0', 10);
+    return numA - numB;
+  });
+  return rows;
 }
 
 async function fetchCompany(id: string): Promise<CompanyRow> {
