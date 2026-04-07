@@ -44,16 +44,6 @@ const MOCK_ENROLLED_EMPLOYEES = [
   { id: '7', mid: 'M6', name: 'Sarah Johnson', department: 'Marketing', planType: 'Dental', planName: 'Basic', tier: 'Employee Only', status: 'pending', effectiveDate: '2026-05-01', monthlyPremiumCents: 4500, erPortionCents: 2250, eePortionCents: 2250 },
 ];
 
-const MOCK_ELIGIBLE_EMPLOYEES = [
-  { id: '1', mid: 'M5', name: 'John Smith', department: 'Engineering', startDate: '2024-06-15', eligibleDate: '2024-09-15', enrolledPlans: ['Medical', 'Dental'], waivedPlans: ['Vision'] },
-  { id: '2', mid: 'M6', name: 'Sarah Johnson', department: 'Marketing', startDate: '2025-03-01', eligibleDate: '2025-06-01', enrolledPlans: ['Medical'], waivedPlans: [] },
-  { id: '3', mid: 'M7', name: 'Mike Davis', department: 'Sales', startDate: '2025-08-10', eligibleDate: '2025-11-10', enrolledPlans: ['Medical'], waivedPlans: ['Dental', 'Vision'] },
-  { id: '4', mid: 'M8', name: 'Lisa Chen', department: 'Engineering', startDate: '2025-01-20', eligibleDate: '2025-04-20', enrolledPlans: ['Vision'], waivedPlans: ['Medical'] },
-  { id: '5', mid: 'M9', name: 'Tom Wilson', department: 'Operations', startDate: '2024-11-01', eligibleDate: '2025-02-01', enrolledPlans: ['401k'], waivedPlans: [] },
-  { id: '6', mid: 'M10', name: 'Amy Brown', department: 'HR', startDate: '2026-02-01', eligibleDate: '2026-05-01', enrolledPlans: [], waivedPlans: [] },
-  { id: '7', mid: 'M11', name: 'James Lee', department: 'Finance', startDate: '2026-03-15', eligibleDate: '2026-06-15', enrolledPlans: [], waivedPlans: [] },
-];
-
 const MOCK_QLES = [
   { id: '1', mid: 'M6', employeeName: 'Sarah Johnson', qleType: 'Marriage', eventDate: '2026-04-15', requestDate: '2026-04-16', status: 'pending_review', documentsUploaded: true, coverageImpact: 'Add spouse to Medical, Dental', deadline: '2026-05-15' },
   { id: '2', mid: 'M9', employeeName: 'Tom Wilson', qleType: 'Birth/Adoption', eventDate: '2026-03-28', requestDate: '2026-03-29', status: 'approved', documentsUploaded: true, coverageImpact: 'Add dependent to Medical', deadline: '2026-04-28' },
@@ -67,19 +57,6 @@ const MOCK_CONTRIBUTION_REPORTS = [
   { id: '3', month: '2026-01', totalPremiumsCents: 478000, erContributionsCents: 340000, eeDeductionsCents: 138000, enrolledCount: 41, avgEeCostCents: 3366 },
   { id: '4', month: '2025-12', totalPremiumsCents: 470000, erContributionsCents: 335000, eeDeductionsCents: 135000, enrolledCount: 40, avgEeCostCents: 3375 },
 ];
-
-// Mock active employees for external benefits entry
-const MOCK_ACTIVE_EMPLOYEES = [
-  { id: '1', mid: 'M5', name: 'John Smith', department: 'Engineering', eeDeductionCents: 31250, erContributionCents: 93750, carrierName: 'Anthem Blue Cross', planType: 'Medical - PPO' },
-  { id: '2', mid: 'M6', name: 'Sarah Johnson', department: 'Marketing', eeDeductionCents: 16250, erContributionCents: 48750, carrierName: 'Anthem Blue Cross', planType: 'Medical - PPO' },
-  { id: '3', mid: 'M7', name: 'Mike Davis', department: 'Sales', eeDeductionCents: 23750, erContributionCents: 71250, carrierName: 'Kaiser', planType: 'Medical - HMO' },
-  { id: '4', mid: 'M8', name: 'Lisa Chen', department: 'Engineering', eeDeductionCents: 12500, erContributionCents: 37500, carrierName: 'Anthem Blue Cross', planType: 'Medical - PPO' },
-  { id: '5', mid: 'M9', name: 'Tom Wilson', department: 'Operations', eeDeductionCents: 18000, erContributionCents: 54000, carrierName: 'United Healthcare', planType: 'Medical - HDHP' },
-  { id: '6', mid: 'M10', name: 'Amy Brown', department: 'HR', eeDeductionCents: 0, erContributionCents: 0, carrierName: '', planType: '' },
-  { id: '7', mid: 'M11', name: 'James Lee', department: 'Finance', eeDeductionCents: 0, erContributionCents: 0, carrierName: '', planType: '' },
-];
-
-
 const fmt = (cents: number) =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(cents / 100);
 
