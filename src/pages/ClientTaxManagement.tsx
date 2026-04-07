@@ -236,7 +236,16 @@ export default function ClientTaxManagement() {
       )}
 
       {/* Summary Cards */}
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-4">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardDescription>Total Employees</CardDescription>
+            <CardTitle className="text-2xl">{employees.length}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-xs text-muted-foreground">Active &amp; onboarding — updates live</p>
+          </CardContent>
+        </Card>
         <Card>
           <CardHeader className="pb-2">
             <CardDescription>Active SUI Accounts</CardDescription>
