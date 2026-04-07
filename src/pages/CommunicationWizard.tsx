@@ -94,12 +94,12 @@ export default function CommunicationWizard() {
           filtered = companies.filter(c => seg.filters.status.includes(c.status));
         }
       }
-      return filtered.map(c => ({
+      return { recipients: filtered.map(c => ({
         entity_type: 'company' as const,
         entity_id: c.id,
         entity_label: `${c.cid} – ${c.name}`,
         email: c.primary_contact_email || '',
-      }));
+      })), csvParseErrors: [] as string[] };
     } else {
       let filtered = employees.filter(e => e.status === 'active');
       if (selectionMethod === 'segment' && selectedSegmentId) {
@@ -114,12 +114,12 @@ export default function CommunicationWizard() {
           filtered = filtered.filter(e => seg.filters.work_state.includes(e.state));
         }
       }
-      return filtered.map(e => ({
+      return { recipients: filtered.map(e => ({
         entity_type: 'employee' as const,
         entity_id: e.id,
         entity_label: `${e.mid} – ${e.first_name} ${e.last_name}`,
         email: e.email,
-      }));
+      })), csvParseErrors: [] as string[] };
     }
   }, [audienceType, selectionMethod, selectedSegmentId, companies, employees, segments, csvText]);
 
