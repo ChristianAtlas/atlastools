@@ -357,9 +357,7 @@ export default function Payroll() {
           <div>
             <p className="font-medium text-xs">Bi-Weekly Cutoff</p>
             <p className="text-xs text-muted-foreground whitespace-pre-line">
-              Timecard Approval: Mon 10:00 AM EST
-              Payroll Approval: Tue 5:00 PM EST
-              Wire (if late): Thurs 1:00 PM EST
+              {"Timecard Approval: Mon 10:00 AM EST\nPayroll Approval: Tue 5:00 PM EST\nWire (if late): Thurs 1:00 PM EST"}
             </p>
           </div>
         </div>
