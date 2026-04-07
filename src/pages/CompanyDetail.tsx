@@ -9,8 +9,9 @@ import { StatusBadge } from '@/components/StatusBadge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useCompany, type CompanyRow } from '@/hooks/useCompanies';
-import { employees as mockEmployees, payrollRuns, invoices, complianceTasks } from '@/lib/mock-data';
-import type { Employee, PayrollRun, Invoice, ComplianceTask } from '@/lib/types';
+import { useEmployees, empCentsToUSD, getInitials, type EmployeeRow } from '@/hooks/useEmployees';
+import { payrollRuns, invoices, complianceTasks } from '@/lib/mock-data';
+import type { PayrollRun, Invoice, ComplianceTask } from '@/lib/types';
 import { EditCompanyDialog } from '@/components/companies/EditCompanyDialog';
 
 const formatCurrency = (n: number) =>
@@ -78,12 +79,13 @@ function OverviewTab({ company, empCount, payrollTotal }: { company: CompanyRow;
 }
 
 /* ─── Employees Tab ─── */
-function EmployeesTab({ emps, navigate }: { emps: Employee[]; navigate: (path: string) => void }) {
+function EmployeesTab({ emps, navigate }: { emps: EmployeeRow[]; navigate: (path: string) => void }) {
   return (
     <div className="rounded-lg border bg-card animate-in-up">
       <Table>
         <TableHeader>
           <TableRow>
+            <TableHead>MID</TableHead>
             <TableHead>Name</TableHead>
             <TableHead>Title</TableHead>
             <TableHead>Department</TableHead>
@@ -93,24 +95,29 @@ function EmployeesTab({ emps, navigate }: { emps: Employee[]; navigate: (path: s
         </TableHeader>
         <TableBody>
           {emps.length === 0 ? (
-            <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">No employees found</TableCell></TableRow>
+            <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">No employees found</TableCell></TableRow>
           ) : emps.map(emp => (
             <TableRow key={emp.id} className="cursor-pointer" onClick={() => navigate(`/employees/${emp.id}`)}>
               <TableCell>
+                <span className="inline-flex items-center rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-bold text-primary tabular-nums">{emp.mid}</span>
+              </TableCell>
+              <TableCell>
                 <div className="flex items-center gap-3">
                   <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-semibold text-primary">
-                    {emp.avatarInitials}
+                    {getInitials(emp.first_name, emp.last_name)}
                   </div>
                   <div>
-                    <p className="font-medium">{emp.firstName} {emp.lastName}</p>
+                    <p className="font-medium">{emp.first_name} {emp.last_name}</p>
                     <p className="text-xs text-muted-foreground">{emp.email}</p>
                   </div>
                 </div>
               </TableCell>
-              <TableCell>{emp.title}</TableCell>
-              <TableCell>{emp.department}</TableCell>
+              <TableCell>{emp.title ?? '—'}</TableCell>
+              <TableCell>{emp.department ?? '—'}</TableCell>
               <TableCell className="text-right tabular-nums">
-                {emp.payType === 'hourly' ? `$${emp.salary}/hr` : formatCurrency(emp.salary)}
+                {emp.pay_type === 'hourly'
+                  ? empCentsToUSD(emp.hourly_rate_cents, 'hourly')
+                  : empCentsToUSD(emp.annual_salary_cents, 'salary')}
               </TableCell>
               <TableCell><StatusBadge status={emp.status} /></TableCell>
             </TableRow>
@@ -265,6 +272,7 @@ export default function CompanyDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data: company, isLoading, error } = useCompany(id);
+  const { data: companyEmployees = [] } = useEmployees(id);
   const [editOpen, setEditOpen] = useState(false);
 
   if (isLoading) {
@@ -289,7 +297,6 @@ export default function CompanyDetail() {
   }
 
   // Still use mock data for related entities until those tables are built
-  const companyEmployees = mockEmployees.filter(e => e.companyId === company.id);
   const companyPayroll = payrollRuns.filter(p => p.companyId === company.id);
   const companyInvoices = invoices.filter(i => i.companyId === company.id);
   const companyCompliance = complianceTasks.filter(t => t.companyId === company.id);
