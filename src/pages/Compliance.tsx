@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { PageHeader } from '@/components/PageHeader';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Plus, Building2, Users, Shield, Calendar, Key, AlertTriangle, FileText } from 'lucide-react';
+import { Plus, Building2, Users, Shield, Calendar, Key, AlertTriangle, FileText, FileCheck } from 'lucide-react';
 import { useComplianceItems, useComplianceLicenses } from '@/hooks/useCompliance';
 import { useAuth } from '@/contexts/AuthContext';
 
