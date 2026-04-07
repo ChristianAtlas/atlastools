@@ -26,6 +26,7 @@ const adminNavItems: NavItem[] = [
   { label: 'Timecards', to: '/timecards', icon: Clock, roles: ['client_admin'] },
   { label: 'PTO', to: '/pto', icon: CalendarDays, roles: ['client_admin'] },
   { label: 'Workers\' Comp', to: '/workers-comp', icon: ShieldCheck, roles: ['super_admin'] },
+  { label: 'Benefits Admin', to: '/benefits-admin', icon: Heart, roles: ['super_admin'] },
   { label: 'Invoices', to: '/invoices', icon: CreditCard, roles: ['super_admin', 'client_admin'] },
   { label: 'Documents', to: '/documents', icon: FileText, roles: ['super_admin', 'client_admin'] },
   { label: 'Tax Management', to: '/tax-management', icon: Landmark, roles: ['super_admin'] },

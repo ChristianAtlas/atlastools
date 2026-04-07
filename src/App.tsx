@@ -30,6 +30,7 @@ import WorkersComp from "@/pages/WorkersComp";
 import Timecards from "@/pages/Timecards";
 import TaxManagement from "@/pages/TaxManagement";
 import AchTool from "@/pages/AchTool";
+import BenefitsAdmin from "@/pages/BenefitsAdmin";
 import Communications from "@/pages/Communications";
 import CommunicationWizard from "@/pages/CommunicationWizard";
 import CommunicationDetail from "@/pages/CommunicationDetail";
@@ -89,6 +90,7 @@ const App = () => (
               <Route path="/compliance" element={<Compliance />} />
               <Route path="/tax-management" element={<TaxManagement />} />
               <Route path="/ach-tool" element={<AchTool />} />
+              <Route path="/benefits-admin" element={<BenefitsAdmin />} />
               <Route path="/communications" element={<Communications />} />
               <Route path="/communications/new" element={<CommunicationWizard />} />
               <Route path="/communications/:id" element={<CommunicationDetail />} />
