@@ -473,7 +473,9 @@ export default function EmployeeDetail() {
     );
   }
 
+  const isSuperAdmin = role === 'super_admin';
   const initials = getInitials(emp.first_name, emp.last_name);
+  const openEdit = (tab: string) => { setEditTab(tab); setEditOpen(true); };
 
   return (
     <div className="space-y-5">
