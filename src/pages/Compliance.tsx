@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { PageHeader } from '@/components/PageHeader';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Plus, Building2, Users, Shield, Calendar, Key, AlertTriangle, FileText, FileCheck } from 'lucide-react';
+import { Plus, Building2, Users, Shield, Calendar, Key, AlertTriangle, FileText, FileCheck, UserPlus } from 'lucide-react';
 import { useComplianceItems, useComplianceLicenses } from '@/hooks/useCompliance';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -15,6 +15,7 @@ import { RiskDashboard } from '@/components/compliance/RiskDashboard';
 import { ComplianceItemDialog } from '@/components/compliance/ComplianceItemDialog';
 import { LicenseDialog } from '@/components/compliance/LicenseDialog';
 import { Form8973Tab } from '@/components/compliance/Form8973Tab';
+import { NewHireReportingDirectory } from '@/components/compliance/NewHireReportingDirectory';
 import { computeComplianceScore } from '@/hooks/useCompliance';
 
 const ENTERPRISE_CATEGORIES = ['PEO Licensing', 'CPEO Status', 'Annual Filings', 'SUI Registration', 'Business Entity', 'Workers Comp', 'Compliance Calendar'];
@@ -147,6 +148,7 @@ export default function Compliance() {
           <TabsTrigger value="calendar" className="gap-1.5"><Calendar className="h-3.5 w-3.5" /> Calendar</TabsTrigger>
           <TabsTrigger value="licenses" className="gap-1.5"><Key className="h-3.5 w-3.5" /> Licenses</TabsTrigger>
           <TabsTrigger value="form8973" className="gap-1.5"><FileCheck className="h-3.5 w-3.5" /> Form 8973</TabsTrigger>
+          <TabsTrigger value="newhire" className="gap-1.5"><UserPlus className="h-3.5 w-3.5" /> New Hire Directory</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="mt-4">
@@ -221,6 +223,10 @@ export default function Compliance() {
 
         <TabsContent value="form8973" className="mt-4">
           <Form8973Tab />
+        </TabsContent>
+
+        <TabsContent value="newhire" className="mt-4">
+          <NewHireReportingDirectory />
         </TabsContent>
       </Tabs>
 
