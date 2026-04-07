@@ -660,8 +660,23 @@ export default function PayrollDetail() {
               <Card><CardHeader className="pb-3"><CardTitle className="text-base">Payroll Breakdown</CardTitle></CardHeader>
                 <CardContent>
                   <div className="space-y-2.5 text-sm">
-                    {[['Gross Pay', fmtCurrency(run.gross_pay_cents)], ['Employer FICA', fmtCurrency(run.employer_taxes_cents)], ['Employer Benefits', fmtCurrency(run.employer_benefits_cents)], ["Workers' Comp", fmtCurrency(run.workers_comp_cents)]].map(([l, v]) => (
-                      <div key={l} className="flex justify-between"><span className="text-muted-foreground">{l}</span><span className="font-medium tabular-nums">{v}</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">Gross Pay</span><span className="font-medium tabular-nums">{fmtCurrency(run.gross_pay_cents)}</span></div>
+                    <Separator />
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Employer Taxes</p>
+                    {[
+                      ['ER FICA (SS + Medicare)', lines.reduce((s, l) => s + l.employer_fica_cents, 0)],
+                      ['FUTA', lines.reduce((s, l) => s + l.employer_futa_cents, 0)],
+                      ['State Unemployment (SUI)', lines.reduce((s, l) => s + l.employer_sui_cents, 0)],
+                    ].map(([label, cents]) => (
+                      <div key={label as string} className="flex justify-between pl-3"><span className="text-muted-foreground">{label as string}</span><span className="font-medium tabular-nums">{fmtCurrency(cents as number)}</span></div>
+                    ))}
+                    <div className="flex justify-between pl-3 font-medium"><span className="text-muted-foreground">Total Employer Taxes</span><span className="tabular-nums">{fmtCurrency(run.employer_taxes_cents)}</span></div>
+                    <Separator />
+                    {[
+                      ['Employer Benefits', run.employer_benefits_cents],
+                      ["Workers' Comp", run.workers_comp_cents],
+                    ].map(([label, cents]) => (
+                      <div key={label as string} className="flex justify-between"><span className="text-muted-foreground">{label as string}</span><span className="font-medium tabular-nums">{fmtCurrency(cents as number)}</span></div>
                     ))}
                     <Separator />
                     <div className="flex justify-between font-semibold"><span>Total Employer Cost</span><span className="tabular-nums">{fmtCurrency(run.total_employer_cost_cents)}</span></div>
