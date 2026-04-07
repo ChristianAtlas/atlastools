@@ -42,9 +42,9 @@ export default function Dashboard() {
       <PageHeader title="Dashboard" description="Overview of your platform activity" />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard icon={Building2} title="Active Companies" value={isLoading ? '…' : String(activeCompanies)} delay={0} />
-        <StatCard icon={Users} title="Total Employees" value={isLoading ? '…' : String(activeEmployees)} delay={60} />
-        <StatCard icon={DollarSign} title="Pending Payrolls" value={isLoading ? '…' : String(pendingPayrolls)} delay={120} />
+        <StatCard icon={Building2} title="Active Companies" value={isLoading ? '…' : String(activeCompanies)} delay={0} href="/companies" />
+        <StatCard icon={Users} title="Total Employees" value={isLoading ? '…' : String(activeEmployees)} delay={60} href="/employees" />
+        <StatCard icon={DollarSign} title="Pending Payrolls" value={isLoading ? '…' : String(pendingPayrolls)} delay={120} href="/payroll" />
         <StatCard
           icon={AlertTriangle}
           title="Overdue Tasks"
@@ -52,6 +52,7 @@ export default function Dashboard() {
           changeType={overdueCompliance > 0 ? 'negative' : 'neutral'}
           change={overdueCompliance > 0 ? 'Requires attention' : 'All clear'}
           delay={180}
+          href="/compliance"
         />
       </div>
 
