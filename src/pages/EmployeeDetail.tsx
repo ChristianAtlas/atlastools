@@ -498,6 +498,7 @@ export default function EmployeeDetail() {
         {isSuperAdmin && (
           <Button variant="outline" size="sm" onClick={() => openEdit('profile')}>Edit Employee</Button>
         )}
+      </div>
 
       <Tabs defaultValue="profile" className="animate-in-up stagger-1">
         <TabsList className="w-full justify-start overflow-x-auto">
