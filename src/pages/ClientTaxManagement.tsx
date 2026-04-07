@@ -520,6 +520,12 @@ export default function ClientTaxManagement() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+        </TabsContent>
+
+        <TabsContent value="directory">
+          <SuiAgencyDirectory />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
