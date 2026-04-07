@@ -22,6 +22,7 @@ const adminNavItems: NavItem[] = [
   { label: 'Employees', to: '/employees', icon: Users, roles: ['super_admin', 'client_admin'] },
   { label: 'Onboarding', to: '/onboarding', icon: UserPlus, roles: ['super_admin', 'client_admin'] },
   { label: 'Payroll', to: '/payroll', icon: DollarSign, roles: ['super_admin', 'client_admin'] },
+  { label: 'Timecards', to: '/timecards', icon: Clock, roles: ['client_admin'] },
   { label: 'PTO', to: '/pto', icon: CalendarDays, roles: ['client_admin'] },
   { label: 'Workers\' Comp', to: '/workers-comp', icon: ShieldCheck, roles: ['super_admin'] },
   { label: 'Invoices', to: '/invoices', icon: CreditCard, roles: ['super_admin', 'client_admin'] },
