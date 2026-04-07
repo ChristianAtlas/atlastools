@@ -61,18 +61,43 @@ const superAdminNavGroups: NavGroup[] = [
   },
 ];
 
-// Client admin flat nav items
-const clientAdminNavItems: NavItem[] = [
-  { label: 'Dashboard', to: '/', icon: LayoutDashboard },
-  { label: 'Employees', to: '/employees', icon: Users },
-  { label: 'Onboarding', to: '/onboarding', icon: UserPlus },
-  { label: 'Payroll', to: '/payroll', icon: DollarSign },
-  { label: 'Timecards', to: '/timecards', icon: Clock },
-  { label: 'PTO', to: '/pto', icon: CalendarDays },
-  { label: 'Invoices', to: '/invoices', icon: CreditCard },
-  { label: 'Documents', to: '/documents', icon: FileText },
-  { label: 'Tax Management', to: '/client-tax', icon: Landmark },
-  { label: 'Reports', to: '/reports', icon: BarChart3 },
+// Client admin grouped nav
+const clientAdminNavGroups: NavGroup[] = [
+  {
+    label: 'Operations',
+    items: [
+      { label: 'Dashboard', to: '/', icon: LayoutDashboard },
+      { label: 'Employees', to: '/employees', icon: Users },
+      { label: 'Onboarding', to: '/onboarding', icon: UserPlus },
+    ],
+  },
+  {
+    label: 'Payroll',
+    items: [
+      { label: 'Timecards', to: '/timecards', icon: Clock },
+      { label: 'Payroll', to: '/payroll', icon: DollarSign },
+    ],
+  },
+  {
+    label: 'HR & People',
+    items: [
+      { label: 'PTO', to: '/pto', icon: CalendarDays },
+    ],
+  },
+  {
+    label: 'Finance & Admin',
+    items: [
+      { label: 'Invoices', to: '/invoices', icon: CreditCard },
+      { label: 'Reports', to: '/reports', icon: BarChart3 },
+    ],
+  },
+  {
+    label: 'Tax & Compliance',
+    items: [
+      { label: 'Tax Management', to: '/client-tax', icon: Landmark },
+      { label: 'Documents', to: '/documents', icon: FileText },
+    ],
+  },
 ];
 
 // Employee-only nav items
@@ -123,7 +148,7 @@ export function AppSidebar({ userName, userInitials, roleLabel, role, onNavClick
 
   const isSuperAdmin = role === 'super_admin';
   const isEmployee = role === 'employee';
-  const flatItems = isEmployee ? employeeNavItems : clientAdminNavItems;
+  const isClientAdmin = !isSuperAdmin && !isEmployee;
 
   return (
     <aside className="fixed inset-y-0 left-0 z-30 flex w-60 flex-col bg-sidebar border-r border-sidebar-border">
@@ -135,9 +160,9 @@ export function AppSidebar({ userName, userInitials, roleLabel, role, onNavClick
 
       {/* Nav */}
       <nav className="flex-1 overflow-y-auto py-3 px-3 scrollbar-thin">
-        {isSuperAdmin ? (
+        {(isSuperAdmin || isClientAdmin) ? (
           <div className="space-y-4">
-            {superAdminNavGroups.map((group) => (
+            {(isSuperAdmin ? superAdminNavGroups : clientAdminNavGroups).map((group) => (
               <div key={group.label}>
                 <p className="px-2.5 pb-1.5 text-[11px] font-semibold uppercase tracking-wider text-sidebar-muted">
                   {group.label}
@@ -150,7 +175,7 @@ export function AppSidebar({ userName, userInitials, roleLabel, role, onNavClick
           </div>
         ) : (
           <ul className="space-y-0.5">
-            {flatItems.map(renderNavItem)}
+            {employeeNavItems.map(renderNavItem)}
           </ul>
         )}
       </nav>
