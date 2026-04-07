@@ -54,9 +54,9 @@ const DEMO_ACCOUNTS: DemoAccount[] = [
 ];
 
 const FEATURE_CARDS = [
-  'Email/password login for your team',
-  'Secure redirect handling',
-  'Profiles are created automatically on signup',
+  'Tailored onboarding',
+  'Transparent pricing',
+  'Expert support',
 ];
 
 export default function Login() {
