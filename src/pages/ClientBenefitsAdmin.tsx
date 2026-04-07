@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { PageHeader } from '@/components/PageHeader';
@@ -16,11 +16,14 @@ import { Textarea } from '@/components/ui/textarea';
 import {
   Heart, Search, Users, AlertTriangle, DollarSign, FileText, CheckCircle2,
   Clock, Eye, Plus, Upload, Download, Calendar, ExternalLink, ShieldOff,
-  Info, Save
+  Info, Save, Loader2
 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
+import { useEmployees } from '@/hooks/useEmployees';
+import { useExternalBenefits, useSaveAllExternalBenefits } from '@/hooks/useExternalBenefits';
+import { toast } from 'sonner';
 
 // ─── Mock data (scoped to a single company) ─────────────────
 
@@ -41,16 +44,6 @@ const MOCK_ENROLLED_EMPLOYEES = [
   { id: '7', mid: 'M6', name: 'Sarah Johnson', department: 'Marketing', planType: 'Dental', planName: 'Basic', tier: 'Employee Only', status: 'pending', effectiveDate: '2026-05-01', monthlyPremiumCents: 4500, erPortionCents: 2250, eePortionCents: 2250 },
 ];
 
-const MOCK_ELIGIBLE_EMPLOYEES = [
-  { id: '1', mid: 'M5', name: 'John Smith', department: 'Engineering', startDate: '2024-06-15', eligibleDate: '2024-09-15', enrolledPlans: ['Medical', 'Dental'], waivedPlans: ['Vision'] },
-  { id: '2', mid: 'M6', name: 'Sarah Johnson', department: 'Marketing', startDate: '2025-03-01', eligibleDate: '2025-06-01', enrolledPlans: ['Medical'], waivedPlans: [] },
-  { id: '3', mid: 'M7', name: 'Mike Davis', department: 'Sales', startDate: '2025-08-10', eligibleDate: '2025-11-10', enrolledPlans: ['Medical'], waivedPlans: ['Dental', 'Vision'] },
-  { id: '4', mid: 'M8', name: 'Lisa Chen', department: 'Engineering', startDate: '2025-01-20', eligibleDate: '2025-04-20', enrolledPlans: ['Vision'], waivedPlans: ['Medical'] },
-  { id: '5', mid: 'M9', name: 'Tom Wilson', department: 'Operations', startDate: '2024-11-01', eligibleDate: '2025-02-01', enrolledPlans: ['401k'], waivedPlans: [] },
-  { id: '6', mid: 'M10', name: 'Amy Brown', department: 'HR', startDate: '2026-02-01', eligibleDate: '2026-05-01', enrolledPlans: [], waivedPlans: [] },
-  { id: '7', mid: 'M11', name: 'James Lee', department: 'Finance', startDate: '2026-03-15', eligibleDate: '2026-06-15', enrolledPlans: [], waivedPlans: [] },
-];
-
 const MOCK_QLES = [
   { id: '1', mid: 'M6', employeeName: 'Sarah Johnson', qleType: 'Marriage', eventDate: '2026-04-15', requestDate: '2026-04-16', status: 'pending_review', documentsUploaded: true, coverageImpact: 'Add spouse to Medical, Dental', deadline: '2026-05-15' },
   { id: '2', mid: 'M9', employeeName: 'Tom Wilson', qleType: 'Birth/Adoption', eventDate: '2026-03-28', requestDate: '2026-03-29', status: 'approved', documentsUploaded: true, coverageImpact: 'Add dependent to Medical', deadline: '2026-04-28' },
@@ -64,19 +57,6 @@ const MOCK_CONTRIBUTION_REPORTS = [
   { id: '3', month: '2026-01', totalPremiumsCents: 478000, erContributionsCents: 340000, eeDeductionsCents: 138000, enrolledCount: 41, avgEeCostCents: 3366 },
   { id: '4', month: '2025-12', totalPremiumsCents: 470000, erContributionsCents: 335000, eeDeductionsCents: 135000, enrolledCount: 40, avgEeCostCents: 3375 },
 ];
-
-// Mock active employees for external benefits entry
-const MOCK_ACTIVE_EMPLOYEES = [
-  { id: '1', mid: 'M5', name: 'John Smith', department: 'Engineering', eeDeductionCents: 31250, erContributionCents: 93750, carrierName: 'Anthem Blue Cross', planType: 'Medical - PPO' },
-  { id: '2', mid: 'M6', name: 'Sarah Johnson', department: 'Marketing', eeDeductionCents: 16250, erContributionCents: 48750, carrierName: 'Anthem Blue Cross', planType: 'Medical - PPO' },
-  { id: '3', mid: 'M7', name: 'Mike Davis', department: 'Sales', eeDeductionCents: 23750, erContributionCents: 71250, carrierName: 'Kaiser', planType: 'Medical - HMO' },
-  { id: '4', mid: 'M8', name: 'Lisa Chen', department: 'Engineering', eeDeductionCents: 12500, erContributionCents: 37500, carrierName: 'Anthem Blue Cross', planType: 'Medical - PPO' },
-  { id: '5', mid: 'M9', name: 'Tom Wilson', department: 'Operations', eeDeductionCents: 18000, erContributionCents: 54000, carrierName: 'United Healthcare', planType: 'Medical - HDHP' },
-  { id: '6', mid: 'M10', name: 'Amy Brown', department: 'HR', eeDeductionCents: 0, erContributionCents: 0, carrierName: '', planType: '' },
-  { id: '7', mid: 'M11', name: 'James Lee', department: 'Finance', eeDeductionCents: 0, erContributionCents: 0, carrierName: '', planType: '' },
-];
-
-
 const fmt = (cents: number) =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(cents / 100);
 
@@ -96,21 +76,62 @@ const statusBadge = (status: string) => {
 // ─── Main Component ───────────────────────────────────────────
 
 export default function ClientBenefitsAdmin() {
-  const { role } = useAuth();
+  const { role, profile } = useAuth();
+  const companyId = profile?.company_id ?? undefined;
+
   const [search, setSearch] = useState('');
   const [planTypeFilter, setPlanTypeFilter] = useState('all');
   const [qleStatusFilter, setQleStatusFilter] = useState('all');
   const [hasExternalBenefits, setHasExternalBenefits] = useState(false);
-  const [externalEmployeeData, setExternalEmployeeData] = useState(
-    MOCK_ACTIVE_EMPLOYEES.map(e => ({
-      ...e,
-      eeDeductionCents: e.eeDeductionCents,
-      erContributionCents: e.erContributionCents,
-      carrierName: e.carrierName,
-      planType: e.planType,
-      verified: e.erContributionCents > 0,
-    }))
-  );
+
+  // Live employee data
+  const { data: employees = [], isLoading: loadingEmployees } = useEmployees(companyId);
+  const activeEmployees = useMemo(() => employees.filter(e => e.status === 'active'), [employees]);
+  const allEligibleEmployees = useMemo(() => employees.filter(e => e.status === 'active' || e.status === 'onboarding'), [employees]);
+
+  // External benefits from DB
+  const { data: savedExternalBenefits = [] } = useExternalBenefits(companyId);
+  const saveAllMutation = useSaveAllExternalBenefits();
+
+  // Local state for external benefit editing (seeded from DB + active employees)
+  interface ExternalRow {
+    dbId?: string;
+    employeeId: string;
+    mid: string;
+    name: string;
+    department: string;
+    carrierName: string;
+    planType: string;
+    eeDeductionCents: number;
+    erContributionCents: number;
+    verified: boolean;
+  }
+
+  const [externalEmployeeData, setExternalEmployeeData] = useState<ExternalRow[]>([]);
+
+  // Sync external data when employees or saved records change
+  useEffect(() => {
+    const rows: ExternalRow[] = activeEmployees.map(emp => {
+      const saved = savedExternalBenefits.find(s => s.employee_id === emp.id);
+      return {
+        dbId: saved?.id,
+        employeeId: emp.id,
+        mid: emp.mid,
+        name: `${emp.first_name} ${emp.last_name}`,
+        department: emp.department ?? '',
+        carrierName: saved?.carrier_name ?? '',
+        planType: saved?.plan_type ?? '',
+        eeDeductionCents: saved?.ee_deduction_cents ?? 0,
+        erContributionCents: saved?.er_contribution_cents ?? 0,
+        verified: saved?.er_verified ?? false,
+      };
+    });
+    setExternalEmployeeData(rows);
+    // Auto-detect if external benefits are active
+    if (savedExternalBenefits.length > 0) {
+      setHasExternalBenefits(true);
+    }
+  }, [activeEmployees, savedExternalBenefits]);
 
   const filteredEnrollments = useMemo(() => {
     return MOCK_ENROLLED_EMPLOYEES.filter(e => {
@@ -134,11 +155,33 @@ export default function ClientBenefitsAdmin() {
     });
   }, [search, qleStatusFilter]);
 
+  const handleSaveAll = () => {
+    if (!companyId) return;
+    saveAllMutation.mutate(
+      externalEmployeeData
+        .filter(r => r.carrierName || r.planType || r.eeDeductionCents > 0 || r.erContributionCents > 0)
+        .map(r => ({
+          id: r.dbId,
+          employee_id: r.employeeId,
+          company_id: companyId,
+          carrier_name: r.carrierName,
+          plan_type: r.planType,
+          ee_deduction_cents: r.eeDeductionCents,
+          er_contribution_cents: r.erContributionCents,
+          er_verified: r.verified,
+        })),
+      {
+        onSuccess: () => toast.success('External benefit deductions saved — they will be applied to the next payroll run.'),
+        onError: (err) => toast.error(`Failed to save: ${err.message}`),
+      }
+    );
+  };
+
   if (role && role !== 'client_admin') return <Navigate to="/" replace />;
 
-  // Summary metrics
-  const totalEnrolled = MOCK_PLANS.reduce((s, p) => s + p.enrolledCount, 0);
-  const totalEligible = MOCK_PLANS.reduce((s, p) => s + p.eligibleCount, 0);
+  // Summary metrics — live data
+  const totalEnrolled = activeEmployees.length;
+  const totalEligible = allEligibleEmployees.length;
   const pendingQLEs = MOCK_QLES.filter(q => q.status === 'pending_review' || q.status === 'pending_documents').length;
   const latestContrib = MOCK_CONTRIBUTION_REPORTS[0];
 
@@ -286,74 +329,48 @@ export default function ClientBenefitsAdmin() {
           </Card>
         </TabsContent>
 
-        {/* ──── Tab 3: Eligible Employees ──── */}
+        {/* ──── Tab 3: Eligible Employees (live data) ──── */}
         <TabsContent value="eligible">
           <Card>
             <CardHeader>
               <CardTitle className="text-lg">Eligible Employees</CardTitle>
-              <CardDescription>All employees eligible for benefit enrollment based on eligibility rules</CardDescription>
+              <CardDescription>
+                Active and onboarding employees from your company — {allEligibleEmployees.length} total
+              </CardDescription>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>MID</TableHead>
-                    <TableHead>Employee</TableHead>
-                    <TableHead>Department</TableHead>
-                    <TableHead>Start Date</TableHead>
-                    <TableHead>Eligible Date</TableHead>
-                    <TableHead>Enrolled Plans</TableHead>
-                    <TableHead>Waived Plans</TableHead>
-                    <TableHead>Status</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {MOCK_ELIGIBLE_EMPLOYEES.map(e => {
-                    const isFullyEnrolled = e.enrolledPlans.length > 0 && e.waivedPlans.length === 0;
-                    const notEnrolled = e.enrolledPlans.length === 0 && e.waivedPlans.length === 0;
-                    return (
-                      <TableRow key={e.id}>
-                        <TableCell className="font-mono text-xs">{e.mid}</TableCell>
-                        <TableCell className="font-medium">{e.name}</TableCell>
-                        <TableCell>{e.department}</TableCell>
-                        <TableCell>{e.startDate}</TableCell>
-                        <TableCell>{e.eligibleDate}</TableCell>
-                        <TableCell>
-                          {e.enrolledPlans.length > 0 ? (
-                            <div className="flex gap-1 flex-wrap">
-                              {e.enrolledPlans.map(p => (
-                                <Badge key={p} variant="outline" className="border-emerald-500 text-emerald-600 text-xs">{p}</Badge>
-                              ))}
-                            </div>
-                          ) : (
-                            <span className="text-muted-foreground text-xs">—</span>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          {e.waivedPlans.length > 0 ? (
-                            <div className="flex gap-1 flex-wrap">
-                              {e.waivedPlans.map(p => (
-                                <Badge key={p} variant="outline" className="border-muted-foreground text-muted-foreground text-xs">{p}</Badge>
-                              ))}
-                            </div>
-                          ) : (
-                            <span className="text-muted-foreground text-xs">—</span>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          {notEnrolled ? (
-                            <Badge variant="outline" className="border-amber-500 text-amber-600">Pending Election</Badge>
-                          ) : isFullyEnrolled ? (
-                            <Badge variant="outline" className="border-emerald-500 text-emerald-600">Enrolled</Badge>
-                          ) : (
-                            <Badge variant="outline" className="border-blue-500 text-blue-600">Partial</Badge>
-                          )}
-                        </TableCell>
+              {loadingEmployees ? (
+                <div className="flex items-center justify-center py-12 text-muted-foreground">
+                  <Loader2 className="h-5 w-5 animate-spin mr-2" /> Loading employees…
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>MID</TableHead>
+                      <TableHead>Employee</TableHead>
+                      <TableHead>Department</TableHead>
+                      <TableHead>Start Date</TableHead>
+                      <TableHead>Pay Type</TableHead>
+                      <TableHead>Status</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {allEligibleEmployees.length === 0 ? (
+                      <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">No eligible employees found</TableCell></TableRow>
+                    ) : allEligibleEmployees.map(emp => (
+                      <TableRow key={emp.id}>
+                        <TableCell className="font-mono text-xs">{emp.mid}</TableCell>
+                        <TableCell className="font-medium">{emp.first_name} {emp.last_name}</TableCell>
+                        <TableCell>{emp.department ?? '—'}</TableCell>
+                        <TableCell>{emp.start_date}</TableCell>
+                        <TableCell className="capitalize">{emp.pay_type}</TableCell>
+                        <TableCell>{statusBadge(emp.status)}</TableCell>
                       </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -381,7 +398,7 @@ export default function ClientBenefitsAdmin() {
                         <Label>Employee</Label>
                         <Select><SelectTrigger><SelectValue placeholder="Select employee" /></SelectTrigger>
                           <SelectContent>
-                            {MOCK_ELIGIBLE_EMPLOYEES.map(e => <SelectItem key={e.id} value={e.mid}>{e.name} ({e.mid})</SelectItem>)}
+                            {activeEmployees.map(e => <SelectItem key={e.id} value={e.mid}>{e.first_name} {e.last_name} ({e.mid})</SelectItem>)}
                           </SelectContent>
                         </Select>
                       </div>
@@ -617,7 +634,10 @@ export default function ClientBenefitsAdmin() {
                       </div>
                       <div className="flex gap-2">
                         <Button variant="outline" size="sm"><Upload className="h-4 w-4 mr-1" /> Bulk Upload</Button>
-                        <Button size="sm"><Save className="h-4 w-4 mr-1" /> Save All</Button>
+                        <Button size="sm" onClick={handleSaveAll} disabled={saveAllMutation.isPending}>
+                          {saveAllMutation.isPending ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Save className="h-4 w-4 mr-1" />}
+                          Save All
+                        </Button>
                       </div>
                     </div>
                   </CardHeader>
@@ -637,7 +657,7 @@ export default function ClientBenefitsAdmin() {
                       </TableHeader>
                       <TableBody>
                         {externalEmployeeData.map((emp, idx) => (
-                          <TableRow key={emp.id}>
+                          <TableRow key={emp.employeeId}>
                             <TableCell className="font-mono text-xs">{emp.mid}</TableCell>
                             <TableCell className="font-medium">{emp.name}</TableCell>
                             <TableCell>{emp.department}</TableCell>

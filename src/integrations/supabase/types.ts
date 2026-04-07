@@ -1713,6 +1713,63 @@ export type Database = {
         }
         Relationships: []
       }
+      external_benefit_deductions: {
+        Row: {
+          carrier_name: string
+          company_id: string
+          created_at: string
+          ee_deduction_cents: number
+          employee_id: string
+          er_contribution_cents: number
+          er_verified: boolean
+          id: string
+          is_active: boolean
+          plan_type: string
+          updated_at: string
+        }
+        Insert: {
+          carrier_name?: string
+          company_id: string
+          created_at?: string
+          ee_deduction_cents?: number
+          employee_id: string
+          er_contribution_cents?: number
+          er_verified?: boolean
+          id?: string
+          is_active?: boolean
+          plan_type?: string
+          updated_at?: string
+        }
+        Update: {
+          carrier_name?: string
+          company_id?: string
+          created_at?: string
+          ee_deduction_cents?: number
+          employee_id?: string
+          er_contribution_cents?: number
+          er_verified?: boolean
+          id?: string
+          is_active?: boolean
+          plan_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "external_benefit_deductions_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "external_benefit_deductions_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       form_8973_filings: {
         Row: {
           client_address_line1: string | null
