@@ -93,7 +93,7 @@ function ProfileTab({ emp, onEdit }: { emp: EmployeeRow; onEdit?: () => void }) 
   );
 }
 
-function CompensationTab({ emp, history }: { emp: EmployeeRow; history: CompensationRecordRow[] }) {
+function CompensationTab({ emp, history, onEdit }: { emp: EmployeeRow; history: CompensationRecordRow[]; onEdit?: () => void }) {
   const currentPay = emp.pay_type === 'hourly'
     ? empCentsToUSD(emp.hourly_rate_cents, 'hourly')
     : empCentsToUSD(emp.annual_salary_cents, 'salary');
@@ -101,8 +101,9 @@ function CompensationTab({ emp, history }: { emp: EmployeeRow; history: Compensa
   return (
     <div className="grid gap-5 md:grid-cols-2 animate-in-up">
       <Card>
-        <CardHeader className="pb-3">
+        <CardHeader className="pb-3 flex-row items-center justify-between space-y-0">
           <CardTitle className="text-base">Current Compensation</CardTitle>
+          {onEdit && <CardEditButton onClick={onEdit} />}
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="flex items-baseline justify-between">
