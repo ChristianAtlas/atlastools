@@ -14,7 +14,7 @@ import {
   empCentsToUSD, getInitials,
   type EmployeeRow, type CompensationRecordRow,
 } from '@/hooks/useEmployees';
-import { EditEmployeeDialog } from '@/components/employees/EditEmployeeDialog';
+import { EditEmployeeDialog, CardEditButton } from '@/components/employees/EditEmployeeDialog';
 import { usePTOBalances, usePTORequests, hoursToDays, type PTOBalance, type PTORequest } from '@/hooks/usePTO';
 import { useAuth } from '@/contexts/AuthContext';
 import { useInternalNotes, useAddInternalNote } from '@/hooks/useInternalNotes';
@@ -33,12 +33,13 @@ function InfoRow({ label, value, icon: Icon }: { label: string; value: string; i
   );
 }
 
-function ProfileTab({ emp }: { emp: EmployeeRow }) {
+function ProfileTab({ emp, onEdit }: { emp: EmployeeRow; onEdit?: () => void }) {
   return (
     <div className="grid gap-5 md:grid-cols-2 animate-in-up">
       <Card>
-        <CardHeader className="pb-3">
+        <CardHeader className="pb-3 flex-row items-center justify-between space-y-0">
           <CardTitle className="text-base">Personal Information</CardTitle>
+          {onEdit && <CardEditButton onClick={onEdit} />}
         </CardHeader>
         <CardContent className="space-y-1">
           <InfoRow icon={Mail} label="Email" value={emp.email} />
@@ -52,8 +53,9 @@ function ProfileTab({ emp }: { emp: EmployeeRow }) {
         </CardContent>
       </Card>
       <Card>
-        <CardHeader className="pb-3">
+        <CardHeader className="pb-3 flex-row items-center justify-between space-y-0">
           <CardTitle className="text-base">Employment Details</CardTitle>
+          {onEdit && <CardEditButton onClick={onEdit} />}
         </CardHeader>
         <CardContent className="space-y-1">
           <InfoRow icon={Building2} label="Company" value={emp.companies?.name ?? '—'} />
@@ -62,12 +64,13 @@ function ProfileTab({ emp }: { emp: EmployeeRow }) {
           <InfoRow icon={Calendar} label="Start Date" value={
             new Date(emp.start_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
           } />
-          <InfoRow label="Employee ID" value={emp.id.substring(0, 8).toUpperCase()} />
+          <InfoRow label="Employee ID" value={emp.mid} />
         </CardContent>
       </Card>
       <Card className="md:col-span-2">
-        <CardHeader className="pb-3">
+        <CardHeader className="pb-3 flex-row items-center justify-between space-y-0">
           <CardTitle className="text-base">Emergency Contact</CardTitle>
+          {onEdit && <CardEditButton onClick={onEdit} />}
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 sm:grid-cols-3">
@@ -90,7 +93,7 @@ function ProfileTab({ emp }: { emp: EmployeeRow }) {
   );
 }
 
-function CompensationTab({ emp, history }: { emp: EmployeeRow; history: CompensationRecordRow[] }) {
+function CompensationTab({ emp, history, onEdit }: { emp: EmployeeRow; history: CompensationRecordRow[]; onEdit?: () => void }) {
   const currentPay = emp.pay_type === 'hourly'
     ? empCentsToUSD(emp.hourly_rate_cents, 'hourly')
     : empCentsToUSD(emp.annual_salary_cents, 'salary');
@@ -98,8 +101,9 @@ function CompensationTab({ emp, history }: { emp: EmployeeRow; history: Compensa
   return (
     <div className="grid gap-5 md:grid-cols-2 animate-in-up">
       <Card>
-        <CardHeader className="pb-3">
+        <CardHeader className="pb-3 flex-row items-center justify-between space-y-0">
           <CardTitle className="text-base">Current Compensation</CardTitle>
+          {onEdit && <CardEditButton onClick={onEdit} />}
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="flex items-baseline justify-between">
@@ -171,13 +175,16 @@ function CompensationTab({ emp, history }: { emp: EmployeeRow; history: Compensa
   );
 }
 
-function TaxInfoTab() {
+function TaxInfoTab({ onEdit }: { onEdit?: () => void }) {
   return (
     <div className="grid gap-5 md:grid-cols-2 animate-in-up">
       <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base">Federal W-4</CardTitle>
-          <CardDescription>Last updated Jan 15, 2025</CardDescription>
+        <CardHeader className="pb-3 flex-row items-center justify-between space-y-0">
+          <div>
+            <CardTitle className="text-base">Federal W-4</CardTitle>
+            <CardDescription>Last updated Jan 15, 2025</CardDescription>
+          </div>
+          {onEdit && <CardEditButton onClick={onEdit} />}
         </CardHeader>
         <CardContent className="space-y-1">
           <InfoRow label="Filing Status" value="Married Filing Jointly" />
@@ -187,9 +194,12 @@ function TaxInfoTab() {
         </CardContent>
       </Card>
       <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base">State Tax</CardTitle>
-          <CardDescription>Texas — no state income tax</CardDescription>
+        <CardHeader className="pb-3 flex-row items-center justify-between space-y-0">
+          <div>
+            <CardTitle className="text-base">State Tax</CardTitle>
+            <CardDescription>Texas — no state income tax</CardDescription>
+          </div>
+          {onEdit && <CardEditButton onClick={onEdit} />}
         </CardHeader>
         <CardContent className="space-y-1">
           <InfoRow label="Work State" value="Texas" />
@@ -220,13 +230,16 @@ function TaxInfoTab() {
   );
 }
 
-function DirectDepositTab() {
+function DirectDepositTab({ onEdit }: { onEdit?: () => void }) {
   return (
     <div className="grid gap-5 md:grid-cols-2 animate-in-up">
       <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base">Primary Account</CardTitle>
-          <CardDescription>Checking — receives remainder</CardDescription>
+        <CardHeader className="pb-3 flex-row items-center justify-between space-y-0">
+          <div>
+            <CardTitle className="text-base">Primary Account</CardTitle>
+            <CardDescription>Checking — receives remainder</CardDescription>
+          </div>
+          {onEdit && <CardEditButton onClick={onEdit} />}
         </CardHeader>
         <CardContent className="space-y-1">
           <InfoRow icon={CreditCard} label="Bank" value="Chase Bank" />
@@ -237,9 +250,12 @@ function DirectDepositTab() {
         </CardContent>
       </Card>
       <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base">Secondary Account</CardTitle>
-          <CardDescription>Savings — fixed amount</CardDescription>
+        <CardHeader className="pb-3 flex-row items-center justify-between space-y-0">
+          <div>
+            <CardTitle className="text-base">Secondary Account</CardTitle>
+            <CardDescription>Savings — fixed amount</CardDescription>
+          </div>
+          {onEdit && <CardEditButton onClick={onEdit} />}
         </CardHeader>
         <CardContent className="space-y-1">
           <InfoRow icon={CreditCard} label="Bank" value="Ally Bank" />
@@ -411,6 +427,7 @@ export default function EmployeeDetail() {
   const { data: emp, isLoading, error } = useEmployee(id);
   const { data: compHistory = [] } = useCompensationRecords(id);
   const [editOpen, setEditOpen] = useState(false);
+  const [editTab, setEditTab] = useState('profile');
   const { user, profile, role } = useAuth();
   const { data: rawNotes = [] } = useInternalNotes('employee', id);
   const addNote = useAddInternalNote();
@@ -456,7 +473,9 @@ export default function EmployeeDetail() {
     );
   }
 
+  const isSuperAdmin = role === 'super_admin';
   const initials = getInitials(emp.first_name, emp.last_name);
+  const openEdit = (tab: string) => { setEditTab(tab); setEditOpen(true); };
 
   return (
     <div className="space-y-5">
@@ -470,13 +489,16 @@ export default function EmployeeDetail() {
           </div>
           <div>
             <div className="flex items-center gap-2">
+              <span className="inline-flex items-center rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-bold text-primary tabular-nums">{emp.mid}</span>
               <h1 className="text-xl font-semibold">{emp.first_name} {emp.last_name}</h1>
               <StatusBadge status={emp.status} />
             </div>
             <p className="text-sm text-muted-foreground">{emp.title} · {emp.companies?.name}</p>
           </div>
         </div>
-        <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>Edit Employee</Button>
+        {isSuperAdmin && (
+          <Button variant="outline" size="sm" onClick={() => openEdit('profile')}>Edit Employee</Button>
+        )}
       </div>
 
       <Tabs defaultValue="profile" className="animate-in-up stagger-1">
@@ -489,10 +511,10 @@ export default function EmployeeDetail() {
           <TabsTrigger value="pto" className="gap-1.5"><PalmtreeIcon className="h-3.5 w-3.5" />PTO</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="profile"><ProfileTab emp={emp} /></TabsContent>
-        <TabsContent value="compensation"><CompensationTab emp={emp} history={compHistory} /></TabsContent>
-        <TabsContent value="tax"><TaxInfoTab /></TabsContent>
-        <TabsContent value="deposit"><DirectDepositTab /></TabsContent>
+        <TabsContent value="profile"><ProfileTab emp={emp} onEdit={isSuperAdmin ? () => openEdit('profile') : undefined} /></TabsContent>
+        <TabsContent value="compensation"><CompensationTab emp={emp} history={compHistory} onEdit={isSuperAdmin ? () => openEdit('compensation') : undefined} /></TabsContent>
+        <TabsContent value="tax"><TaxInfoTab onEdit={isSuperAdmin ? () => openEdit('tax') : undefined} /></TabsContent>
+        <TabsContent value="deposit"><DirectDepositTab onEdit={isSuperAdmin ? () => openEdit('deposit') : undefined} /></TabsContent>
         <TabsContent value="documents"><DocumentsTab /></TabsContent>
         <TabsContent value="pto"><PTOTab employeeId={emp.id} companyId={emp.company_id} /></TabsContent>
       </Tabs>
@@ -505,7 +527,7 @@ export default function EmployeeDetail() {
         />
       </RoleGate>
 
-      <EditEmployeeDialog employee={emp} open={editOpen} onOpenChange={setEditOpen} />
+      <EditEmployeeDialog employee={emp} open={editOpen} onOpenChange={setEditOpen} defaultTab={editTab} />
     </div>
   );
 }
