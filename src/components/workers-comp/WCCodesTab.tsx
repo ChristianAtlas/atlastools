@@ -20,6 +20,7 @@ export function WCCodesTab() {
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editingCode, setEditingCode] = useState<WCCode | null>(null);
+  const [bulkOpen, setBulkOpen] = useState(false);
 
   const filtered = codes.filter(c =>
     !search ||
