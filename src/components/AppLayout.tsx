@@ -4,12 +4,13 @@ import { NotificationBell, type Notification } from '@/components/workflow/Notif
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { LogOut, Menu } from 'lucide-react';
+import { LogOut, Menu, Building2 } from 'lucide-react';
 import { ImpersonationProvider } from '@/contexts/ImpersonationContext';
 import { ImpersonationBanner } from '@/components/ImpersonationBanner';
 import { ImpersonationSelector } from '@/components/ImpersonationSelector';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useCompanies } from '@/hooks/useCompanies';
 
 const initialNotifications: Notification[] = [
   { id: 'n1', title: 'Payroll approval due', message: 'Meridian Construction payroll needs approval by Tuesday 6 PM EST.', type: 'warning', read: false, timestamp: new Date(Date.now() - 1800000).toISOString(), actionUrl: '/payroll/pr1' },
@@ -23,7 +24,14 @@ export function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { profile, role, signOut } = useAuth();
   const isMobile = useIsMobile();
+  const isClientAdmin = role === 'client_admin';
+  const isEmployeeRole = role === 'employee';
 
+  // Fetch company info for client admins and employees
+  const { data: companies = [] } = useCompanies();
+  const userCompany = (isClientAdmin || isEmployeeRole) && profile?.company_id
+    ? companies.find(c => c.id === profile.company_id)
+    : null;
   const handleMarkRead = (id: string) => {
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
   };
@@ -80,6 +88,15 @@ export function AppLayout() {
                 <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setSidebarOpen(true)}>
                   <Menu className="h-5 w-5" />
                 </Button>
+              )}
+              {userCompany && (
+                <div className="flex items-center gap-2">
+                  <Building2 className="h-4 w-4 text-primary" />
+                  <div className="leading-tight">
+                    <span className="font-semibold text-sm">{userCompany.name}</span>
+                    <span className="ml-2 text-xs font-mono text-muted-foreground bg-muted px-1.5 py-0.5 rounded">{userCompany.cid}</span>
+                  </div>
+                </div>
               )}
             </div>
             <div className="flex items-center gap-2">
