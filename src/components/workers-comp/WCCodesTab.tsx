@@ -119,6 +119,13 @@ export function WCCodesTab() {
         policyId={defaultPolicyId}
         companyId={defaultCompanyId}
       />
+
+      <WCBulkUploadDialog
+        open={bulkOpen}
+        onOpenChange={setBulkOpen}
+        policyId={defaultPolicyId}
+        companyId={defaultCompanyId}
+      />
     </div>
   );
 }
