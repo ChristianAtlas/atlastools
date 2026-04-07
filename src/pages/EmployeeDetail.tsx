@@ -495,8 +495,9 @@ export default function EmployeeDetail() {
             <p className="text-sm text-muted-foreground">{emp.title} · {emp.companies?.name}</p>
           </div>
         </div>
-        <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>Edit Employee</Button>
-      </div>
+        {isSuperAdmin && (
+          <Button variant="outline" size="sm" onClick={() => openEdit('profile')}>Edit Employee</Button>
+        )}
 
       <Tabs defaultValue="profile" className="animate-in-up stagger-1">
         <TabsList className="w-full justify-start overflow-x-auto">
