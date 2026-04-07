@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Users, Clock, CheckCircle2, AlertCircle, UserPlus, Building2, Rocket, Sparkles } from 'lucide-react';
+import { Plus, Users, Clock, CheckCircle2, AlertCircle, UserPlus, Building2, Rocket, Sparkles, Trash2 } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Button } from '@/components/ui/button';
@@ -13,7 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { WorkflowStepper, type WorkflowStep } from '@/components/onboarding/WorkflowStepper';
 import { useOnboardingSessions, useOnboardingTemplates, useCreateOnboardingSession } from '@/hooks/useOnboarding';
-import { useClientOnboardingWizards, useCreateOnboardingWizard } from '@/hooks/useClientOnboarding';
+import { useClientOnboardingWizards, useCreateOnboardingWizard, useDeleteOnboardingWizard } from '@/hooks/useClientOnboarding';
 import { useAuth } from '@/contexts/AuthContext';
 import { employees, companies } from '@/lib/mock-data';
 
@@ -52,6 +52,7 @@ export default function Onboarding() {
   const createSession = useCreateOnboardingSession();
   const { data: wizards = [], isLoading: wizardsLoading } = useClientOnboardingWizards();
   const createWizard = useCreateOnboardingWizard();
+  const deleteWizard = useDeleteOnboardingWizard();
 
   const [showNewDialog, setShowNewDialog] = useState(false);
   const [showModeDialog, setShowModeDialog] = useState(false);
@@ -159,6 +160,18 @@ export default function Onboarding() {
                             <span className="text-xs font-medium tabular-nums">{progress}%</span>
                           </div>
                           <StatusBadge status={wizardStatusMap[w.status] || 'pending'} />
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (window.confirm('Delete this onboarding? All associated data will be permanently removed.')) {
+                                deleteWizard.mutate(w.id);
+                              }
+                            }}
+                            className="ml-1 p-1 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+                            title="Delete onboarding"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
                         </div>
                       </div>
                     );
