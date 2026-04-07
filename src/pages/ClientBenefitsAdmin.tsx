@@ -117,28 +117,6 @@ export default function ClientBenefitsAdmin() {
   const pendingQLEs = MOCK_QLES.filter(q => q.status === 'pending_review' || q.status === 'pending_documents').length;
   const latestContrib = MOCK_CONTRIBUTION_REPORTS[0];
 
-  const filteredEnrollments = useMemo(() => {
-    return MOCK_ENROLLED_EMPLOYEES.filter(e => {
-      if (planTypeFilter !== 'all' && e.planType !== planTypeFilter) return false;
-      if (search) {
-        const q = search.toLowerCase();
-        return e.name.toLowerCase().includes(q) || e.mid.toLowerCase().includes(q) || e.department.toLowerCase().includes(q);
-      }
-      return true;
-    });
-  }, [search, planTypeFilter]);
-
-  const filteredQLEs = useMemo(() => {
-    return MOCK_QLES.filter(q => {
-      if (qleStatusFilter !== 'all' && q.status !== qleStatusFilter) return false;
-      if (search) {
-        const s = search.toLowerCase();
-        return q.employeeName.toLowerCase().includes(s) || q.mid.toLowerCase().includes(s);
-      }
-      return true;
-    });
-  }, [search, qleStatusFilter]);
-
   return (
     <div className="space-y-6">
       <PageHeader
