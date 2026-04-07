@@ -170,15 +170,15 @@ function KPICards({ runs }: { runs: PayrollRunRow[] }) {
   ];
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
       {cards.map(c => (
         <Card key={c.label}>
-          <CardContent className="pt-3.5 pb-3 px-3">
-            <div className={`flex items-center gap-1 ${c.color} mb-1`}>
-              <c.icon className="h-3.5 w-3.5" />
-              <span className="text-[10px] font-medium truncate">{c.label}</span>
+          <CardContent className="pt-4 pb-3 px-4">
+            <div className={`flex items-center gap-1.5 ${c.color} mb-2`}>
+              <c.icon className="h-4 w-4 shrink-0" />
+              <span className="text-xs font-bold truncate">{c.label}</span>
             </div>
-            <p className="text-lg font-bold tabular-nums">{c.value}</p>
+            <p className="text-2xl font-bold tabular-nums whitespace-nowrap leading-none">{c.value}</p>
           </CardContent>
         </Card>
       ))}
