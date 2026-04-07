@@ -63,8 +63,6 @@ export default function CommunicationWizard() {
 
   const creatorName = profile?.full_name || null;
 
-  if (role && role !== 'super_admin') return <Navigate to="/" replace />;
-
   // Build recipient list
   const recipients: RecipientItem[] = useMemo(() => {
     if (selectionMethod === 'upload' && csvText) {
