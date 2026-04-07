@@ -18,7 +18,7 @@ export default function Companies() {
       <PageHeader
         title="Companies"
         description={`${companies.length} client companies`}
-        actions={<Button size="sm"><Plus className="h-4 w-4 mr-1.5" />Add Company</Button>}
+        actions={<Button size="sm" onClick={() => navigate('/onboarding/client/new')}><Plus className="h-4 w-4 mr-1.5" />Add Company</Button>}
       />
 
       <div className="flex items-center gap-3 animate-in-up stagger-1">
