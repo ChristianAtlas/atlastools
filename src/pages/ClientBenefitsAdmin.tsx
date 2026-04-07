@@ -99,21 +99,62 @@ const statusBadge = (status: string) => {
 // ─── Main Component ───────────────────────────────────────────
 
 export default function ClientBenefitsAdmin() {
-  const { role } = useAuth();
+  const { role, profile } = useAuth();
+  const companyId = profile?.company_id ?? undefined;
+
   const [search, setSearch] = useState('');
   const [planTypeFilter, setPlanTypeFilter] = useState('all');
   const [qleStatusFilter, setQleStatusFilter] = useState('all');
   const [hasExternalBenefits, setHasExternalBenefits] = useState(false);
-  const [externalEmployeeData, setExternalEmployeeData] = useState(
-    MOCK_ACTIVE_EMPLOYEES.map(e => ({
-      ...e,
-      eeDeductionCents: e.eeDeductionCents,
-      erContributionCents: e.erContributionCents,
-      carrierName: e.carrierName,
-      planType: e.planType,
-      verified: e.erContributionCents > 0,
-    }))
-  );
+
+  // Live employee data
+  const { data: employees = [], isLoading: loadingEmployees } = useEmployees(companyId);
+  const activeEmployees = useMemo(() => employees.filter(e => e.status === 'active'), [employees]);
+  const allEligibleEmployees = useMemo(() => employees.filter(e => e.status === 'active' || e.status === 'onboarding'), [employees]);
+
+  // External benefits from DB
+  const { data: savedExternalBenefits = [] } = useExternalBenefits(companyId);
+  const saveAllMutation = useSaveAllExternalBenefits();
+
+  // Local state for external benefit editing (seeded from DB + active employees)
+  interface ExternalRow {
+    dbId?: string;
+    employeeId: string;
+    mid: string;
+    name: string;
+    department: string;
+    carrierName: string;
+    planType: string;
+    eeDeductionCents: number;
+    erContributionCents: number;
+    verified: boolean;
+  }
+
+  const [externalEmployeeData, setExternalEmployeeData] = useState<ExternalRow[]>([]);
+
+  // Sync external data when employees or saved records change
+  useEffect(() => {
+    const rows: ExternalRow[] = activeEmployees.map(emp => {
+      const saved = savedExternalBenefits.find(s => s.employee_id === emp.id);
+      return {
+        dbId: saved?.id,
+        employeeId: emp.id,
+        mid: emp.mid,
+        name: `${emp.first_name} ${emp.last_name}`,
+        department: emp.department ?? '',
+        carrierName: saved?.carrier_name ?? '',
+        planType: saved?.plan_type ?? '',
+        eeDeductionCents: saved?.ee_deduction_cents ?? 0,
+        erContributionCents: saved?.er_contribution_cents ?? 0,
+        verified: saved?.er_verified ?? false,
+      };
+    });
+    setExternalEmployeeData(rows);
+    // Auto-detect if external benefits are active
+    if (savedExternalBenefits.length > 0) {
+      setHasExternalBenefits(true);
+    }
+  }, [activeEmployees, savedExternalBenefits]);
 
   const filteredEnrollments = useMemo(() => {
     return MOCK_ENROLLED_EMPLOYEES.filter(e => {
@@ -137,11 +178,33 @@ export default function ClientBenefitsAdmin() {
     });
   }, [search, qleStatusFilter]);
 
+  const handleSaveAll = () => {
+    if (!companyId) return;
+    saveAllMutation.mutate(
+      externalEmployeeData
+        .filter(r => r.carrierName || r.planType || r.eeDeductionCents > 0 || r.erContributionCents > 0)
+        .map(r => ({
+          id: r.dbId,
+          employee_id: r.employeeId,
+          company_id: companyId,
+          carrier_name: r.carrierName,
+          plan_type: r.planType,
+          ee_deduction_cents: r.eeDeductionCents,
+          er_contribution_cents: r.erContributionCents,
+          er_verified: r.verified,
+        })),
+      {
+        onSuccess: () => toast.success('External benefit deductions saved — they will be applied to the next payroll run.'),
+        onError: (err) => toast.error(`Failed to save: ${err.message}`),
+      }
+    );
+  };
+
   if (role && role !== 'client_admin') return <Navigate to="/" replace />;
 
-  // Summary metrics
-  const totalEnrolled = MOCK_PLANS.reduce((s, p) => s + p.enrolledCount, 0);
-  const totalEligible = MOCK_PLANS.reduce((s, p) => s + p.eligibleCount, 0);
+  // Summary metrics — live data
+  const totalEnrolled = activeEmployees.length;
+  const totalEligible = allEligibleEmployees.length;
   const pendingQLEs = MOCK_QLES.filter(q => q.status === 'pending_review' || q.status === 'pending_documents').length;
   const latestContrib = MOCK_CONTRIBUTION_REPORTS[0];
 
