@@ -73,6 +73,24 @@ export default function ClientTaxManagement() {
     },
   });
 
+  // Realtime: auto-refresh employees and SUI rates on changes
+  useEffect(() => {
+    if (!companyId) return;
+    const empChannel = supabase
+      .channel('client-tax-employees')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'employees', filter: `company_id=eq.${companyId}` },
+        () => qc.invalidateQueries({ queryKey: ['company_employees_states', companyId] })
+      )
+      .subscribe();
+    const rateChannel = supabase
+      .channel('client-tax-rates')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'client_sui_rates', filter: `company_id=eq.${companyId}` },
+        () => qc.invalidateQueries({ queryKey: ['client_sui_rates', companyId] })
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(empChannel); supabase.removeChannel(rateChannel); };
+  }, [companyId, qc]);
+
   // Compute current rates (most recent per state)
   const today = new Date().toISOString().slice(0, 10);
   const currentRates: Record<string, ClientSuiRateRow> = {};
@@ -80,6 +98,14 @@ export default function ClientTaxManagement() {
     if (!currentRates[r.state_code] || r.effective_date > currentRates[r.state_code].effective_date) {
       currentRates[r.state_code] = r;
     }
+  }
+
+  // Per-state employee counts
+  const employeesByState: Record<string, number> = {};
+  for (const emp of employees) {
+    if (!emp.state) continue;
+    const st = emp.state.toUpperCase();
+    employeesByState[st] = (employeesByState[st] || 0) + 1;
   }
 
   // Detect states with employees but no SUI rate (only client-reporting states)
