@@ -147,6 +147,7 @@ export default function Compliance() {
           <TabsTrigger value="calendar" className="gap-1.5"><Calendar className="h-3.5 w-3.5" /> Calendar</TabsTrigger>
           <TabsTrigger value="licenses" className="gap-1.5"><Key className="h-3.5 w-3.5" /> Licenses</TabsTrigger>
           <TabsTrigger value="form8973" className="gap-1.5"><FileCheck className="h-3.5 w-3.5" /> Form 8973</TabsTrigger>
+        </TabsList>
 
         <TabsContent value="overview" className="mt-4">
           <RiskDashboard items={allItems} licenses={licenses} />
