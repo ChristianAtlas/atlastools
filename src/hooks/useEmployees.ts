@@ -7,6 +7,7 @@ export type PayType = 'salary' | 'hourly';
 
 export interface EmployeeRow {
   id: string;
+  mid: string;
   company_id: string;
   user_id: string | null;
   first_name: string;

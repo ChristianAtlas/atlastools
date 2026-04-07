@@ -48,7 +48,10 @@ export default function Companies() {
             <div key={company.id} className="rounded-lg border bg-card p-5 shadow-sm hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate(`/companies/${company.id}`)}>
               <div className="flex items-start justify-between">
                 <div>
-                  <h3 className="font-semibold">{company.name}</h3>
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex items-center rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-bold text-primary tabular-nums">{company.cid}</span>
+                    <h3 className="font-semibold">{company.name}</h3>
+                  </div>
                   <p className="text-xs text-muted-foreground mt-0.5">EIN: {company.ein}</p>
                 </div>
                 <StatusBadge status={company.status} />

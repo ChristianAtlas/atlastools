@@ -44,6 +44,7 @@ export default function Employees() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b bg-muted/50">
+                <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">MID</th>
                 <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Employee</th>
                 <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Company</th>
                 <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Department</th>
@@ -54,17 +55,20 @@ export default function Employees() {
             <tbody className="divide-y">
               {employees.map(emp => (
                 <tr key={emp.id} className="hover:bg-muted/30 transition-colors cursor-pointer" onClick={() => navigate(`/employees/${emp.id}`)}>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-2.5">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
-                        {getInitials(emp.first_name, emp.last_name)}
-                      </div>
-                      <div>
-                        <p className="font-medium">{emp.first_name} {emp.last_name}</p>
-                        <p className="text-xs text-muted-foreground">{emp.title}</p>
-                      </div>
-                    </div>
-                  </td>
+                   <td className="px-4 py-3">
+                     <span className="inline-flex items-center rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-bold text-primary tabular-nums">{emp.mid}</span>
+                   </td>
+                   <td className="px-4 py-3">
+                     <div className="flex items-center gap-2.5">
+                       <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
+                         {getInitials(emp.first_name, emp.last_name)}
+                       </div>
+                       <div>
+                         <p className="font-medium">{emp.first_name} {emp.last_name}</p>
+                         <p className="text-xs text-muted-foreground">{emp.title}</p>
+                       </div>
+                     </div>
+                   </td>
                   <td className="px-4 py-3 text-muted-foreground">{emp.companies?.name ?? '—'}</td>
                   <td className="px-4 py-3 text-muted-foreground">{emp.department ?? '—'}</td>
                   <td className="px-4 py-3 font-medium tabular-nums">
@@ -76,7 +80,7 @@ export default function Employees() {
                 </tr>
               ))}
               {employees.length === 0 && (
-                <tr><td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">No employees found</td></tr>
+                <tr><td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">No employees found</td></tr>
               )}
             </tbody>
           </table>
