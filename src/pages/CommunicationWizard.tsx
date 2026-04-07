@@ -32,32 +32,24 @@ interface RecipientItem {
 }
 
 export default function CommunicationWizard() {
-  const { role, userName } = useAuth();
+  const { role, profile } = useAuth();
   const navigate = useNavigate();
   const [params] = useSearchParams();
 
   const [step, setStep] = useState(0);
-
-  // Step 1 state
   const [audienceType, setAudienceType] = useState<'company' | 'employee'>(
     (params.get('audience') as 'company' | 'employee') || 'company'
   );
   const [contactType, setContactType] = useState('primary_admin');
-
-  // Step 2 state
   const [selectionMethod, setSelectionMethod] = useState<'all' | 'segment' | 'upload'>('all');
   const [selectedSegmentId, setSelectedSegmentId] = useState('');
   const [csvText, setCsvText] = useState('');
   const [csvErrors, setCsvErrors] = useState<string[]>([]);
-
-  // Step 4 state
   const [fromName, setFromName] = useState('AtlasOne HR Support');
   const [replyTo, setReplyTo] = useState('');
   const [subject, setSubject] = useState('');
   const [bodyHtml, setBodyHtml] = useState('');
   const [showPreview, setShowPreview] = useState(false);
-
-  // Step 5 state
   const [sendMode, setSendMode] = useState<'now' | 'schedule'>('now');
   const [scheduledDate, setScheduledDate] = useState('');
   const [scheduledTime, setScheduledTime] = useState('09:00');
@@ -68,6 +60,8 @@ export default function CommunicationWizard() {
   const { data: segments = [] } = useSavedSegments(audienceType);
   const createComm = useCreateCommunication();
   const insertRecipients = useInsertRecipients();
+
+  const creatorName = profile?.full_name || null;
 
   if (role && role !== 'super_admin') return <Navigate to="/" replace />;
 
