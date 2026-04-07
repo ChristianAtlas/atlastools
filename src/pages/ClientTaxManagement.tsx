@@ -206,6 +206,13 @@ export default function ClientTaxManagement() {
         description="Manage your SUI account numbers and rates for client-reporting states"
       />
 
+      <Tabs defaultValue="rates" className="space-y-6">
+        <TabsList>
+          <TabsTrigger value="rates">SUI Rates & Accounts</TabsTrigger>
+          <TabsTrigger value="directory">Agency Directory</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="rates" className="space-y-6">
       {/* Missing State Registrations Alert */}
       {missingStates.length > 0 && (
         <Alert variant="destructive">
