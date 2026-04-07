@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { LogOut, Menu, Building2 } from 'lucide-react';
+import { GlobalSearch } from '@/components/GlobalSearch';
 import { ImpersonationProvider } from '@/contexts/ImpersonationContext';
 import { ImpersonationBanner } from '@/components/ImpersonationBanner';
 import { ImpersonationSelector } from '@/components/ImpersonationSelector';
@@ -104,6 +105,7 @@ export function AppLayout() {
                 </div>
               )}
             </div>
+            <GlobalSearch />
             <div className="flex items-center gap-2">
               <ImpersonationSelector />
               <NotificationBell
