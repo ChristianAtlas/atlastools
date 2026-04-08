@@ -9,6 +9,7 @@ import { ArrowRight, Shield, Building2, User, Mail, Lock } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { lovable } from '@/integrations/lovable/index';
 import logoImg from '@/assets/logo.png';
+import { isSandbox } from '@/lib/environment';
 
 interface DemoAccount {
   label: string;
@@ -292,31 +293,35 @@ export default function Login() {
                 </Button>
               </form>
 
-              <div className="relative my-6">
-                <Separator />
-                <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-3 text-xs text-muted-foreground uppercase tracking-wider">
-                  demo access
-                </span>
-              </div>
-
-              <div className="space-y-2">
-                {DEMO_ACCOUNTS.map((account) => (
-                  <Button
-                    key={account.email}
-                    type="button"
-                    variant="outline"
-                    className="w-full justify-start gap-3 h-11 text-sm"
-                    disabled={demoLoading !== null}
-                    onClick={() => handleDemoLogin(account)}
-                  >
-                    <account.icon className="h-4 w-4 shrink-0 text-muted-foreground" />
-                    <span className="font-medium">{account.label}</span>
-                    <span className="text-muted-foreground text-xs ml-auto">
-                      {demoLoading === account.email ? 'Signing in…' : account.description}
+              {isSandbox() && (
+                <>
+                  <div className="relative my-6">
+                    <Separator />
+                    <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-3 text-xs text-muted-foreground uppercase tracking-wider">
+                      demo access
                     </span>
-                  </Button>
-                ))}
-              </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    {DEMO_ACCOUNTS.map((account) => (
+                      <Button
+                        key={account.email}
+                        type="button"
+                        variant="outline"
+                        className="w-full justify-start gap-3 h-11 text-sm"
+                        disabled={demoLoading !== null}
+                        onClick={() => handleDemoLogin(account)}
+                      >
+                        <account.icon className="h-4 w-4 shrink-0 text-muted-foreground" />
+                        <span className="font-medium">{account.label}</span>
+                        <span className="text-muted-foreground text-xs ml-auto">
+                          {demoLoading === account.email ? 'Signing in…' : account.description}
+                        </span>
+                      </Button>
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
 
             <p className="text-xs text-muted-foreground/60 text-center mt-6">

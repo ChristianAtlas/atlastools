@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { isProduction } from '@/lib/environment';
 
 export type EmployeeStatus = 'active' | 'onboarding' | 'on_leave' | 'terminated' | 'suspended';
 export type PayType = 'salary' | 'hourly';
@@ -103,6 +104,9 @@ export function useEmployees(companyId?: string, search?: string) {
         .select('*, companies(name)')
         .is('deleted_at', null)
         .order('last_name');
+      if (isProduction()) {
+        query = query.eq('is_demo', false);
+      }
       if (companyId) query = query.eq('company_id', companyId);
       if (search) {
         query = query.or(`first_name.ilike.%${search}%,last_name.ilike.%${search}%,email.ilike.%${search}%`);

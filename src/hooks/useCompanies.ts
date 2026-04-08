@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { isProduction } from '@/lib/environment';
 
 export interface CompanyRow {
   id: string;
@@ -30,6 +31,9 @@ async function fetchCompanies(search?: string): Promise<CompanyRow[]> {
     .select('*')
     .is('deleted_at', null)
     .order('name');
+  if (isProduction()) {
+    query = query.eq('is_demo', false);
+  }
   if (search) {
     query = query.ilike('name', `%${search}%`);
   }
