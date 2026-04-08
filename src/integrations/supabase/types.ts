@@ -534,6 +534,7 @@ export type Database = {
           employee_count: number
           entity_type: string | null
           id: string
+          is_demo: boolean
           legal_name: string | null
           mailing_address_line1: string | null
           mailing_address_line2: string | null
@@ -566,6 +567,7 @@ export type Database = {
           employee_count?: number
           entity_type?: string | null
           id?: string
+          is_demo?: boolean
           legal_name?: string | null
           mailing_address_line1?: string | null
           mailing_address_line2?: string | null
@@ -598,6 +600,7 @@ export type Database = {
           employee_count?: number
           entity_type?: string | null
           id?: string
+          is_demo?: boolean
           legal_name?: string | null
           mailing_address_line1?: string | null
           mailing_address_line2?: string | null
@@ -1492,6 +1495,7 @@ export type Database = {
           gender: string | null
           hourly_rate_cents: number | null
           id: string
+          is_demo: boolean
           last_name: string
           manager_id: string | null
           mid: string
@@ -1530,6 +1534,7 @@ export type Database = {
           gender?: string | null
           hourly_rate_cents?: number | null
           id?: string
+          is_demo?: boolean
           last_name: string
           manager_id?: string | null
           mid?: string
@@ -1568,6 +1573,7 @@ export type Database = {
           gender?: string | null
           hourly_rate_cents?: number | null
           id?: string
+          is_demo?: boolean
           last_name?: string
           manager_id?: string | null
           mid?: string
