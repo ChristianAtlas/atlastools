@@ -431,6 +431,10 @@ function ClientSettingsTab() {
         {activeSection === 'billing' && renderOverridableSettings(clientBillingDefs, 'Billing Settings')}
         {activeSection === 'compliance' && renderOverridableSettings(clientComplianceDefs, 'Compliance Settings')}
 
+        {activeSection === 'time_off' && selectedCompanyId && (
+          <TimeOffPoliciesManager companyId={selectedCompanyId} companyName={selectedCompany?.name} />
+        )}
+
         {activeSection === 'hr' && (
           <Card>
             <CardHeader><CardTitle className="text-lg">HR / Employment Settings</CardTitle></CardHeader>
