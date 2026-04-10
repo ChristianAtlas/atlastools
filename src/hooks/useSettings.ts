@@ -261,6 +261,7 @@ export const ENTERPRISE_SETTING_DEFS: {
 export const SETTING_CATEGORIES = [
   { key: 'platform', label: 'Company / Platform', icon: 'Building2' },
   { key: 'payroll', label: 'Payroll Engine', icon: 'DollarSign' },
+  { key: 'time_off', label: 'Time Off Policies', icon: 'Clock' },
   { key: 'tax', label: 'Tax Settings', icon: 'Receipt' },
   { key: 'billing', label: 'Billing & Invoicing', icon: 'CreditCard' },
   { key: 'compliance', label: 'Compliance', icon: 'Shield' },
@@ -274,6 +275,7 @@ export const SETTING_CATEGORIES = [
 export const CLIENT_SETTING_SECTIONS = [
   { key: 'profile', label: 'Client Profile', icon: 'Building' },
   { key: 'payroll', label: 'Payroll Settings', icon: 'DollarSign' },
+  { key: 'time_off', label: 'Time Off Policies', icon: 'Clock' },
   { key: 'tax', label: 'Tax Settings', icon: 'Receipt' },
   { key: 'billing', label: 'Billing Settings', icon: 'CreditCard' },
   { key: 'compliance', label: 'Compliance', icon: 'Shield' },

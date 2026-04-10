@@ -3370,6 +3370,77 @@ export type Database = {
           },
         ]
       }
+      time_off_policies: {
+        Row: {
+          accrual_method: string
+          accrual_rate: number
+          annual_accrual_cap_hours: number | null
+          balance_cap_hours: number | null
+          carryover_max_hours: number | null
+          company_id: string
+          created_at: string
+          created_by: string | null
+          custom_reset_date: string | null
+          eligible_earning_codes: string[]
+          id: string
+          is_active: boolean
+          name: string
+          policy_type: string
+          reset_schedule: string
+          unused_hours_policy: string
+          updated_at: string
+          waiting_period_days: number
+        }
+        Insert: {
+          accrual_method?: string
+          accrual_rate?: number
+          annual_accrual_cap_hours?: number | null
+          balance_cap_hours?: number | null
+          carryover_max_hours?: number | null
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          custom_reset_date?: string | null
+          eligible_earning_codes?: string[]
+          id?: string
+          is_active?: boolean
+          name: string
+          policy_type?: string
+          reset_schedule?: string
+          unused_hours_policy?: string
+          updated_at?: string
+          waiting_period_days?: number
+        }
+        Update: {
+          accrual_method?: string
+          accrual_rate?: number
+          annual_accrual_cap_hours?: number | null
+          balance_cap_hours?: number | null
+          carryover_max_hours?: number | null
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          custom_reset_date?: string | null
+          eligible_earning_codes?: string[]
+          id?: string
+          is_active?: boolean
+          name?: string
+          policy_type?: string
+          reset_schedule?: string
+          unused_hours_policy?: string
+          updated_at?: string
+          waiting_period_days?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "time_off_policies_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       timecards: {
         Row: {
           approval_status: string
