@@ -542,6 +542,59 @@ function ClientSettingsTab() {
   );
 }
 
+// ─── Enterprise Time Off Section ───
+function EnterpriseTimeOffSection() {
+  const { data: companies = [] } = useCompanies();
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
+
+  const filtered = companies.filter(c =>
+    !search || c.name.toLowerCase().includes(search.toLowerCase())
+  );
+
+  if (selectedCompanyId) {
+    const company = companies.find(c => c.id === selectedCompanyId);
+    return (
+      <div className="space-y-4">
+        <Button variant="outline" size="sm" onClick={() => setSelectedCompanyId(null)}>
+          <ArrowLeft className="h-3.5 w-3.5 mr-1" /> Back to companies
+        </Button>
+        <TimeOffPoliciesManager companyId={selectedCompanyId} companyName={company?.name} />
+      </div>
+    );
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-lg">Time Off Policies</CardTitle>
+        <CardDescription>Select a company to manage its time off plans. Each company can have multiple active plans.</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input placeholder="Search companies..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
+        </div>
+        <div className="space-y-2 max-h-[400px] overflow-y-auto">
+          {filtered.slice(0, 20).map(c => (
+            <button
+              key={c.id}
+              onClick={() => setSelectedCompanyId(c.id)}
+              className="w-full flex items-center justify-between p-3 rounded-lg border hover:bg-muted transition-colors text-left"
+            >
+              <div>
+                <p className="text-sm font-medium">{c.name}</p>
+                <p className="text-xs text-muted-foreground">{c.state} · {c.employee_count} employees</p>
+              </div>
+              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+            </button>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 // ─── Sub-sections for Enterprise ───
 
 function RolesSection() {
