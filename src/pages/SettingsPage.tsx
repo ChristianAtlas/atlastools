@@ -109,7 +109,8 @@ function EnterpriseSettingsTab() {
           </div>
         </div>
 
-        {activeCategory === 'roles' ? <RolesSection /> :
+        {activeCategory === 'time_off' ? <EnterpriseTimeOffSection /> :
+         activeCategory === 'roles' ? <RolesSection /> :
          activeCategory === 'automations' ? <AutomationsSection /> :
          activeCategory === 'integrations' ? <IntegrationsSection /> :
          activeCategory === 'notifications' ? <NotificationsSection /> :
