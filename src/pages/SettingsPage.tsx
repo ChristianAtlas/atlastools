@@ -17,7 +17,7 @@ import { StatCard } from '@/components/StatCard';
 import { toast } from 'sonner';
 import {
   Building2, DollarSign, Receipt, CreditCard, Shield, Users, Zap, Plug, Bell, History,
-  Building, UserCheck, Key, FileText, Search, Settings as SettingsIcon, Save, RotateCcw, ChevronRight,
+  Building, UserCheck, Key, FileText, Search, Settings as SettingsIcon, Save, RotateCcw, ChevronRight, ArrowLeft,
   AlertTriangle, CheckCircle2, Clock, Edit2, X
 } from 'lucide-react';
 import { TimeOffPoliciesManager } from '@/components/settings/time-off/TimeOffPoliciesManager';
