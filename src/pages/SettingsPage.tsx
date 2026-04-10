@@ -18,9 +18,10 @@ import { toast } from 'sonner';
 import {
   Building2, DollarSign, Receipt, CreditCard, Shield, Users, Zap, Plug, Bell, History,
   Building, UserCheck, Key, FileText, Search, Settings as SettingsIcon, Save, RotateCcw, ChevronRight, ArrowLeft,
-  AlertTriangle, CheckCircle2, Clock, Edit2, X
+  AlertTriangle, CheckCircle2, Clock, Edit2, X, MapPin
 } from 'lucide-react';
 import { TimeOffPoliciesManager } from '@/components/settings/time-off/TimeOffPoliciesManager';
+import { StateSickLeaveManager } from '@/components/settings/time-off/StateSickLeaveManager';
 import {
   useEnterpriseSettings, useClientOverrides, useSettingAuditLogs,
   useUpsertEnterpriseSetting, useUpsertClientOverride, useDeleteClientOverride,
@@ -547,6 +548,7 @@ function EnterpriseTimeOffSection() {
   const { data: companies = [] } = useCompanies();
   const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
+  const [subPage, setSubPage] = useState<'companies' | 'state_laws'>('companies');
 
   const filtered = companies.filter(c =>
     !search || c.name.toLowerCase().includes(search.toLowerCase())
@@ -565,33 +567,57 @@ function EnterpriseTimeOffSection() {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-lg">Time Off Policies</CardTitle>
-        <CardDescription>Select a company to manage its time off plans. Each company can have multiple active plans.</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Search companies..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
-        </div>
-        <div className="space-y-2 max-h-[400px] overflow-y-auto">
-          {filtered.slice(0, 20).map(c => (
-            <button
-              key={c.id}
-              onClick={() => setSelectedCompanyId(c.id)}
-              className="w-full flex items-center justify-between p-3 rounded-lg border hover:bg-muted transition-colors text-left"
-            >
-              <div>
-                <p className="text-sm font-medium">{c.name}</p>
-                <p className="text-xs text-muted-foreground">{c.state} · {c.employee_count} employees</p>
-              </div>
-              <ChevronRight className="h-4 w-4 text-muted-foreground" />
-            </button>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
+    <div className="space-y-4">
+      {/* Sub-navigation tabs */}
+      <div className="flex gap-2">
+        <Button
+          variant={subPage === 'companies' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => setSubPage('companies')}
+        >
+          <Building2 className="h-4 w-4 mr-1" /> Company Plans
+        </Button>
+        <Button
+          variant={subPage === 'state_laws' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => setSubPage('state_laws')}
+        >
+          <MapPin className="h-4 w-4 mr-1" /> State Mandatory Sick Leave
+        </Button>
+      </div>
+
+      {subPage === 'state_laws' ? (
+        <StateSickLeaveManager />
+      ) : (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Time Off Policies</CardTitle>
+            <CardDescription>Select a company to manage its time off plans. Each company can have multiple active plans.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input placeholder="Search companies..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
+            </div>
+            <div className="space-y-2 max-h-[400px] overflow-y-auto">
+              {filtered.slice(0, 20).map(c => (
+                <button
+                  key={c.id}
+                  onClick={() => setSelectedCompanyId(c.id)}
+                  className="w-full flex items-center justify-between p-3 rounded-lg border hover:bg-muted transition-colors text-left"
+                >
+                  <div>
+                    <p className="text-sm font-medium">{c.name}</p>
+                    <p className="text-xs text-muted-foreground">{c.state} · {c.employee_count} employees</p>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                </button>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
   );
 }
 

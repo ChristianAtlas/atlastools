@@ -3302,6 +3302,54 @@ export type Database = {
           },
         ]
       }
+      state_sick_leave_rules: {
+        Row: {
+          accrual_per_hours_worked: number
+          accrual_rate_hours: number
+          carryover_allowed: boolean
+          created_at: string
+          effective_date: string | null
+          id: string
+          is_active: boolean
+          law_name: string
+          max_use_hours_per_year: number | null
+          notes: string | null
+          state_code: string
+          state_name: string
+          updated_at: string
+        }
+        Insert: {
+          accrual_per_hours_worked?: number
+          accrual_rate_hours?: number
+          carryover_allowed?: boolean
+          created_at?: string
+          effective_date?: string | null
+          id?: string
+          is_active?: boolean
+          law_name: string
+          max_use_hours_per_year?: number | null
+          notes?: string | null
+          state_code: string
+          state_name: string
+          updated_at?: string
+        }
+        Update: {
+          accrual_per_hours_worked?: number
+          accrual_rate_hours?: number
+          carryover_allowed?: boolean
+          created_at?: string
+          effective_date?: string | null
+          id?: string
+          is_active?: boolean
+          law_name?: string
+          max_use_hours_per_year?: number | null
+          notes?: string | null
+          state_code?: string
+          state_name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       sui_adjustments: {
         Row: {
           adjustment_cents: number
