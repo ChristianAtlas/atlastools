@@ -118,7 +118,7 @@ export function StateSickLeaveManager() {
               <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
             </div>
           ) : (
-            <ScrollArea className="max-h-[600px]">
+            <ScrollArea className="h-[500px]">
               <div className="space-y-1">
                 {filtered.map(rule => (
                   <div
