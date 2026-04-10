@@ -134,12 +134,14 @@ export function TimeOffPolicyWizard({ companyId, userId, initial, onSave, onCanc
 // ─── Step Components ───
 
 function StepPlanType({ form, update }: { form: TimeOffPolicyInput; update: (p: Partial<TimeOffPolicyInput>) => void }) {
-  const presets: { type: PolicyType; label: string; icon: any }[] = [
-    { type: 'pto', label: 'PTO (Paid Time Off)', icon: Clock },
-    { type: 'vacation', label: 'Vacation', icon: Briefcase },
-    { type: 'sick', label: 'Sick Leave', icon: AlertCircle },
-    { type: 'custom', label: 'Custom Plan', icon: Calendar },
+  const presets: { type: PolicyType; label: string; defaultName: string; icon: any }[] = [
+    { type: 'pto', label: 'PTO (Paid Time Off)', defaultName: 'PTO', icon: Clock },
+    { type: 'vacation', label: 'Vacation', defaultName: 'Vacation', icon: Briefcase },
+    { type: 'sick', label: 'Sick Leave', defaultName: 'Sick Leave', icon: AlertCircle },
+    { type: 'custom', label: 'Custom Plan', defaultName: '', icon: Calendar },
   ];
+
+  const isCustom = form.policy_type === 'custom';
 
   return (
     <div className="space-y-4">
@@ -152,8 +154,7 @@ function StepPlanType({ form, update }: { form: TimeOffPolicyInput; update: (p: 
               <button
                 key={p.type}
                 onClick={() => {
-                  update({ policy_type: p.type });
-                  if (p.type !== 'custom' && !form.name) update({ name: p.label.split(' (')[0] });
+                  update({ policy_type: p.type, name: p.defaultName });
                 }}
                 className={cn(
                   'flex items-center gap-3 p-3 rounded-lg border-2 transition-colors text-left',
@@ -170,14 +171,25 @@ function StepPlanType({ form, update }: { form: TimeOffPolicyInput; update: (p: 
         </div>
       </div>
       <div>
-        <Label htmlFor="plan-name">Plan Name</Label>
-        <Input
-          id="plan-name"
-          value={form.name}
-          onChange={e => update({ name: e.target.value })}
-          placeholder="e.g. Vacation, Sick Leave, PTO"
-          className="mt-1"
-        />
+        <Label htmlFor="plan-name">
+          Plan Name {isCustom && <span className="text-destructive">*</span>}
+        </Label>
+        {isCustom ? (
+          <Input
+            id="plan-name"
+            value={form.name}
+            onChange={e => update({ name: e.target.value })}
+            placeholder="Enter a custom plan name"
+            className="mt-1"
+          />
+        ) : (
+          <Input
+            id="plan-name"
+            value={form.name}
+            readOnly
+            className="mt-1 bg-muted cursor-default"
+          />
+        )}
       </div>
     </div>
   );
