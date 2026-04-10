@@ -547,6 +547,7 @@ function EnterpriseTimeOffSection() {
   const { data: companies = [] } = useCompanies();
   const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
+  const [subPage, setSubPage] = useState<'companies' | 'state_laws'>('companies');
 
   const filtered = companies.filter(c =>
     !search || c.name.toLowerCase().includes(search.toLowerCase())
