@@ -566,33 +566,57 @@ function EnterpriseTimeOffSection() {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-lg">Time Off Policies</CardTitle>
-        <CardDescription>Select a company to manage its time off plans. Each company can have multiple active plans.</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Search companies..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
-        </div>
-        <div className="space-y-2 max-h-[400px] overflow-y-auto">
-          {filtered.slice(0, 20).map(c => (
-            <button
-              key={c.id}
-              onClick={() => setSelectedCompanyId(c.id)}
-              className="w-full flex items-center justify-between p-3 rounded-lg border hover:bg-muted transition-colors text-left"
-            >
-              <div>
-                <p className="text-sm font-medium">{c.name}</p>
-                <p className="text-xs text-muted-foreground">{c.state} · {c.employee_count} employees</p>
-              </div>
-              <ChevronRight className="h-4 w-4 text-muted-foreground" />
-            </button>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
+    <div className="space-y-4">
+      {/* Sub-navigation tabs */}
+      <div className="flex gap-2">
+        <Button
+          variant={subPage === 'companies' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => setSubPage('companies')}
+        >
+          <Building2 className="h-4 w-4 mr-1" /> Company Plans
+        </Button>
+        <Button
+          variant={subPage === 'state_laws' ? 'default' : 'outline'}
+          size="sm"
+          onClick={() => setSubPage('state_laws')}
+        >
+          <MapPin className="h-4 w-4 mr-1" /> State Mandatory Sick Leave
+        </Button>
+      </div>
+
+      {subPage === 'state_laws' ? (
+        <StateSickLeaveManager />
+      ) : (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Time Off Policies</CardTitle>
+            <CardDescription>Select a company to manage its time off plans. Each company can have multiple active plans.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input placeholder="Search companies..." value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
+            </div>
+            <div className="space-y-2 max-h-[400px] overflow-y-auto">
+              {filtered.slice(0, 20).map(c => (
+                <button
+                  key={c.id}
+                  onClick={() => setSelectedCompanyId(c.id)}
+                  className="w-full flex items-center justify-between p-3 rounded-lg border hover:bg-muted transition-colors text-left"
+                >
+                  <div>
+                    <p className="text-sm font-medium">{c.name}</p>
+                    <p className="text-xs text-muted-foreground">{c.state} · {c.employee_count} employees</p>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                </button>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
   );
 }
 
