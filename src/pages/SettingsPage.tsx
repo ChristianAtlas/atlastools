@@ -18,9 +18,10 @@ import { toast } from 'sonner';
 import {
   Building2, DollarSign, Receipt, CreditCard, Shield, Users, Zap, Plug, Bell, History,
   Building, UserCheck, Key, FileText, Search, Settings as SettingsIcon, Save, RotateCcw, ChevronRight, ArrowLeft,
-  AlertTriangle, CheckCircle2, Clock, Edit2, X
+  AlertTriangle, CheckCircle2, Clock, Edit2, X, MapPin
 } from 'lucide-react';
 import { TimeOffPoliciesManager } from '@/components/settings/time-off/TimeOffPoliciesManager';
+import { StateSickLeaveManager } from '@/components/settings/time-off/StateSickLeaveManager';
 import {
   useEnterpriseSettings, useClientOverrides, useSettingAuditLogs,
   useUpsertEnterpriseSetting, useUpsertClientOverride, useDeleteClientOverride,
