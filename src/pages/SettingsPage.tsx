@@ -30,7 +30,7 @@ import { useCompanies } from '@/hooks/useCompanies';
 
 const ICON_MAP: Record<string, any> = {
   Building2, DollarSign, Receipt, CreditCard, Shield, Users, Zap, Plug, Bell, History,
-  Building, UserCheck, Key, FileText
+  Building, UserCheck, Key, FileText, Clock
 };
 
 // ─── Enterprise Settings Tab ───
