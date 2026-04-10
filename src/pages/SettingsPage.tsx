@@ -20,6 +20,7 @@ import {
   Building, UserCheck, Key, FileText, Search, Settings as SettingsIcon, Save, RotateCcw, ChevronRight,
   AlertTriangle, CheckCircle2, Clock, Edit2, X
 } from 'lucide-react';
+import { TimeOffPoliciesManager } from '@/components/settings/time-off/TimeOffPoliciesManager';
 import {
   useEnterpriseSettings, useClientOverrides, useSettingAuditLogs,
   useUpsertEnterpriseSetting, useUpsertClientOverride, useDeleteClientOverride,
