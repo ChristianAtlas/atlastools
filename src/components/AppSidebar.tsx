@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils';
 import {
   LayoutDashboard, Users, Building2, CreditCard, FileText, Workflow,
   ClipboardCheck, ScrollText, BarChart3, Settings, DollarSign,
-  CalendarDays, UserPlus, ShieldCheck, Clock, Heart, User, Landmark, Banknote, Mail
+  CalendarDays, UserPlus, ShieldCheck, Clock, Heart, User, Landmark, Banknote, Mail, Globe
 } from 'lucide-react';
 import type { AppRole } from '@/contexts/AuthContext';
 import logoImg from '@/assets/logo.png';
@@ -83,6 +83,7 @@ const clientAdminNavGroups: NavGroup[] = [
     items: [
       { label: 'PTO', to: '/pto', icon: CalendarDays },
       { label: 'Benefits Admin', to: '/client-benefits', icon: Heart },
+      { label: 'Atlas HR Hub', to: '/atlas-hr-hub', icon: Globe },
     ],
   },
   {
