@@ -463,30 +463,32 @@ function ClientReporting({ lockToOwnCompany = false }: { lockToOwnCompany?: bool
 
   return (
     <div className="space-y-5 animate-in-up">
-      {/* Client Selector */}
-      <Card>
-        <CardContent className="pt-4 pb-3">
-          <div className="flex items-center gap-3">
-            <Search className="h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search clients..."
-              value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
-              className="h-8 max-w-xs text-sm"
-            />
-            <Select value={selectedCompany} onValueChange={setSelectedCompany}>
-              <SelectTrigger className="h-8 w-64 text-sm">
-                <SelectValue placeholder="Select a client..." />
-              </SelectTrigger>
-              <SelectContent>
-                {filteredCompanies.map(c => (
-                  <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Client Selector — hidden for client admins */}
+      {!lockToOwnCompany && (
+        <Card>
+          <CardContent className="pt-4 pb-3">
+            <div className="flex items-center gap-3">
+              <Search className="h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search clients..."
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+                className="h-8 max-w-xs text-sm"
+              />
+              <Select value={selectedCompany} onValueChange={setSelectedCompany}>
+                <SelectTrigger className="h-8 w-64 text-sm">
+                  <SelectValue placeholder="Select a client..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {filteredCompanies.map(c => (
+                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {!selectedCompany ? (
         <Card>
