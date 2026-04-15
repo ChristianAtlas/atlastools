@@ -24,6 +24,7 @@ import {
   useReportComplianceLicenses, fmt, fmtDate,
 } from '@/hooks/useReportingData';
 import { useCompanies } from '@/hooks/useCompanies';
+import { useAuth } from '@/contexts/AuthContext';
 
 /* ───── helpers ───── */
 const now = new Date();
@@ -42,7 +43,18 @@ const CHART_COLORS = [
 
 /* ───── MAIN ───── */
 export default function Reports() {
-  const [tab, setTab] = useState('enterprise');
+  const { isSuperAdmin } = useAuth();
+  const [tab, setTab] = useState(isSuperAdmin ? 'enterprise' : 'client');
+
+  // Client admins only see their own company reports
+  if (!isSuperAdmin) {
+    return (
+      <div className="space-y-5">
+        <PageHeader title="Reports" description="View reports and analytics for your company" />
+        <ClientReporting lockToOwnCompany />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-5">
@@ -356,9 +368,12 @@ function EnterpriseDashboard() {
 /* ═══════════════════════════════════════════════════════════
    2. CLIENT REPORTING
    ═══════════════════════════════════════════════════════════ */
-function ClientReporting() {
+function ClientReporting({ lockToOwnCompany = false }: { lockToOwnCompany?: boolean }) {
   const { data: companies = [] } = useCompanies();
-  const [selectedCompany, setSelectedCompany] = useState<string>('');
+  // When locked, auto-select the first (only) company the client admin can see
+  const autoCompanyId = lockToOwnCompany && companies.length > 0 ? companies[0].id : '';
+  const [manualCompany, setSelectedCompany] = useState<string>('');
+  const selectedCompany = lockToOwnCompany ? autoCompanyId : manualCompany;
   const [searchTerm, setSearchTerm] = useState('');
   const { data: payrollRuns = [] } = useReportPayrollRuns();
   const { data: employees = [] } = useReportEmployees();
@@ -448,30 +463,32 @@ function ClientReporting() {
 
   return (
     <div className="space-y-5 animate-in-up">
-      {/* Client Selector */}
-      <Card>
-        <CardContent className="pt-4 pb-3">
-          <div className="flex items-center gap-3">
-            <Search className="h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search clients..."
-              value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
-              className="h-8 max-w-xs text-sm"
-            />
-            <Select value={selectedCompany} onValueChange={setSelectedCompany}>
-              <SelectTrigger className="h-8 w-64 text-sm">
-                <SelectValue placeholder="Select a client..." />
-              </SelectTrigger>
-              <SelectContent>
-                {filteredCompanies.map(c => (
-                  <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Client Selector — hidden for client admins */}
+      {!lockToOwnCompany && (
+        <Card>
+          <CardContent className="pt-4 pb-3">
+            <div className="flex items-center gap-3">
+              <Search className="h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search clients..."
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+                className="h-8 max-w-xs text-sm"
+              />
+              <Select value={selectedCompany} onValueChange={setSelectedCompany}>
+                <SelectTrigger className="h-8 w-64 text-sm">
+                  <SelectValue placeholder="Select a client..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {filteredCompanies.map(c => (
+                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {!selectedCompany ? (
         <Card>
