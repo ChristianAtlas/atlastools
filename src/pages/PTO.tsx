@@ -328,6 +328,45 @@ export default function PTO() {
   );
 }
 
+// ─── Federal Holidays Helper ───────────────────────────────
+interface FederalHolidayDef {
+  name: string;
+  getDate: (year: number) => string;
+}
+
+function nthDayOfMonth(year: number, month: number, dayOfWeek: number, n: number): string {
+  const d = new Date(year, month - 1, 1);
+  let count = 0;
+  while (d.getMonth() === month - 1) {
+    if (d.getDay() === dayOfWeek) {
+      count++;
+      if (count === n) return `${year}-${String(month).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    }
+    d.setDate(d.getDate() + 1);
+  }
+  return `${year}-${String(month).padStart(2, '0')}-01`;
+}
+
+function lastMondayOfMay(year: number): string {
+  const d = new Date(year, 4, 31);
+  while (d.getDay() !== 1) d.setDate(d.getDate() - 1);
+  return `${year}-05-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+const FEDERAL_HOLIDAYS: FederalHolidayDef[] = [
+  { name: "New Year's Day", getDate: (y) => `${y}-01-01` },
+  { name: 'Birthday of Martin Luther King, Jr.', getDate: (y) => nthDayOfMonth(y, 1, 1, 3) },
+  { name: "Washington's Birthday", getDate: (y) => nthDayOfMonth(y, 2, 1, 3) },
+  { name: 'Memorial Day', getDate: (y) => lastMondayOfMay(y) },
+  { name: 'Juneteenth', getDate: (y) => `${y}-06-19` },
+  { name: 'Independence Day', getDate: (y) => `${y}-07-04` },
+  { name: 'Labor Day', getDate: (y) => nthDayOfMonth(y, 9, 1, 1) },
+  { name: 'Columbus Day', getDate: (y) => nthDayOfMonth(y, 10, 1, 2) },
+  { name: 'Veterans Day', getDate: (y) => `${y}-11-11` },
+  { name: 'Thanksgiving Day', getDate: (y) => nthDayOfMonth(y, 11, 4, 4) },
+  { name: 'Christmas Day', getDate: (y) => `${y}-12-25` },
+];
+
 // ─── Holidays Manager Sub-Component ────────────────────────
 function HolidaysManager({
   companyId,
@@ -345,6 +384,7 @@ function HolidaysManager({
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<CompanyHoliday | null>(null);
   const [form, setForm] = useState({ name: '', date: '', is_paid: true, notes: '' });
+  const [togglingFederal, setTogglingFederal] = useState<string | null>(null);
   const createHoliday = useCreateCompanyHoliday();
   const updateHoliday = useUpdateCompanyHoliday();
   const deleteHoliday = useDeleteCompanyHoliday();
@@ -353,6 +393,74 @@ function HolidaysManager({
   const currentYear = new Date().getFullYear();
   const thisYearHolidays = holidays.filter(h => parseISO(h.date).getFullYear() === currentYear);
   const futureHolidays = thisYearHolidays.filter(h => isAfter(parseISO(h.date), new Date()));
+
+  const federalHolidaysWithStatus = useMemo(() => {
+    return FEDERAL_HOLIDAYS.map(fh => {
+      const date = fh.getDate(currentYear);
+      const existing = thisYearHolidays.find(h => h.name === fh.name && h.date === date);
+      return { ...fh, date, observed: !!existing, holidayId: existing?.id };
+    });
+  }, [currentYear, thisYearHolidays]);
+
+  const handleToggleFederal = async (fh: typeof federalHolidaysWithStatus[0]) => {
+    if (!companyId || !isAdmin) return;
+    setTogglingFederal(fh.name);
+    try {
+      if (fh.observed && fh.holidayId) {
+        await deleteHoliday.mutateAsync(fh.holidayId);
+        toast({ title: `${fh.name} removed` });
+      } else {
+        await createHoliday.mutateAsync({
+          company_id: companyId, name: fh.name, date: fh.date,
+          is_paid: true, notes: 'Federal holiday', created_by: userId ?? null,
+        });
+        toast({ title: `${fh.name} added` });
+      }
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    } finally {
+      setTogglingFederal(null);
+    }
+  };
+
+  const handleSelectAll = async () => {
+    if (!companyId || !isAdmin) return;
+    const unobserved = federalHolidaysWithStatus.filter(fh => !fh.observed);
+    if (unobserved.length === 0) return;
+    setTogglingFederal('all');
+    try {
+      for (const fh of unobserved) {
+        await createHoliday.mutateAsync({
+          company_id: companyId, name: fh.name, date: fh.date,
+          is_paid: true, notes: 'Federal holiday', created_by: userId ?? null,
+        });
+      }
+      toast({ title: `${unobserved.length} federal holidays added` });
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    } finally {
+      setTogglingFederal(null);
+    }
+  };
+
+  const handleDeselectAll = async () => {
+    if (!companyId || !isAdmin) return;
+    const observed = federalHolidaysWithStatus.filter(fh => fh.observed && fh.holidayId);
+    if (observed.length === 0) return;
+    setTogglingFederal('all');
+    try {
+      for (const fh of observed) {
+        await deleteHoliday.mutateAsync(fh.holidayId!);
+      }
+      toast({ title: `${observed.length} federal holidays removed` });
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    } finally {
+      setTogglingFederal(null);
+    }
+  };
+
+  const observedCount = federalHolidaysWithStatus.filter(f => f.observed).length;
 
   const openAdd = () => {
     setEditing(null);
@@ -390,7 +498,6 @@ function HolidaysManager({
       toast({ title: 'Error', description: err.message, variant: 'destructive' });
     }
   };
-
   return (
     <Card>
       <CardHeader className="flex-row items-center justify-between space-y-0">
