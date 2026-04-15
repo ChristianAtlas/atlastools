@@ -37,43 +37,33 @@ interface DonutSegment {
 }
 
 function LastPayrollDonut({ segments, total }: { segments: DonutSegment[]; total: number }) {
-  const radius = 70;
-  const stroke = 18;
-  const circumference = 2 * Math.PI * radius;
-  let cumulative = 0;
+  const gradient = total > 0
+    ? (() => {
+        let start = 0;
+        const stops = segments.map((seg) => {
+          const end = start + (seg.value / total) * 100;
+          const stop = `${seg.color} ${start}% ${end}%`;
+          start = end;
+          return stop;
+        });
+        return `conic-gradient(${stops.join(', ')})`;
+      })()
+    : 'conic-gradient(hsl(var(--muted)) 0% 100%)';
 
   return (
     <div className="relative flex items-center justify-center">
-      <svg width="200" height="200" viewBox="0 0 200 200" className="-rotate-90">
-        {total === 0 ? (
-          <circle cx="100" cy="100" r={radius} fill="none" stroke="hsl(var(--muted))" strokeWidth={stroke} />
-        ) : (
-          segments.map((seg, i) => {
-            const pct = seg.value / total;
-            const dash = pct * circumference;
-            const offset = -(cumulative / total) * circumference;
-            cumulative += seg.value;
-            return (
-              <circle
-                key={i}
-                cx="100"
-                cy="100"
-                r={radius}
-                fill="none"
-                stroke={seg.color}
-                strokeWidth={stroke}
-                strokeDasharray={`${dash} ${circumference - dash}`}
-                strokeDashoffset={offset}
-                strokeLinecap="butt"
-                className="transition-all duration-700"
-              />
-            );
-          })
-        )}
-      </svg>
-      <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-        <span className="text-lg font-bold tabular-nums">{formatCurrency(total / 100)}</span>
-        <span className="text-[11px] text-muted-foreground">Cash required</span>
+      <div
+        className="relative h-[200px] w-[200px] rounded-full"
+        style={{ background: gradient }}
+      >
+        <div
+          className="absolute inset-[18px] rounded-full bg-card"
+          aria-hidden="true"
+        />
+        <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+          <span className="text-lg font-bold tabular-nums">{formatCurrency(total / 100)}</span>
+          <span className="text-[11px] text-muted-foreground">Cash required</span>
+        </div>
       </div>
     </div>
   );
