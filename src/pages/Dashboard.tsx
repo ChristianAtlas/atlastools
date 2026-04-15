@@ -138,6 +138,7 @@ function LastPayrollCard({ run }: { run: PayrollRunRow }) {
 
 export default function Dashboard() {
   const { isSuperAdmin } = useAuth();
+  const [expandedTask, setExpandedTask] = useState<string | null>(null);
   const { data: companies = [], isLoading: loadingCo } = useCompanies();
   const { data: employees = [], isLoading: loadingEmp } = useEmployees();
   const { data: payrollRuns = [], isLoading: loadingPR } = usePayrollRuns();
@@ -160,16 +161,19 @@ export default function Dashboard() {
   const activeEmployees = employees.filter(e => e.status === 'active').length;
   const pendingPayrolls = payrollRuns.filter(p => PENDING_STATUSES.includes(p.status)).length;
 
-  // === Task calculations ===
-  const openComplianceTasks = complianceItems.filter(
+  // === Task calculations with detail lists ===
+  const openComplianceList = complianceItems.filter(
     t => t.status === 'pending' || t.status === 'overdue' || t.status === 'in_progress'
-  ).length;
+  );
+  const openComplianceTasks = openComplianceList.length;
 
-  const onboardingEmployees = employees.filter(e => e.status === 'onboarding').length;
+  const onboardingList = employees.filter(e => e.status === 'onboarding');
+  const onboardingEmployees = onboardingList.length;
 
-  const missingSsnCount = employees.filter(
+  const missingSsnList = employees.filter(
     e => (e.status === 'active' || e.status === 'onboarding') && !e.ssn_encrypted
-  ).length;
+  );
+  const missingSsnCount = missingSsnList.length;
 
   const today = new Date().toISOString().slice(0, 10);
   const coveredPairs = new Set(
@@ -177,16 +181,21 @@ export default function Dashboard() {
       .filter(r => r.effective_date <= today)
       .map(r => `${r.company_id}_${r.state_code}`)
   );
-  const missingPairs = new Set<string>();
+  const missingPairsSet = new Set<string>();
+  const missingSuiDetails: { companyName: string; state: string }[] = [];
   for (const emp of employees) {
     if (!emp.state || !emp.company_id) continue;
     if (emp.status !== 'active' && emp.status !== 'onboarding') continue;
     const st = emp.state.toUpperCase();
     if (!CLIENT_REPORTING_STATES.includes(st as any)) continue;
     const key = `${emp.company_id}_${st}`;
-    if (!coveredPairs.has(key)) missingPairs.add(key);
+    if (!coveredPairs.has(key) && !missingPairsSet.has(key)) {
+      missingPairsSet.add(key);
+      const co = companies.find(c => c.id === emp.company_id);
+      missingSuiDetails.push({ companyName: co?.name ?? emp.company_id, state: st });
+    }
   }
-  const missingSuiCount = missingPairs.size;
+  const missingSuiCount = missingPairsSet.size;
 
   const totalTasks = openComplianceTasks + onboardingEmployees + missingSsnCount + missingSuiCount;
 
