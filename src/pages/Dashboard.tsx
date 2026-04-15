@@ -1,4 +1,4 @@
-import { Building2, Users, DollarSign, ClipboardList, ArrowRight, Loader2, MoreHorizontal } from 'lucide-react';
+import { Building2, Users, DollarSign, ClipboardList, ArrowRight, Loader2, MoreHorizontal, AlertCircle, UserPlus, KeyRound, FileWarning, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { StatCard } from '@/components/StatCard';
 import { PageHeader } from '@/components/PageHeader';
