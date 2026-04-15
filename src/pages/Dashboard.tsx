@@ -64,7 +64,7 @@ function LastPayrollDonut({ segments, total }: { segments: DonutSegment[]; total
                 strokeWidth={stroke}
                 strokeDasharray={`${dash} ${circumference - dash}`}
                 strokeDashoffset={offset}
-                strokeLinecap="round"
+                strokeLinecap="butt"
                 className="transition-all duration-700"
               />
             );
