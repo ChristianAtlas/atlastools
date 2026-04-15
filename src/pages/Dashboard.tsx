@@ -71,16 +71,23 @@ function LastPayrollDonut({ segments, total }: { segments: DonutSegment[]; total
 
 function LastPayrollCard({ run }: { run: PayrollRunRow }) {
   const netPay = run.net_pay_cents;
-  const taxes = (run.employer_taxes_cents ?? 0);
+  const eeTaxes = (run.gross_pay_cents - run.net_pay_cents) > 0 ? (run.gross_pay_cents - run.net_pay_cents) : 0;
+  const erTaxes = run.employer_taxes_cents ?? 0;
   const wc = run.workers_comp_cents;
   const benefits = run.employer_benefits_cents;
-  const total = run.total_employer_cost_cents || (netPay + taxes + wc + benefits);
+  const total = run.total_employer_cost_cents || (netPay + eeTaxes + erTaxes + wc + benefits);
+
+  // Build segments that sum to total for proportional display
+  const knownSum = netPay + eeTaxes + erTaxes + wc + benefits;
+  const remainder = total - knownSum;
 
   const segments: DonutSegment[] = [
     { label: 'Net Pay', value: netPay, color: 'hsl(262, 60%, 45%)' },
-    { label: 'Taxes', value: taxes, color: 'hsl(262, 50%, 60%)' },
+    { label: 'EE Taxes', value: eeTaxes, color: 'hsl(262, 55%, 55%)' },
+    { label: 'ER Taxes', value: erTaxes, color: 'hsl(262, 50%, 65%)' },
     { label: "Workers' Comp", value: wc, color: 'hsl(262, 40%, 72%)' },
     { label: 'ER Benefits', value: benefits, color: 'hsl(262, 35%, 82%)' },
+    ...(remainder > 0 ? [{ label: 'Other', value: remainder, color: 'hsl(262, 25%, 88%)' }] : []),
   ].filter(s => s.value > 0);
 
   const fmtDate = (d: string) =>
