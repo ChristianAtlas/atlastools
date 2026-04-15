@@ -1,9 +1,11 @@
 import { Building2, Users, DollarSign, ClipboardList, ArrowRight, Loader2 } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 import { StatCard } from '@/components/StatCard';
 import { PageHeader } from '@/components/PageHeader';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Link } from 'react-router-dom';
 import { useCompanies } from '@/hooks/useCompanies';
+import { cn } from '@/lib/utils';
 import { useEmployees } from '@/hooks/useEmployees';
 import { usePayrollRuns } from '@/hooks/usePayrollRuns';
 import { useAuditLogs } from '@/hooks/useAuditLogs';
@@ -23,6 +25,7 @@ const PENDING_STATUSES = [
 ];
 
 export default function Dashboard() {
+  const { isSuperAdmin } = useAuth();
   const { data: companies = [], isLoading: loadingCo } = useCompanies();
   const { data: employees = [], isLoading: loadingEmp } = useEmployees();
   const { data: payrollRuns = [], isLoading: loadingPR } = usePayrollRuns();
@@ -95,8 +98,10 @@ export default function Dashboard() {
     <div className="space-y-6">
       <PageHeader title="Dashboard" description="Overview of your platform activity" />
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard icon={Building2} title="Active Companies" value={isLoading ? '…' : String(activeCompanies)} delay={0} href="/companies" />
+      <div className={cn('grid gap-4 sm:grid-cols-2', isSuperAdmin ? 'lg:grid-cols-4' : 'lg:grid-cols-3')}>
+        {isSuperAdmin && (
+          <StatCard icon={Building2} title="Active Companies" value={isLoading ? '…' : String(activeCompanies)} delay={0} href="/companies" />
+        )}
         <StatCard icon={Users} title="Total Employees" value={isLoading ? '…' : String(activeEmployees)} delay={60} href="/employees" />
         <StatCard icon={DollarSign} title="Pending Payrolls" value={isLoading ? '…' : String(pendingPayrolls)} delay={120} href="/payroll" />
         <StatCard
