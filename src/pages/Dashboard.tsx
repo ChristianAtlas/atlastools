@@ -5,6 +5,7 @@ import { PageHeader } from '@/components/PageHeader';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Link } from 'react-router-dom';
 import { useCompanies } from '@/hooks/useCompanies';
+import { cn } from '@/lib/utils';
 import { useEmployees } from '@/hooks/useEmployees';
 import { usePayrollRuns } from '@/hooks/usePayrollRuns';
 import { useAuditLogs } from '@/hooks/useAuditLogs';
