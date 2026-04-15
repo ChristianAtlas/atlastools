@@ -1,4 +1,5 @@
-import { Building2, Users, DollarSign, ClipboardList, ArrowRight, Loader2, MoreHorizontal, AlertCircle, UserPlus, KeyRound, FileWarning, CheckCircle2 } from 'lucide-react';
+import { useState } from 'react';
+import { Building2, Users, DollarSign, ClipboardList, ArrowRight, Loader2, MoreHorizontal, AlertCircle, UserPlus, KeyRound, FileWarning, CheckCircle2, ChevronDown, ChevronRight } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { StatCard } from '@/components/StatCard';
 import { PageHeader } from '@/components/PageHeader';
@@ -137,6 +138,7 @@ function LastPayrollCard({ run }: { run: PayrollRunRow }) {
 
 export default function Dashboard() {
   const { isSuperAdmin } = useAuth();
+  const [expandedTask, setExpandedTask] = useState<string | null>(null);
   const { data: companies = [], isLoading: loadingCo } = useCompanies();
   const { data: employees = [], isLoading: loadingEmp } = useEmployees();
   const { data: payrollRuns = [], isLoading: loadingPR } = usePayrollRuns();
@@ -159,16 +161,19 @@ export default function Dashboard() {
   const activeEmployees = employees.filter(e => e.status === 'active').length;
   const pendingPayrolls = payrollRuns.filter(p => PENDING_STATUSES.includes(p.status)).length;
 
-  // === Task calculations ===
-  const openComplianceTasks = complianceItems.filter(
+  // === Task calculations with detail lists ===
+  const openComplianceList = complianceItems.filter(
     t => t.status === 'pending' || t.status === 'overdue' || t.status === 'in_progress'
-  ).length;
+  );
+  const openComplianceTasks = openComplianceList.length;
 
-  const onboardingEmployees = employees.filter(e => e.status === 'onboarding').length;
+  const onboardingList = employees.filter(e => e.status === 'onboarding');
+  const onboardingEmployees = onboardingList.length;
 
-  const missingSsnCount = employees.filter(
+  const missingSsnList = employees.filter(
     e => (e.status === 'active' || e.status === 'onboarding') && !e.ssn_encrypted
-  ).length;
+  );
+  const missingSsnCount = missingSsnList.length;
 
   const today = new Date().toISOString().slice(0, 10);
   const coveredPairs = new Set(
@@ -176,16 +181,21 @@ export default function Dashboard() {
       .filter(r => r.effective_date <= today)
       .map(r => `${r.company_id}_${r.state_code}`)
   );
-  const missingPairs = new Set<string>();
+  const missingPairsSet = new Set<string>();
+  const missingSuiDetails: { companyName: string; state: string }[] = [];
   for (const emp of employees) {
     if (!emp.state || !emp.company_id) continue;
     if (emp.status !== 'active' && emp.status !== 'onboarding') continue;
     const st = emp.state.toUpperCase();
     if (!CLIENT_REPORTING_STATES.includes(st as any)) continue;
     const key = `${emp.company_id}_${st}`;
-    if (!coveredPairs.has(key)) missingPairs.add(key);
+    if (!coveredPairs.has(key) && !missingPairsSet.has(key)) {
+      missingPairsSet.add(key);
+      const co = companies.find(c => c.id === emp.company_id);
+      missingSuiDetails.push({ companyName: co?.name ?? emp.company_id, state: st });
+    }
   }
-  const missingSuiCount = missingPairs.size;
+  const missingSuiCount = missingPairsSet.size;
 
   const totalTasks = openComplianceTasks + onboardingEmployees + missingSsnCount + missingSuiCount;
 
@@ -248,33 +258,135 @@ export default function Dashboard() {
                 <span>All clear — no open tasks</span>
               </div>
             ) : (
-              <ul className="space-y-2">
+              <ul className="space-y-1">
                 {openComplianceTasks > 0 && (
-                  <li className="flex items-center gap-2 text-xs">
-                    <AlertCircle className="h-3.5 w-3.5 text-destructive shrink-0" />
-                    <span className="text-muted-foreground">Compliance tasks</span>
-                    <span className="ml-auto font-semibold tabular-nums">{openComplianceTasks}</span>
+                  <li>
+                    <button
+                      onClick={() => setExpandedTask(expandedTask === 'compliance' ? null : 'compliance')}
+                      className="flex w-full items-center gap-2 text-xs py-1.5 rounded-md hover:bg-muted/50 px-1 -mx-1 transition-colors"
+                    >
+                      {expandedTask === 'compliance' ? <ChevronDown className="h-3 w-3 text-muted-foreground shrink-0" /> : <ChevronRight className="h-3 w-3 text-muted-foreground shrink-0" />}
+                      <AlertCircle className="h-3.5 w-3.5 text-destructive shrink-0" />
+                      <span className="text-muted-foreground">Compliance tasks</span>
+                      <span className="ml-auto font-semibold tabular-nums">{openComplianceTasks}</span>
+                    </button>
+                    {expandedTask === 'compliance' && (
+                      <ul className="ml-8 mt-1 space-y-1 border-l-2 border-muted pl-3 pb-1">
+                        {openComplianceList.slice(0, 10).map(item => (
+                          <li key={item.id} className="flex items-start gap-2 text-[11px]">
+                            <span className={cn(
+                              'mt-0.5 h-1.5 w-1.5 rounded-full shrink-0',
+                              item.status === 'overdue' ? 'bg-destructive' : 'bg-amber-500'
+                            )} />
+                            <div className="min-w-0">
+                              <p className="text-foreground truncate">{item.title}</p>
+                              {item.due_date && (
+                                <p className="text-muted-foreground">
+                                  Due {new Date(item.due_date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                  {item.status === 'overdue' && <span className="text-destructive font-medium"> — Overdue</span>}
+                                </p>
+                              )}
+                            </div>
+                          </li>
+                        ))}
+                        {openComplianceList.length > 10 && (
+                          <li className="text-[11px] text-muted-foreground">+ {openComplianceList.length - 10} more</li>
+                        )}
+                      </ul>
+                    )}
                   </li>
                 )}
+
                 {onboardingEmployees > 0 && (
-                  <li className="flex items-center gap-2 text-xs">
-                    <UserPlus className="h-3.5 w-3.5 text-amber-500 shrink-0" />
-                    <span className="text-muted-foreground">Employees onboarding</span>
-                    <span className="ml-auto font-semibold tabular-nums">{onboardingEmployees}</span>
+                  <li>
+                    <button
+                      onClick={() => setExpandedTask(expandedTask === 'onboarding' ? null : 'onboarding')}
+                      className="flex w-full items-center gap-2 text-xs py-1.5 rounded-md hover:bg-muted/50 px-1 -mx-1 transition-colors"
+                    >
+                      {expandedTask === 'onboarding' ? <ChevronDown className="h-3 w-3 text-muted-foreground shrink-0" /> : <ChevronRight className="h-3 w-3 text-muted-foreground shrink-0" />}
+                      <UserPlus className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+                      <span className="text-muted-foreground">Employees onboarding</span>
+                      <span className="ml-auto font-semibold tabular-nums">{onboardingEmployees}</span>
+                    </button>
+                    {expandedTask === 'onboarding' && (
+                      <ul className="ml-8 mt-1 space-y-1 border-l-2 border-muted pl-3 pb-1">
+                        {onboardingList.slice(0, 10).map(emp => (
+                          <li key={emp.id} className="flex items-start gap-2 text-[11px]">
+                            <span className="mt-0.5 h-1.5 w-1.5 rounded-full bg-amber-500 shrink-0" />
+                            <div className="min-w-0">
+                              <p className="text-foreground truncate">{emp.first_name} {emp.last_name}</p>
+                              <p className="text-muted-foreground">
+                                Started {new Date(emp.start_date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                {emp.title && <span> · {emp.title}</span>}
+                              </p>
+                            </div>
+                          </li>
+                        ))}
+                        {onboardingList.length > 10 && (
+                          <li className="text-[11px] text-muted-foreground">+ {onboardingList.length - 10} more</li>
+                        )}
+                      </ul>
+                    )}
                   </li>
                 )}
+
                 {missingSsnCount > 0 && (
-                  <li className="flex items-center gap-2 text-xs">
-                    <KeyRound className="h-3.5 w-3.5 text-amber-500 shrink-0" />
-                    <span className="text-muted-foreground">Missing SSN</span>
-                    <span className="ml-auto font-semibold tabular-nums">{missingSsnCount}</span>
+                  <li>
+                    <button
+                      onClick={() => setExpandedTask(expandedTask === 'ssn' ? null : 'ssn')}
+                      className="flex w-full items-center gap-2 text-xs py-1.5 rounded-md hover:bg-muted/50 px-1 -mx-1 transition-colors"
+                    >
+                      {expandedTask === 'ssn' ? <ChevronDown className="h-3 w-3 text-muted-foreground shrink-0" /> : <ChevronRight className="h-3 w-3 text-muted-foreground shrink-0" />}
+                      <KeyRound className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+                      <span className="text-muted-foreground">Missing SSN</span>
+                      <span className="ml-auto font-semibold tabular-nums">{missingSsnCount}</span>
+                    </button>
+                    {expandedTask === 'ssn' && (
+                      <ul className="ml-8 mt-1 space-y-1 border-l-2 border-muted pl-3 pb-1">
+                        {missingSsnList.slice(0, 10).map(emp => (
+                          <li key={emp.id} className="flex items-start gap-2 text-[11px]">
+                            <span className="mt-0.5 h-1.5 w-1.5 rounded-full bg-amber-500 shrink-0" />
+                            <div className="min-w-0">
+                              <p className="text-foreground truncate">{emp.first_name} {emp.last_name}</p>
+                              <p className="text-muted-foreground">
+                                {emp.status === 'onboarding' ? 'Onboarding' : 'Active'}
+                                {emp.title && <span> · {emp.title}</span>}
+                              </p>
+                            </div>
+                          </li>
+                        ))}
+                        {missingSsnList.length > 10 && (
+                          <li className="text-[11px] text-muted-foreground">+ {missingSsnList.length - 10} more</li>
+                        )}
+                      </ul>
+                    )}
                   </li>
                 )}
+
                 {missingSuiCount > 0 && (
-                  <li className="flex items-center gap-2 text-xs">
-                    <FileWarning className="h-3.5 w-3.5 text-amber-500 shrink-0" />
-                    <span className="text-muted-foreground">Missing SUI registrations</span>
-                    <span className="ml-auto font-semibold tabular-nums">{missingSuiCount}</span>
+                  <li>
+                    <button
+                      onClick={() => setExpandedTask(expandedTask === 'sui' ? null : 'sui')}
+                      className="flex w-full items-center gap-2 text-xs py-1.5 rounded-md hover:bg-muted/50 px-1 -mx-1 transition-colors"
+                    >
+                      {expandedTask === 'sui' ? <ChevronDown className="h-3 w-3 text-muted-foreground shrink-0" /> : <ChevronRight className="h-3 w-3 text-muted-foreground shrink-0" />}
+                      <FileWarning className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+                      <span className="text-muted-foreground">Missing SUI registrations</span>
+                      <span className="ml-auto font-semibold tabular-nums">{missingSuiCount}</span>
+                    </button>
+                    {expandedTask === 'sui' && (
+                      <ul className="ml-8 mt-1 space-y-1 border-l-2 border-muted pl-3 pb-1">
+                        {missingSuiDetails.slice(0, 10).map((d, i) => (
+                          <li key={i} className="flex items-start gap-2 text-[11px]">
+                            <span className="mt-0.5 h-1.5 w-1.5 rounded-full bg-amber-500 shrink-0" />
+                            <p className="text-foreground">{d.state} — no SUI rate on file</p>
+                          </li>
+                        ))}
+                        {missingSuiDetails.length > 10 && (
+                          <li className="text-[11px] text-muted-foreground">+ {missingSuiDetails.length - 10} more</li>
+                        )}
+                      </ul>
+                    )}
                   </li>
                 )}
               </ul>
