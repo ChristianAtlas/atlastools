@@ -13,6 +13,7 @@ interface NavItem {
   to: string;
   icon: React.ElementType;
   roles?: AppRole[];
+  external?: boolean;
 }
 
 interface NavGroup {
