@@ -13,6 +13,7 @@ interface NavItem {
   to: string;
   icon: React.ElementType;
   roles?: AppRole[];
+  external?: boolean;
 }
 
 interface NavGroup {
@@ -33,7 +34,7 @@ const superAdminNavGroups: NavGroup[] = [
       { label: 'Payroll', to: '/payroll', icon: DollarSign },
       { label: 'Workers\' Comp', to: '/workers-comp', icon: ShieldCheck },
       { label: 'Benefits Admin', to: '/benefits-admin', icon: Heart },
-      { label: 'Atlas HR Hub', to: '/atlas-hr-hub', icon: Globe },
+      { label: 'Atlas HR Hub', to: 'https://atlasone-hr-guide.lovable.app', icon: Globe, external: true },
     ],
   },
   {
@@ -84,7 +85,7 @@ const clientAdminNavGroups: NavGroup[] = [
     items: [
       { label: 'PTO', to: '/pto', icon: CalendarDays },
       { label: 'Benefits Admin', to: '/client-benefits', icon: Heart },
-      { label: 'Atlas HR Hub', to: '/atlas-hr-hub', icon: Globe },
+      { label: 'Atlas HR Hub', to: 'https://atlasone-hr-guide.lovable.app', icon: Globe, external: true },
     ],
   },
   {
@@ -126,6 +127,22 @@ export function AppSidebar({ userName, userInitials, roleLabel, role, onNavClick
   const location = useLocation();
 
   const renderNavItem = (item: NavItem) => {
+    if (item.external) {
+      return (
+        <li key={item.to}>
+          <a
+            href={item.to}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={onNavClick}
+            className="group relative flex items-center gap-2.5 rounded-md px-2.5 py-2 text-[13px] font-medium transition-colors duration-150 text-sidebar-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground"
+          >
+            <item.icon className="h-4 w-4 shrink-0 relative z-10" />
+            <span className="relative z-10">{item.label}</span>
+          </a>
+        </li>
+      );
+    }
     const isActive = item.to === '/' ? location.pathname === '/' : location.pathname.startsWith(item.to);
     return (
       <li key={item.to}>
