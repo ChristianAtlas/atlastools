@@ -1,4 +1,4 @@
-import { Building2, Users, DollarSign, ClipboardList, ArrowRight, Loader2 } from 'lucide-react';
+import { Building2, Users, DollarSign, ClipboardList, ArrowRight, Loader2, MoreHorizontal } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { StatCard } from '@/components/StatCard';
 import { PageHeader } from '@/components/PageHeader';
@@ -7,7 +7,7 @@ import { Link } from 'react-router-dom';
 import { useCompanies } from '@/hooks/useCompanies';
 import { cn } from '@/lib/utils';
 import { useEmployees } from '@/hooks/useEmployees';
-import { usePayrollRuns } from '@/hooks/usePayrollRuns';
+import { usePayrollRuns, type PayrollRunRow } from '@/hooks/usePayrollRuns';
 import { useAuditLogs } from '@/hooks/useAuditLogs';
 import { useComplianceItems } from '@/hooks/useCompliance';
 import { useQuery } from '@tanstack/react-query';
@@ -15,6 +15,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { CLIENT_REPORTING_STATES } from '@/hooks/useTaxManagement';
 
 const formatCurrency = (n: number) =>
+  new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 }).format(n);
+
+const formatCurrencyShort = (n: number) =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(n);
 
 const PENDING_STATUSES = [
@@ -23,6 +26,117 @@ const PENDING_STATUSES = [
   'open', 'open_for_timecards', 'awaiting_timecard_approval',
   'timecards_approved',
 ];
+
+const COMPLETED_STATUSES = ['completed', 'paid', 'processing', 'funded'];
+
+/* ── Donut chart for last payroll ── */
+interface DonutSegment {
+  label: string;
+  value: number;
+  color: string;
+}
+
+function LastPayrollDonut({ segments, total }: { segments: DonutSegment[]; total: number }) {
+  const radius = 70;
+  const stroke = 18;
+  const circumference = 2 * Math.PI * radius;
+  let cumulative = 0;
+
+  return (
+    <div className="relative flex items-center justify-center">
+      <svg width="200" height="200" viewBox="0 0 200 200" className="-rotate-90">
+        {total === 0 ? (
+          <circle cx="100" cy="100" r={radius} fill="none" stroke="hsl(var(--muted))" strokeWidth={stroke} />
+        ) : (
+          segments.map((seg, i) => {
+            const pct = seg.value / total;
+            const dash = pct * circumference;
+            const offset = -(cumulative / total) * circumference;
+            cumulative += seg.value;
+            return (
+              <circle
+                key={i}
+                cx="100"
+                cy="100"
+                r={radius}
+                fill="none"
+                stroke={seg.color}
+                strokeWidth={stroke}
+                strokeDasharray={`${dash} ${circumference - dash}`}
+                strokeDashoffset={offset}
+                strokeLinecap="round"
+                className="transition-all duration-700"
+              />
+            );
+          })
+        )}
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+        <span className="text-lg font-bold tabular-nums">{formatCurrency(total / 100)}</span>
+        <span className="text-[11px] text-muted-foreground">Cash required</span>
+      </div>
+    </div>
+  );
+}
+
+function LastPayrollCard({ run }: { run: PayrollRunRow }) {
+  const netPay = run.net_pay_cents;
+  const taxes = (run.employer_taxes_cents ?? 0);
+  const wc = run.workers_comp_cents;
+  const benefits = run.employer_benefits_cents;
+  const total = run.total_employer_cost_cents || (netPay + taxes + wc + benefits);
+
+  const segments: DonutSegment[] = [
+    { label: 'Net Pay', value: netPay, color: 'hsl(262, 60%, 45%)' },
+    { label: 'Taxes', value: taxes, color: 'hsl(262, 50%, 60%)' },
+    { label: "Workers' Comp", value: wc, color: 'hsl(262, 40%, 72%)' },
+    { label: 'ER Benefits', value: benefits, color: 'hsl(262, 35%, 82%)' },
+  ].filter(s => s.value > 0);
+
+  const fmtDate = (d: string) =>
+    new Date(d + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+  const fmtShort = (d: string) =>
+    new Date(d + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+  return (
+    <div className="rounded-lg border bg-card shadow-sm animate-in-up stagger-2">
+      <div className="flex items-center justify-between border-b px-5 py-3.5">
+        <h2 className="text-sm font-semibold">Last payroll</h2>
+        <Link to="/payroll" className="flex items-center gap-1 text-xs font-medium text-primary hover:underline">
+          View all <ArrowRight className="h-3 w-3" />
+        </Link>
+      </div>
+      <div className="p-5 space-y-5">
+        {/* Info boxes */}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="rounded-md bg-muted/50 px-3 py-2">
+            <p className="text-[11px] text-muted-foreground">Check date</p>
+            <p className="text-sm font-medium">{fmtDate(run.pay_date)}</p>
+          </div>
+          <div className="rounded-md bg-muted/50 px-3 py-2">
+            <p className="text-[11px] text-muted-foreground">Pay period</p>
+            <p className="text-sm font-medium">{fmtShort(run.pay_period_start)} – {fmtShort(run.pay_period_end)}</p>
+          </div>
+        </div>
+
+        {/* Donut */}
+        <LastPayrollDonut segments={segments} total={total} />
+
+        {/* Legend */}
+        <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
+          {segments.map((seg, i) => (
+            <div key={i} className="flex items-center gap-2">
+              <span className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: seg.color }} />
+              <span className="text-muted-foreground truncate">{seg.label}</span>
+              <span className="ml-auto font-medium tabular-nums">{formatCurrencyShort(seg.value / 100)}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function Dashboard() {
   const { isSuperAdmin } = useAuth();
@@ -53,15 +167,12 @@ export default function Dashboard() {
     t => t.status === 'pending' || t.status === 'overdue' || t.status === 'in_progress'
   ).length;
 
-  // Employees still onboarding
   const onboardingEmployees = employees.filter(e => e.status === 'onboarding').length;
 
-  // Employees missing SSN
   const missingSsnCount = employees.filter(
     e => (e.status === 'active' || e.status === 'onboarding') && !e.ssn_encrypted
   ).length;
 
-  // SUI missing registrations: companies with employees in client-reporting states but no rate on file
   const today = new Date().toISOString().slice(0, 10);
   const coveredPairs = new Set(
     clientSuiRates
@@ -92,6 +203,11 @@ export default function Dashboard() {
     .filter(p => p.status !== 'completed' && p.status !== 'voided')
     .slice(0, 4);
 
+  // Last completed payroll for client admin card
+  const lastCompletedRun = payrollRuns
+    .filter(p => COMPLETED_STATUSES.includes(p.status))
+    .sort((a, b) => new Date(b.pay_date).getTime() - new Date(a.pay_date).getTime())[0] ?? null;
+
   const isLoading = loadingCo || loadingEmp || loadingPR;
 
   return (
@@ -116,7 +232,12 @@ export default function Dashboard() {
         />
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className={cn('grid gap-6', !isSuperAdmin && lastCompletedRun ? 'lg:grid-cols-3' : 'lg:grid-cols-2')}>
+        {/* Last Payroll — client admin only */}
+        {!isSuperAdmin && lastCompletedRun && (
+          <LastPayrollCard run={lastCompletedRun} />
+        )}
+
         {/* Active Payroll Runs */}
         <div className="rounded-lg border bg-card shadow-sm animate-in-up stagger-2">
           <div className="flex items-center justify-between border-b px-5 py-3.5">
@@ -143,7 +264,7 @@ export default function Dashboard() {
                   </div>
                   <div className="flex items-center gap-3">
                     <span className="text-sm font-medium tabular-nums">
-                      {formatCurrency(run.gross_pay_cents / 100)}
+                      {formatCurrencyShort(run.gross_pay_cents / 100)}
                     </span>
                     <StatusBadge status={run.status} />
                   </div>
