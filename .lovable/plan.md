@@ -1,116 +1,39 @@
 
 
-# Employee Portal Implementation Plan
+## Plan: "Last Payroll" Card for Client Admin Dashboard
 
-## Overview
-Build 7 employee-facing pages replicating the atlasonepayroll.app prototype, styled with the existing dark navy/coral theme. All data flows through shared Supabase tables and React Query hooks, ensuring changes made by employees, client admins, or super admins are reflected everywhere in real-time.
+### What
+Replace the simple StatCard approach with a custom "Last Payroll" card matching the reference design — showing check date, pay period, and a donut chart with the cash required amount in the center.
 
-## Data Flow Architecture
+### Design (matching reference image)
+- **Card title**: "Last payroll" (bold, top-left) with a "..." menu icon (top-right)
+- **Info row**: Two grey boxes — "Check date" (pay_date) and "Pay period" (period start → end)
+- **Donut chart**: Centered, showing cash breakdown segments with the total "$X,XXX.XX Cash required" in the center
 
-All views (employee portal, admin detail pages, super admin views) read from and write to the same Supabase tables via shared hooks. React Query's cache invalidation ensures updates propagate instantly across views.
+### Donut Segments
+From the `payroll_runs` table columns:
+- `net_pay_cents` — Net wages (dark purple)
+- `employer_taxes_cents` + `employee_taxes_cents` — Taxes (medium purple)  
+- `workers_comp_cents` — Workers' Comp (light purple)
+- `employer_benefits_cents` — ER Benefits (lightest purple)
 
-```text
-┌──────────────┐     ┌──────────────────┐     ┌──────────────────┐
-│  EE Portal   │     │  Client Admin    │     │  Super Admin     │
-│  (My Profile,│     │  (Company Detail,│     │  (Employee Detail│
-│   My Pay...) │     │   Employees...)  │     │   Edit Dialog...)│
-└──────┬───────┘     └────────┬─────────┘     └────────┬─────────┘
-       │                      │                        │
-       ▼                      ▼                        ▼
-   ┌─────────────────────────────────────────────────────┐
-   │         Shared React Query Hooks                    │
-   │  useEmployee, useUpdateEmployee, usePTO,            │
-   │  useTimecards, useCompensationRecords               │
-   └──────────────────────┬──────────────────────────────┘
-                          │
-                          ▼
-              ┌───────────────────────┐
-              │   Supabase Tables     │
-              │   (employees, pto_*,  │
-              │    timecards, etc.)   │
-              │   + Realtime channels │
-              └───────────────────────┘
-```
+Total = `total_employer_cost_cents` (or sum of above if zero)
 
-Key principle: No local-only state for persistent data. Every edit (address, tax, compensation, etc.) goes through `useUpdateEmployee` or the relevant mutation hook, which invalidates the shared query cache. Realtime subscriptions (already set up in `useEmployee`) push changes from other users' edits.
+### Data Source
+Filter `payrollRuns` for latest run with status in `['completed', 'paid', 'processing', 'funded']`, sorted by `pay_date` desc. Uses existing `usePayrollRuns()` hook already in Dashboard.
 
-## Pages to Build
+### Technical Changes
 
-### 1. Employee Dashboard (`/`) -- conditional on role
-- Next pay date card, time off snapshot, recent paystubs, to-do items
-- Data from: `useEmployee` (profile), `usePTOBalances` (time off), `useTimecards` (hours)
-- Verification letter CTA linking to `/verification-letter`
+**File: `src/pages/Dashboard.tsx`**
+1. Add a new `LastPayrollCard` component (inline in the file) that:
+   - Takes the latest completed payroll run as a prop
+   - Renders the card header, date info boxes, and an SVG donut chart
+   - Formats `total_employer_cost_cents` as the center label
+   - Uses `pay_date`, `pay_period_start`, `pay_period_end` for the info row
+2. Render `LastPayrollCard` below the stat cards row, only for client admins (`!isSuperAdmin`)
+3. Keep the existing 3-column stat card grid unchanged
 
-### 2. My Pay (`/my-pay`)
-- Paystub list with period selector, earnings/deductions/taxes breakdown, YTD summary
-- Initially mock paystub data structured for future real table
-- Download/email actions (static for now)
+**Donut chart**: Pure SVG with `stroke-dasharray`/`stroke-dashoffset` arcs — no charting library needed. Four segments color-coded in purples matching the reference.
 
-### 3. Time Off (`/time-off`)
-- Balance cards, request form, upcoming/past requests
-- Wired to existing `usePTOBalances`, `usePTORequests`, `useUpdatePTORequest`
-- Employee submits requests; admin/super admin approvals flow back via same hooks
-
-### 4. Time Card (`/time-card`)
-- Weekly timesheet entry grid
-- Wired to existing `useTimecards` hook
-- Save/submit actions write to `timecards` table
-
-### 5. Benefits (`/benefits`)
-- Summary cards, enrolled benefits list with cost breakdown
-- Static/mock data initially (no benefits table yet)
-
-### 6. My Documents (`/my-documents`)
-- Filterable document list with category tabs
-- Static/mock initially; structure for future `compliance_documents` integration
-
-### 7. My Profile (`/my-profile`)
-- Tabbed form: Personal, Tax, Direct Deposit, Security
-- **Reads from** `useEmployee` (same hook admin uses)
-- **Writes via** `useUpdateEmployee` (same mutation admin uses)
-- Employee edits address/phone/emergency contact -> invalidates `['employees']` cache -> admin views see update instantly
-- Tax and Direct Deposit: placeholder fields for now
-
-### 8. Verification Letter (`/verification-letter`)
-- 3-step wizard: select fields, preview, download/print
-- Pulls from employee record via `useEmployee`
-
-## Sidebar & Routing Changes
-
-**AppSidebar.tsx**: Add employee nav items (Dashboard, My Pay, Time Off, Time Card, Benefits, Documents, Profile). These are already gated by `roles: ['employee']`.
-
-**App.tsx**: Add routes `/my-pay`, `/time-off`, `/time-card`, `/benefits`, `/my-documents`, `/my-profile`, `/verification-letter`. Update `/` to render `EmployeeDashboard` when role is `employee`.
-
-## Cross-View Data Sync Details
-
-| Data Changed | Written By | Hook Used | Views That Update |
-|---|---|---|---|
-| Address, phone, emergency contact | Employee or Admin | `useUpdateEmployee` | My Profile, Employee Detail, Company Detail |
-| Compensation (pay rate, type) | Super Admin only | `useUpdateEmployee` | My Pay, Employee Detail, Company Detail |
-| PTO request status | Admin approves | `useUpdatePTORequest` | Time Off (EE), PTO page (admin) |
-| Timecard entries | Employee submits | `useTimecards` mutation | Time Card (EE), Payroll (admin) |
-| Tax / Direct Deposit | Employee or Admin | `useUpdateEmployee` | My Profile, Employee Detail |
-
-Realtime channels already configured in `useEmployee` and `useEmployees` ensure cross-session updates (e.g., admin edits while employee is viewing).
-
-## File Structure
-```text
-src/pages/employee/
-  EmployeeDashboard.tsx
-  MyPay.tsx
-  TimeOff.tsx
-  TimeCard.tsx
-  Benefits.tsx
-  MyDocuments.tsx
-  MyProfile.tsx
-  VerificationLetter.tsx
-```
-
-## Steps
-1. Create 8 employee page components under `src/pages/employee/`
-2. Update `AppSidebar.tsx` with employee nav items
-3. Add all new routes in `App.tsx` with role-conditional dashboard
-4. Wire real data hooks (PTO, timecards, profile) -- no duplicated data fetching
-5. Add employee self-edit capabilities in My Profile using existing `useUpdateEmployee`
-6. Ensure all mutation hooks invalidate shared query keys for cross-view sync
+**No new files or DB changes required.** All columns already exist on `payroll_runs`.
 
