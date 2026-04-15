@@ -328,6 +328,45 @@ export default function PTO() {
   );
 }
 
+// ─── Federal Holidays Helper ───────────────────────────────
+interface FederalHolidayDef {
+  name: string;
+  getDate: (year: number) => string;
+}
+
+function nthDayOfMonth(year: number, month: number, dayOfWeek: number, n: number): string {
+  const d = new Date(year, month - 1, 1);
+  let count = 0;
+  while (d.getMonth() === month - 1) {
+    if (d.getDay() === dayOfWeek) {
+      count++;
+      if (count === n) return `${year}-${String(month).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    }
+    d.setDate(d.getDate() + 1);
+  }
+  return `${year}-${String(month).padStart(2, '0')}-01`;
+}
+
+function lastMondayOfMay(year: number): string {
+  const d = new Date(year, 4, 31);
+  while (d.getDay() !== 1) d.setDate(d.getDate() - 1);
+  return `${year}-05-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+const FEDERAL_HOLIDAYS: FederalHolidayDef[] = [
+  { name: "New Year's Day", getDate: (y) => `${y}-01-01` },
+  { name: 'Birthday of Martin Luther King, Jr.', getDate: (y) => nthDayOfMonth(y, 1, 1, 3) },
+  { name: "Washington's Birthday", getDate: (y) => nthDayOfMonth(y, 2, 1, 3) },
+  { name: 'Memorial Day', getDate: (y) => lastMondayOfMay(y) },
+  { name: 'Juneteenth', getDate: (y) => `${y}-06-19` },
+  { name: 'Independence Day', getDate: (y) => `${y}-07-04` },
+  { name: 'Labor Day', getDate: (y) => nthDayOfMonth(y, 9, 1, 1) },
+  { name: 'Columbus Day', getDate: (y) => nthDayOfMonth(y, 10, 1, 2) },
+  { name: 'Veterans Day', getDate: (y) => `${y}-11-11` },
+  { name: 'Thanksgiving Day', getDate: (y) => nthDayOfMonth(y, 11, 4, 4) },
+  { name: 'Christmas Day', getDate: (y) => `${y}-12-25` },
+];
+
 // ─── Holidays Manager Sub-Component ────────────────────────
 function HolidaysManager({
   companyId,
@@ -345,6 +384,7 @@ function HolidaysManager({
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<CompanyHoliday | null>(null);
   const [form, setForm] = useState({ name: '', date: '', is_paid: true, notes: '' });
+  const [togglingFederal, setTogglingFederal] = useState<string | null>(null);
   const createHoliday = useCreateCompanyHoliday();
   const updateHoliday = useUpdateCompanyHoliday();
   const deleteHoliday = useDeleteCompanyHoliday();
@@ -353,6 +393,74 @@ function HolidaysManager({
   const currentYear = new Date().getFullYear();
   const thisYearHolidays = holidays.filter(h => parseISO(h.date).getFullYear() === currentYear);
   const futureHolidays = thisYearHolidays.filter(h => isAfter(parseISO(h.date), new Date()));
+
+  const federalHolidaysWithStatus = useMemo(() => {
+    return FEDERAL_HOLIDAYS.map(fh => {
+      const date = fh.getDate(currentYear);
+      const existing = thisYearHolidays.find(h => h.name === fh.name && h.date === date);
+      return { ...fh, date, observed: !!existing, holidayId: existing?.id };
+    });
+  }, [currentYear, thisYearHolidays]);
+
+  const handleToggleFederal = async (fh: typeof federalHolidaysWithStatus[0]) => {
+    if (!companyId || !isAdmin) return;
+    setTogglingFederal(fh.name);
+    try {
+      if (fh.observed && fh.holidayId) {
+        await deleteHoliday.mutateAsync(fh.holidayId);
+        toast({ title: `${fh.name} removed` });
+      } else {
+        await createHoliday.mutateAsync({
+          company_id: companyId, name: fh.name, date: fh.date,
+          is_paid: true, notes: 'Federal holiday', created_by: userId ?? null,
+        });
+        toast({ title: `${fh.name} added` });
+      }
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    } finally {
+      setTogglingFederal(null);
+    }
+  };
+
+  const handleSelectAll = async () => {
+    if (!companyId || !isAdmin) return;
+    const unobserved = federalHolidaysWithStatus.filter(fh => !fh.observed);
+    if (unobserved.length === 0) return;
+    setTogglingFederal('all');
+    try {
+      for (const fh of unobserved) {
+        await createHoliday.mutateAsync({
+          company_id: companyId, name: fh.name, date: fh.date,
+          is_paid: true, notes: 'Federal holiday', created_by: userId ?? null,
+        });
+      }
+      toast({ title: `${unobserved.length} federal holidays added` });
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    } finally {
+      setTogglingFederal(null);
+    }
+  };
+
+  const handleDeselectAll = async () => {
+    if (!companyId || !isAdmin) return;
+    const observed = federalHolidaysWithStatus.filter(fh => fh.observed && fh.holidayId);
+    if (observed.length === 0) return;
+    setTogglingFederal('all');
+    try {
+      for (const fh of observed) {
+        await deleteHoliday.mutateAsync(fh.holidayId!);
+      }
+      toast({ title: `${observed.length} federal holidays removed` });
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    } finally {
+      setTogglingFederal(null);
+    }
+  };
+
+  const observedCount = federalHolidaysWithStatus.filter(f => f.observed).length;
 
   const openAdd = () => {
     setEditing(null);
@@ -390,92 +498,150 @@ function HolidaysManager({
       toast({ title: 'Error', description: err.message, variant: 'destructive' });
     }
   };
-
   return (
-    <Card>
-      <CardHeader className="flex-row items-center justify-between space-y-0">
-        <CardTitle className="text-sm flex items-center gap-2">
-          <PartyPopper className="h-4 w-4 text-warning" />
-          {currentYear} Company Observed Holidays
-          <Badge variant="outline" className="ml-2">{thisYearHolidays.length} total</Badge>
-          {futureHolidays.length > 0 && (
-            <Badge variant="secondary" className="text-xs">{futureHolidays.length} upcoming</Badge>
+    <div className="space-y-6">
+      {/* ── Federal Holidays Selector ── */}
+      {isAdmin && (
+        <Card>
+          <CardHeader className="flex-row items-center justify-between space-y-0">
+            <CardTitle className="text-sm flex items-center gap-2">
+              🇺🇸 Federal Holidays
+              <Badge variant="outline" className="ml-1">{observedCount} of {FEDERAL_HOLIDAYS.length} observed</Badge>
+            </CardTitle>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" className="text-xs" disabled={togglingFederal !== null || observedCount === FEDERAL_HOLIDAYS.length} onClick={handleSelectAll}>
+                Select All
+              </Button>
+              <Button variant="ghost" size="sm" className="text-xs" disabled={togglingFederal !== null || observedCount === 0} onClick={handleDeselectAll}>
+                Deselect All
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <p className="text-xs text-muted-foreground mb-4">
+              Toggle the federal holidays your company observes. Selected holidays will be added as paid company holidays for {currentYear}.
+            </p>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {federalHolidaysWithStatus.map(fh => {
+                const d = parseISO(fh.date);
+                const isPast = isBefore(d, new Date());
+                return (
+                  <div
+                    key={fh.name}
+                    className={cn(
+                      'flex items-center justify-between rounded-md border px-3 py-2.5 transition-colors',
+                      fh.observed ? 'bg-primary/5 border-primary/20' : 'bg-card',
+                      isPast && 'opacity-60'
+                    )}
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <Switch
+                        checked={fh.observed}
+                        disabled={togglingFederal !== null}
+                        onCheckedChange={() => handleToggleFederal(fh)}
+                      />
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium truncate">{fh.name}</p>
+                        <p className="text-xs text-muted-foreground">{format(d, 'EEEE, MMMM d, yyyy')}</p>
+                      </div>
+                    </div>
+                    {togglingFederal === fh.name && (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground shrink-0" />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* ── Company Holidays Table ── */}
+      <Card>
+        <CardHeader className="flex-row items-center justify-between space-y-0">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <PartyPopper className="h-4 w-4 text-warning" />
+            {currentYear} Company Observed Holidays
+            <Badge variant="outline" className="ml-2">{thisYearHolidays.length} total</Badge>
+            {futureHolidays.length > 0 && (
+              <Badge variant="secondary" className="text-xs">{futureHolidays.length} upcoming</Badge>
+            )}
+          </CardTitle>
+          {isAdmin && (
+            <Button size="sm" className="gap-1" onClick={openAdd}>
+              <Plus className="h-4 w-4" /> Add Custom Holiday
+            </Button>
           )}
-        </CardTitle>
-        {isAdmin && (
-          <Button size="sm" className="gap-1" onClick={openAdd}>
-            <Plus className="h-4 w-4" /> Add Holiday
-          </Button>
-        )}
-      </CardHeader>
-      <CardContent>
-        {isLoading ? (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-          </div>
-        ) : thisYearHolidays.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-8">
-            No holidays configured for {currentYear}.{isAdmin ? ' Click "Add Holiday" to get started.' : ''}
-          </p>
-        ) : (
-          <div className="rounded-lg border overflow-hidden">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b bg-muted/50">
-                  <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Holiday</th>
-                  <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Date</th>
-                  <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Day</th>
-                  <th className="px-4 py-2.5 text-center font-medium text-muted-foreground">Paid</th>
-                  <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Notes</th>
-                  {isAdmin && <th className="px-4 py-2.5 text-right font-medium text-muted-foreground">Actions</th>}
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {thisYearHolidays.map(h => {
-                  const d = parseISO(h.date);
-                  const isPast = isBefore(d, new Date());
-                  return (
-                    <tr key={h.id} className={cn('hover:bg-muted/30 transition-colors', isPast && 'opacity-60')}>
-                      <td className="px-4 py-3 font-medium">{h.name}</td>
-                      <td className="px-4 py-3 tabular-nums text-muted-foreground">{format(d, 'MMM d, yyyy')}</td>
-                      <td className="px-4 py-3 text-muted-foreground">{format(d, 'EEEE')}</td>
-                      <td className="px-4 py-3 text-center">
-                        <Badge variant={h.is_paid ? 'default' : 'outline'} className="text-[10px]">
-                          {h.is_paid ? 'Paid' : 'Unpaid'}
-                        </Badge>
-                      </td>
-                      <td className="px-4 py-3 text-xs text-muted-foreground max-w-[200px] truncate">{h.notes ?? '—'}</td>
-                      {isAdmin && (
-                        <td className="px-4 py-3 text-right">
-                          <div className="flex gap-1 justify-end">
-                            <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => openEdit(h)}>
-                              <Pencil className="h-3 w-3" />
-                            </Button>
-                            <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-destructive" onClick={() => handleDelete(h.id)}>
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
-                          </div>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            </div>
+          ) : thisYearHolidays.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-8">
+              No holidays configured for {currentYear}.{isAdmin ? ' Select federal holidays above or add a custom holiday.' : ''}
+            </p>
+          ) : (
+            <div className="rounded-lg border overflow-hidden">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b bg-muted/50">
+                    <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Holiday</th>
+                    <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Date</th>
+                    <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Day</th>
+                    <th className="px-4 py-2.5 text-center font-medium text-muted-foreground">Paid</th>
+                    <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Notes</th>
+                    {isAdmin && <th className="px-4 py-2.5 text-right font-medium text-muted-foreground">Actions</th>}
+                  </tr>
+                </thead>
+                <tbody className="divide-y">
+                  {thisYearHolidays.map(h => {
+                    const d = parseISO(h.date);
+                    const isPast = isBefore(d, new Date());
+                    return (
+                      <tr key={h.id} className={cn('hover:bg-muted/30 transition-colors', isPast && 'opacity-60')}>
+                        <td className="px-4 py-3 font-medium">{h.name}</td>
+                        <td className="px-4 py-3 tabular-nums text-muted-foreground">{format(d, 'MMM d, yyyy')}</td>
+                        <td className="px-4 py-3 text-muted-foreground">{format(d, 'EEEE')}</td>
+                        <td className="px-4 py-3 text-center">
+                          <Badge variant={h.is_paid ? 'default' : 'outline'} className="text-[10px]">
+                            {h.is_paid ? 'Paid' : 'Unpaid'}
+                          </Badge>
                         </td>
-                      )}
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </CardContent>
+                        <td className="px-4 py-3 text-xs text-muted-foreground max-w-[200px] truncate">{h.notes ?? '—'}</td>
+                        {isAdmin && (
+                          <td className="px-4 py-3 text-right">
+                            <div className="flex gap-1 justify-end">
+                              <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => openEdit(h)}>
+                                <Pencil className="h-3 w-3" />
+                              </Button>
+                              <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-destructive" onClick={() => handleDelete(h.id)}>
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          </td>
+                        )}
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Add/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>{editing ? 'Edit Holiday' : 'Add Holiday'}</DialogTitle>
+            <DialogTitle>{editing ? 'Edit Holiday' : 'Add Custom Holiday'}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4 mt-2">
             <div>
               <Label>Holiday Name</Label>
-              <Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="e.g., Independence Day" />
+              <Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="e.g., Company Anniversary" />
             </div>
             <div>
               <Label>Date</Label>
@@ -500,6 +666,6 @@ function HolidaysManager({
           </div>
         </DialogContent>
       </Dialog>
-    </Card>
+    </div>
   );
 }
