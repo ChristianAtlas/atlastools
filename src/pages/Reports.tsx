@@ -43,7 +43,18 @@ const CHART_COLORS = [
 
 /* ───── MAIN ───── */
 export default function Reports() {
-  const [tab, setTab] = useState('enterprise');
+  const { isSuperAdmin } = useAuth();
+  const [tab, setTab] = useState(isSuperAdmin ? 'enterprise' : 'client');
+
+  // Client admins only see their own company reports
+  if (!isSuperAdmin) {
+    return (
+      <div className="space-y-5">
+        <PageHeader title="Reports" description="View reports and analytics for your company" />
+        <ClientReporting lockToOwnCompany />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-5">
