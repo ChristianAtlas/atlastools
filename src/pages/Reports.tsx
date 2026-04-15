@@ -24,6 +24,7 @@ import {
   useReportComplianceLicenses, fmt, fmtDate,
 } from '@/hooks/useReportingData';
 import { useCompanies } from '@/hooks/useCompanies';
+import { useAuth } from '@/contexts/AuthContext';
 
 /* ───── helpers ───── */
 const now = new Date();
