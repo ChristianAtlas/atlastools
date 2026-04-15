@@ -368,9 +368,12 @@ function EnterpriseDashboard() {
 /* ═══════════════════════════════════════════════════════════
    2. CLIENT REPORTING
    ═══════════════════════════════════════════════════════════ */
-function ClientReporting() {
+function ClientReporting({ lockToOwnCompany = false }: { lockToOwnCompany?: boolean }) {
   const { data: companies = [] } = useCompanies();
-  const [selectedCompany, setSelectedCompany] = useState<string>('');
+  // When locked, auto-select the first (only) company the client admin can see
+  const autoCompanyId = lockToOwnCompany && companies.length > 0 ? companies[0].id : '';
+  const [manualCompany, setSelectedCompany] = useState<string>('');
+  const selectedCompany = lockToOwnCompany ? autoCompanyId : manualCompany;
   const [searchTerm, setSearchTerm] = useState('');
   const { data: payrollRuns = [] } = useReportPayrollRuns();
   const { data: employees = [] } = useReportEmployees();
