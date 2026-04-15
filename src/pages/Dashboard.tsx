@@ -220,16 +220,70 @@ export default function Dashboard() {
         )}
         <StatCard icon={Users} title="Total Employees" value={isLoading ? '…' : String(activeEmployees)} delay={60} href="/employees" />
         <StatCard icon={DollarSign} title="Pending Payrolls" value={isLoading ? '…' : String(pendingPayrolls)} delay={120} href="/payroll" />
-        <StatCard
-          icon={ClipboardList}
-          title="Open Tasks"
-          value={isLoading ? '…' : String(totalTasks)}
-          changeType={totalTasks > 0 ? 'negative' : 'neutral'}
-          change={totalTasks > 0 ? 'Requires attention' : 'All clear'}
-          delay={180}
-          href="/compliance"
-          breakdown={taskBreakdown}
-        />
+        {isSuperAdmin ? (
+          <StatCard
+            icon={ClipboardList}
+            title="Open Tasks"
+            value={isLoading ? '…' : String(totalTasks)}
+            changeType={totalTasks > 0 ? 'negative' : 'neutral'}
+            change={totalTasks > 0 ? 'Requires attention' : 'All clear'}
+            delay={180}
+            href="/compliance"
+            breakdown={taskBreakdown}
+          />
+        ) : (
+          <div
+            className="rounded-lg border bg-card p-5 shadow-sm animate-in-up"
+            style={{ animationDelay: '180ms' }}
+          >
+            <div className="flex items-start justify-between mb-3">
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground">Open Tasks</p>
+                <p className="text-2xl font-semibold tabular-nums">{isLoading ? '…' : String(totalTasks)}</p>
+              </div>
+              <div className="rounded-lg bg-primary/10 p-2.5">
+                <ClipboardList className="h-5 w-5 text-primary" />
+              </div>
+            </div>
+            {totalTasks === 0 ? (
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />
+                <span>All clear — no open tasks</span>
+              </div>
+            ) : (
+              <ul className="space-y-2">
+                {openComplianceTasks > 0 && (
+                  <li className="flex items-center gap-2 text-xs">
+                    <AlertCircle className="h-3.5 w-3.5 text-destructive shrink-0" />
+                    <span className="text-muted-foreground">Compliance tasks</span>
+                    <span className="ml-auto font-semibold tabular-nums">{openComplianceTasks}</span>
+                  </li>
+                )}
+                {onboardingEmployees > 0 && (
+                  <li className="flex items-center gap-2 text-xs">
+                    <UserPlus className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+                    <span className="text-muted-foreground">Employees onboarding</span>
+                    <span className="ml-auto font-semibold tabular-nums">{onboardingEmployees}</span>
+                  </li>
+                )}
+                {missingSsnCount > 0 && (
+                  <li className="flex items-center gap-2 text-xs">
+                    <KeyRound className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+                    <span className="text-muted-foreground">Missing SSN</span>
+                    <span className="ml-auto font-semibold tabular-nums">{missingSsnCount}</span>
+                  </li>
+                )}
+                {missingSuiCount > 0 && (
+                  <li className="flex items-center gap-2 text-xs">
+                    <FileWarning className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+                    <span className="text-muted-foreground">Missing SUI registrations</span>
+                    <span className="ml-auto font-semibold tabular-nums">{missingSuiCount}</span>
+                  </li>
+                )}
+              </ul>
+            )}
+          </div>
+        )}
       </div>
 
       <div className={cn('grid gap-6', !isSuperAdmin && lastCompletedRun ? 'lg:grid-cols-3' : 'lg:grid-cols-2')}>
