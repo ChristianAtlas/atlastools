@@ -33,6 +33,7 @@ const superAdminNavGroups: NavGroup[] = [
       { label: 'Payroll', to: '/payroll', icon: DollarSign },
       { label: 'Workers\' Comp', to: '/workers-comp', icon: ShieldCheck },
       { label: 'Benefits Admin', to: '/benefits-admin', icon: Heart },
+      { label: 'Atlas HR Hub', to: '/atlas-hr-hub', icon: Globe },
     ],
   },
   {
