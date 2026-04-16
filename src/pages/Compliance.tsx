@@ -48,6 +48,7 @@ export default function Compliance() {
     isClientAdmin ? profile?.company_id || undefined : undefined
   );
   const { data: licenses = [], isLoading: licensesLoading } = useComplianceLicenses();
+  const { data: companies = [] } = useCompanies();
 
   const enterpriseItems = allItems.filter(i => i.entity_type === 'enterprise');
   const clientItems = allItems.filter(i => i.entity_type === 'client');
@@ -58,6 +59,16 @@ export default function Compliance() {
   const atRisk = allItems.filter(i => i.status === 'at_risk').length;
   const nonCompliant = allItems.filter(i => i.status === 'non_compliant' || i.status === 'expired').length;
   const pending = allItems.filter(i => i.status === 'pending' || i.status === 'in_progress').length;
+
+  // % of companies with at least one unresolved compliance task
+  const unresolvedStatuses = new Set(['pending', 'in_progress', 'at_risk', 'non_compliant', 'expired']);
+  const companiesWithUnresolved = new Set(
+    allItems.filter(i => i.company_id && unresolvedStatuses.has(i.status)).map(i => i.company_id)
+  );
+  const totalCompanies = companies.length;
+  const atRiskPercent = totalCompanies > 0
+    ? Math.round((companiesWithUnresolved.size / totalCompanies) * 100)
+    : 0;
 
   const openAddItem = (entityType: 'enterprise' | 'client' | 'employee') => {
     setItemDialogEntity(entityType);
