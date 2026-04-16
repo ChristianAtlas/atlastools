@@ -14,6 +14,519 @@ export type Database = {
   }
   public: {
     Tables: {
+      _b2_map_compensation_records: {
+        Row: {
+          candidate_er_id: string | null
+          derived_company_id: string | null
+          derived_date: string | null
+          match_count: number
+          match_strategy: string
+          notes: string | null
+          source_id: string
+        }
+        Insert: {
+          candidate_er_id?: string | null
+          derived_company_id?: string | null
+          derived_date?: string | null
+          match_count?: number
+          match_strategy: string
+          notes?: string | null
+          source_id: string
+        }
+        Update: {
+          candidate_er_id?: string | null
+          derived_company_id?: string | null
+          derived_date?: string | null
+          match_count?: number
+          match_strategy?: string
+          notes?: string | null
+          source_id?: string
+        }
+        Relationships: []
+      }
+      _b2_map_employee_deductions: {
+        Row: {
+          candidate_er_id: string | null
+          derived_company_id: string | null
+          derived_date: string | null
+          match_count: number
+          match_strategy: string
+          notes: string | null
+          source_id: string
+        }
+        Insert: {
+          candidate_er_id?: string | null
+          derived_company_id?: string | null
+          derived_date?: string | null
+          match_count?: number
+          match_strategy: string
+          notes?: string | null
+          source_id: string
+        }
+        Update: {
+          candidate_er_id?: string | null
+          derived_company_id?: string | null
+          derived_date?: string | null
+          match_count?: number
+          match_strategy?: string
+          notes?: string | null
+          source_id?: string
+        }
+        Relationships: []
+      }
+      _b2_map_employee_wc_assignments: {
+        Row: {
+          candidate_er_id: string | null
+          derived_company_id: string | null
+          derived_date: string | null
+          match_count: number
+          match_strategy: string
+          notes: string | null
+          source_id: string
+        }
+        Insert: {
+          candidate_er_id?: string | null
+          derived_company_id?: string | null
+          derived_date?: string | null
+          match_count?: number
+          match_strategy: string
+          notes?: string | null
+          source_id: string
+        }
+        Update: {
+          candidate_er_id?: string | null
+          derived_company_id?: string | null
+          derived_date?: string | null
+          match_count?: number
+          match_strategy?: string
+          notes?: string | null
+          source_id?: string
+        }
+        Relationships: []
+      }
+      _b2_map_external_benefit_deductions: {
+        Row: {
+          candidate_er_id: string | null
+          derived_company_id: string | null
+          derived_date: string | null
+          match_count: number
+          match_strategy: string
+          notes: string | null
+          source_id: string
+        }
+        Insert: {
+          candidate_er_id?: string | null
+          derived_company_id?: string | null
+          derived_date?: string | null
+          match_count?: number
+          match_strategy: string
+          notes?: string | null
+          source_id: string
+        }
+        Update: {
+          candidate_er_id?: string | null
+          derived_company_id?: string | null
+          derived_date?: string | null
+          match_count?: number
+          match_strategy?: string
+          notes?: string | null
+          source_id?: string
+        }
+        Relationships: []
+      }
+      _b2_map_payroll_run_employees: {
+        Row: {
+          candidate_er_id: string | null
+          derived_company_id: string | null
+          derived_date: string | null
+          match_count: number
+          match_strategy: string
+          notes: string | null
+          source_id: string
+        }
+        Insert: {
+          candidate_er_id?: string | null
+          derived_company_id?: string | null
+          derived_date?: string | null
+          match_count?: number
+          match_strategy: string
+          notes?: string | null
+          source_id: string
+        }
+        Update: {
+          candidate_er_id?: string | null
+          derived_company_id?: string | null
+          derived_date?: string | null
+          match_count?: number
+          match_strategy?: string
+          notes?: string | null
+          source_id?: string
+        }
+        Relationships: []
+      }
+      _b2_orphans_compensation_records: {
+        Row: {
+          annual_salary_cents: number | null
+          approved_by: string | null
+          change_amount_cents: number | null
+          change_percentage: number | null
+          company_id: string | null
+          created_at: string | null
+          effective_date: string | null
+          employee_id: string | null
+          employment_record_id: string | null
+          end_date: string | null
+          hourly_rate_cents: number | null
+          id: string | null
+          match_count: number | null
+          match_strategy: string | null
+          notes: string | null
+          overtime_eligible: boolean | null
+          pay_frequency: Database["public"]["Enums"]["pay_frequency"] | null
+          pay_type: Database["public"]["Enums"]["pay_type"] | null
+          reason: Database["public"]["Enums"]["compensation_reason"] | null
+          standard_hours: number | null
+        }
+        Insert: {
+          annual_salary_cents?: number | null
+          approved_by?: string | null
+          change_amount_cents?: number | null
+          change_percentage?: number | null
+          company_id?: string | null
+          created_at?: string | null
+          effective_date?: string | null
+          employee_id?: string | null
+          employment_record_id?: string | null
+          end_date?: string | null
+          hourly_rate_cents?: number | null
+          id?: string | null
+          match_count?: number | null
+          match_strategy?: string | null
+          notes?: string | null
+          overtime_eligible?: boolean | null
+          pay_frequency?: Database["public"]["Enums"]["pay_frequency"] | null
+          pay_type?: Database["public"]["Enums"]["pay_type"] | null
+          reason?: Database["public"]["Enums"]["compensation_reason"] | null
+          standard_hours?: number | null
+        }
+        Update: {
+          annual_salary_cents?: number | null
+          approved_by?: string | null
+          change_amount_cents?: number | null
+          change_percentage?: number | null
+          company_id?: string | null
+          created_at?: string | null
+          effective_date?: string | null
+          employee_id?: string | null
+          employment_record_id?: string | null
+          end_date?: string | null
+          hourly_rate_cents?: number | null
+          id?: string | null
+          match_count?: number | null
+          match_strategy?: string | null
+          notes?: string | null
+          overtime_eligible?: boolean | null
+          pay_frequency?: Database["public"]["Enums"]["pay_frequency"] | null
+          pay_type?: Database["public"]["Enums"]["pay_type"] | null
+          reason?: Database["public"]["Enums"]["compensation_reason"] | null
+          standard_hours?: number | null
+        }
+        Relationships: []
+      }
+      _b2_orphans_employee_deductions: {
+        Row: {
+          amount_cents: number | null
+          company_id: string | null
+          created_at: string | null
+          earning_deduction_type_id: string | null
+          effective_date: string | null
+          employee_id: string | null
+          employment_record_id: string | null
+          end_date: string | null
+          id: string | null
+          is_active: boolean | null
+          match_count: number | null
+          match_strategy: string | null
+          notes: string | null
+          percent: number | null
+          start_date: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          amount_cents?: number | null
+          company_id?: string | null
+          created_at?: string | null
+          earning_deduction_type_id?: string | null
+          effective_date?: string | null
+          employee_id?: string | null
+          employment_record_id?: string | null
+          end_date?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          match_count?: number | null
+          match_strategy?: string | null
+          notes?: string | null
+          percent?: number | null
+          start_date?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          amount_cents?: number | null
+          company_id?: string | null
+          created_at?: string | null
+          earning_deduction_type_id?: string | null
+          effective_date?: string | null
+          employee_id?: string | null
+          employment_record_id?: string | null
+          end_date?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          match_count?: number | null
+          match_strategy?: string | null
+          notes?: string | null
+          percent?: number | null
+          start_date?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      _b2_orphans_employee_wc_assignments: {
+        Row: {
+          company_id: string | null
+          created_at: string | null
+          effective_date: string | null
+          employee_id: string | null
+          employment_record_id: string | null
+          end_date: string | null
+          id: string | null
+          is_active: boolean | null
+          match_count: number | null
+          match_strategy: string | null
+          updated_at: string | null
+          wc_code_id: string | null
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string | null
+          effective_date?: string | null
+          employee_id?: string | null
+          employment_record_id?: string | null
+          end_date?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          match_count?: number | null
+          match_strategy?: string | null
+          updated_at?: string | null
+          wc_code_id?: string | null
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string | null
+          effective_date?: string | null
+          employee_id?: string | null
+          employment_record_id?: string | null
+          end_date?: string | null
+          id?: string | null
+          is_active?: boolean | null
+          match_count?: number | null
+          match_strategy?: string | null
+          updated_at?: string | null
+          wc_code_id?: string | null
+        }
+        Relationships: []
+      }
+      _b2_orphans_external_benefit_deductions: {
+        Row: {
+          carrier_name: string | null
+          company_id: string | null
+          created_at: string | null
+          ee_deduction_cents: number | null
+          effective_date: string | null
+          employee_id: string | null
+          employment_record_id: string | null
+          end_date: string | null
+          er_contribution_cents: number | null
+          er_verified: boolean | null
+          id: string | null
+          is_active: boolean | null
+          match_count: number | null
+          match_strategy: string | null
+          plan_type: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          carrier_name?: string | null
+          company_id?: string | null
+          created_at?: string | null
+          ee_deduction_cents?: number | null
+          effective_date?: string | null
+          employee_id?: string | null
+          employment_record_id?: string | null
+          end_date?: string | null
+          er_contribution_cents?: number | null
+          er_verified?: boolean | null
+          id?: string | null
+          is_active?: boolean | null
+          match_count?: number | null
+          match_strategy?: string | null
+          plan_type?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          carrier_name?: string | null
+          company_id?: string | null
+          created_at?: string | null
+          ee_deduction_cents?: number | null
+          effective_date?: string | null
+          employee_id?: string | null
+          employment_record_id?: string | null
+          end_date?: string | null
+          er_contribution_cents?: number | null
+          er_verified?: boolean | null
+          id?: string | null
+          is_active?: boolean | null
+          match_count?: number | null
+          match_strategy?: string | null
+          plan_type?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      _b2_orphans_payroll_run_employees: {
+        Row: {
+          benefits_deduction_cents: number | null
+          bonus_cents: number | null
+          commission_cents: number | null
+          company_id: string | null
+          created_at: string | null
+          employee_id: string | null
+          employer_benefits_cents: number | null
+          employer_fica_cents: number | null
+          employer_futa_cents: number | null
+          employer_sui_cents: number | null
+          employment_record_id: string | null
+          federal_tax_cents: number | null
+          garnishment_cents: number | null
+          gross_pay_cents: number | null
+          holiday_hours: number | null
+          id: string | null
+          local_tax_cents: number | null
+          match_count: number | null
+          match_strategy: string | null
+          medicare_cents: number | null
+          net_pay_cents: number | null
+          notes: string | null
+          other_deductions_cents: number | null
+          other_earnings_cents: number | null
+          overtime_hours: number | null
+          overtime_pay_cents: number | null
+          payroll_run_id: string | null
+          provider_employee_id: string | null
+          provider_line_id: string | null
+          provider_status: string | null
+          pto_hours: number | null
+          regular_hours: number | null
+          regular_pay_cents: number | null
+          reimbursement_cents: number | null
+          retirement_deduction_cents: number | null
+          social_security_cents: number | null
+          state_tax_cents: number | null
+          status: Database["public"]["Enums"]["payroll_employee_status"] | null
+          total_deductions_cents: number | null
+          total_employer_cost_cents: number | null
+          updated_at: string | null
+          workers_comp_cents: number | null
+        }
+        Insert: {
+          benefits_deduction_cents?: number | null
+          bonus_cents?: number | null
+          commission_cents?: number | null
+          company_id?: string | null
+          created_at?: string | null
+          employee_id?: string | null
+          employer_benefits_cents?: number | null
+          employer_fica_cents?: number | null
+          employer_futa_cents?: number | null
+          employer_sui_cents?: number | null
+          employment_record_id?: string | null
+          federal_tax_cents?: number | null
+          garnishment_cents?: number | null
+          gross_pay_cents?: number | null
+          holiday_hours?: number | null
+          id?: string | null
+          local_tax_cents?: number | null
+          match_count?: number | null
+          match_strategy?: string | null
+          medicare_cents?: number | null
+          net_pay_cents?: number | null
+          notes?: string | null
+          other_deductions_cents?: number | null
+          other_earnings_cents?: number | null
+          overtime_hours?: number | null
+          overtime_pay_cents?: number | null
+          payroll_run_id?: string | null
+          provider_employee_id?: string | null
+          provider_line_id?: string | null
+          provider_status?: string | null
+          pto_hours?: number | null
+          regular_hours?: number | null
+          regular_pay_cents?: number | null
+          reimbursement_cents?: number | null
+          retirement_deduction_cents?: number | null
+          social_security_cents?: number | null
+          state_tax_cents?: number | null
+          status?: Database["public"]["Enums"]["payroll_employee_status"] | null
+          total_deductions_cents?: number | null
+          total_employer_cost_cents?: number | null
+          updated_at?: string | null
+          workers_comp_cents?: number | null
+        }
+        Update: {
+          benefits_deduction_cents?: number | null
+          bonus_cents?: number | null
+          commission_cents?: number | null
+          company_id?: string | null
+          created_at?: string | null
+          employee_id?: string | null
+          employer_benefits_cents?: number | null
+          employer_fica_cents?: number | null
+          employer_futa_cents?: number | null
+          employer_sui_cents?: number | null
+          employment_record_id?: string | null
+          federal_tax_cents?: number | null
+          garnishment_cents?: number | null
+          gross_pay_cents?: number | null
+          holiday_hours?: number | null
+          id?: string | null
+          local_tax_cents?: number | null
+          match_count?: number | null
+          match_strategy?: string | null
+          medicare_cents?: number | null
+          net_pay_cents?: number | null
+          notes?: string | null
+          other_deductions_cents?: number | null
+          other_earnings_cents?: number | null
+          overtime_hours?: number | null
+          overtime_pay_cents?: number | null
+          payroll_run_id?: string | null
+          provider_employee_id?: string | null
+          provider_line_id?: string | null
+          provider_status?: string | null
+          pto_hours?: number | null
+          regular_hours?: number | null
+          regular_pay_cents?: number | null
+          reimbursement_cents?: number | null
+          retirement_deduction_cents?: number | null
+          social_security_cents?: number | null
+          state_tax_cents?: number | null
+          status?: Database["public"]["Enums"]["payroll_employee_status"] | null
+          total_deductions_cents?: number | null
+          total_employer_cost_cents?: number | null
+          updated_at?: string | null
+          workers_comp_cents?: number | null
+        }
+        Relationships: []
+      }
       ach_transactions: {
         Row: {
           amount_cents: number
@@ -852,6 +1365,7 @@ export type Database = {
           created_at: string
           effective_date: string
           employee_id: string
+          employment_record_id: string | null
           end_date: string | null
           hourly_rate_cents: number | null
           id: string
@@ -871,6 +1385,7 @@ export type Database = {
           created_at?: string
           effective_date: string
           employee_id: string
+          employment_record_id?: string | null
           end_date?: string | null
           hourly_rate_cents?: number | null
           id?: string
@@ -890,6 +1405,7 @@ export type Database = {
           created_at?: string
           effective_date?: string
           employee_id?: string
+          employment_record_id?: string | null
           end_date?: string | null
           hourly_rate_cents?: number | null
           id?: string
@@ -913,6 +1429,13 @@ export type Database = {
             columns: ["employee_id"]
             isOneToOne: false
             referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "compensation_records_employment_record_id_fkey"
+            columns: ["employment_record_id"]
+            isOneToOne: false
+            referencedRelation: "employment_records"
             referencedColumns: ["id"]
           },
         ]
@@ -1696,6 +2219,7 @@ export type Database = {
           created_at: string
           effective_date: string
           employee_id: string
+          employment_record_id: string | null
           end_date: string | null
           id: string
           is_active: boolean
@@ -1707,6 +2231,7 @@ export type Database = {
           created_at?: string
           effective_date?: string
           employee_id: string
+          employment_record_id?: string | null
           end_date?: string | null
           id?: string
           is_active?: boolean
@@ -1718,6 +2243,7 @@ export type Database = {
           created_at?: string
           effective_date?: string
           employee_id?: string
+          employment_record_id?: string | null
           end_date?: string | null
           id?: string
           is_active?: boolean
@@ -1737,6 +2263,13 @@ export type Database = {
             columns: ["employee_id"]
             isOneToOne: false
             referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_wc_assignments_employment_record_id_fkey"
+            columns: ["employment_record_id"]
+            isOneToOne: false
+            referencedRelation: "employment_records"
             referencedColumns: ["id"]
           },
           {
@@ -2070,7 +2603,10 @@ export type Database = {
           company_id: string
           created_at: string
           ee_deduction_cents: number
+          effective_date: string
           employee_id: string
+          employment_record_id: string | null
+          end_date: string | null
           er_contribution_cents: number
           er_verified: boolean
           id: string
@@ -2083,7 +2619,10 @@ export type Database = {
           company_id: string
           created_at?: string
           ee_deduction_cents?: number
+          effective_date?: string
           employee_id: string
+          employment_record_id?: string | null
+          end_date?: string | null
           er_contribution_cents?: number
           er_verified?: boolean
           id?: string
@@ -2096,7 +2635,10 @@ export type Database = {
           company_id?: string
           created_at?: string
           ee_deduction_cents?: number
+          effective_date?: string
           employee_id?: string
+          employment_record_id?: string | null
+          end_date?: string | null
           er_contribution_cents?: number
           er_verified?: boolean
           id?: string
@@ -2117,6 +2659,13 @@ export type Database = {
             columns: ["employee_id"]
             isOneToOne: false
             referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "external_benefit_deductions_employment_record_id_fkey"
+            columns: ["employment_record_id"]
+            isOneToOne: false
+            referencedRelation: "employment_records"
             referencedColumns: ["id"]
           },
         ]
@@ -3173,6 +3722,7 @@ export type Database = {
           employer_fica_cents: number
           employer_futa_cents: number
           employer_sui_cents: number
+          employment_record_id: string | null
           federal_tax_cents: number
           garnishment_cents: number
           gross_pay_cents: number
@@ -3214,6 +3764,7 @@ export type Database = {
           employer_fica_cents?: number
           employer_futa_cents?: number
           employer_sui_cents?: number
+          employment_record_id?: string | null
           federal_tax_cents?: number
           garnishment_cents?: number
           gross_pay_cents?: number
@@ -3255,6 +3806,7 @@ export type Database = {
           employer_fica_cents?: number
           employer_futa_cents?: number
           employer_sui_cents?: number
+          employment_record_id?: string | null
           federal_tax_cents?: number
           garnishment_cents?: number
           gross_pay_cents?: number
@@ -3291,6 +3843,13 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payroll_run_employees_employment_record_id_fkey"
+            columns: ["employment_record_id"]
+            isOneToOne: false
+            referencedRelation: "employment_records"
             referencedColumns: ["id"]
           },
           {
