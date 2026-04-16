@@ -7,7 +7,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useForm8973Filings, useCreateForm8973, getStatusConfig } from '@/hooks/useForm8973';
 import { useCompanies } from '@/hooks/useCompanies';
 import { Form8973DetailDialog } from './Form8973DetailDialog';
-import { Search, Plus, FileText, AlertCircle } from 'lucide-react';
+import { TicketsList } from './TicketsList';
+import { Search, Plus, FileText } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -92,23 +93,11 @@ export function Form8973Tab() {
         </Button>
       </div>
 
-      {/* Missing filings alert */}
-      {missingCompanies.length > 0 && (
-        <Card className="border-amber-200 bg-amber-50/50 dark:bg-amber-950/20 dark:border-amber-800">
-          <CardContent className="p-3 flex items-start gap-3">
-            <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5 shrink-0" />
-            <div>
-              <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
-                {missingCompanies.length} active client{missingCompanies.length > 1 ? 's' : ''} missing Form 8973
-              </p>
-              <p className="text-xs text-amber-700 dark:text-amber-300 mt-0.5">
-                {missingCompanies.slice(0, 5).map(c => c.name).join(', ')}
-                {missingCompanies.length > 5 ? `, +${missingCompanies.length - 5} more` : ''}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      {/* Actionable tickets for missing/unsigned filings */}
+      <div className="grid gap-3 md:grid-cols-2">
+        <TicketsList source="form_8973_missing" title="Missing Form 8973" showSync />
+        <TicketsList source="form_8973_unsigned" title="Awaiting client signature" />
+      </div>
 
       <div className="relative max-w-sm">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
