@@ -1,17 +1,21 @@
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Building2, FileText, DollarSign, Users, Rocket, CheckCircle2, AlertCircle,
-  Edit, MapPin, Shield,
+  Edit, MapPin, Shield, FileCheck, PenLine,
 } from 'lucide-react';
 import type { WizardData } from '@/hooks/useClientOnboarding';
 import { BILLING_TIERS } from '@/lib/billing-config';
 
 interface Props {
   data: WizardData;
-  onLaunch: () => void;
+  onLaunch: (review: NonNullable<WizardData['review']>) => void;
   onBack: () => void;
   onEdit: (step: number) => void;
   isLaunching: boolean;
@@ -52,17 +56,30 @@ export function ReviewLaunchStep({ data, onLaunch, onBack, onEdit, isLaunching }
   const p = data.payroll;
   const e = data.employees;
 
+  const today = new Date().toISOString().slice(0, 10);
+  const [signerName, setSignerName] = useState(data.review?.form_8973_signer_name || c?.primary_contact?.name || '');
+  const [signerTitle, setSignerTitle] = useState(data.review?.form_8973_signer_title || '');
+  const [contractBegin, setContractBegin] = useState(data.review?.form_8973_contract_begin_date || today);
+  const [acknowledgeCoemployment, setAcknowledgeCoemployment] = useState(!!data.review?.form_8973_signed);
+  const [signed, setSigned] = useState(!!data.review?.form_8973_signed);
+
+  const form8973Complete = useMemo(
+    () => signed && !!signerName.trim() && !!signerTitle.trim() && !!contractBegin && acknowledgeCoemployment,
+    [signed, signerName, signerTitle, contractBegin, acknowledgeCoemployment],
+  );
+
   const companyComplete = !!(c?.legal_name && c?.ein && c?.entity_type && c?.state_of_incorporation);
   const taxComplete = !!(t?.state_registrations?.length);
   const payrollComplete = !!(p?.pay_frequency);
   const hasEmployees = (e?.employee_data?.length || 0) > 0;
-  const canLaunch = companyComplete && payrollComplete;
+  const canLaunch = companyComplete && payrollComplete && form8973Complete;
 
   const blockers: string[] = [];
   if (!companyComplete) blockers.push('Company information incomplete');
   if (!c?.ein) blockers.push('FEIN is required');
   if (!payrollComplete) blockers.push('Pay frequency not configured');
   if (!t?.state_registrations?.length) blockers.push('No state registrations configured');
+  if (!form8973Complete) blockers.push('IRS Form 8973 must be signed by client before going live');
 
   const warnings: string[] = [];
   if (!t?.csa_uploaded) warnings.push('Client Service Agreement not uploaded');
@@ -71,6 +88,18 @@ export function ReviewLaunchStep({ data, onLaunch, onBack, onEdit, isLaunching }
   if (!hasEmployees) warnings.push('No employees imported');
 
   const tierInfo = c?.selected_tier ? BILLING_TIERS[c.selected_tier as keyof typeof BILLING_TIERS] : null;
+
+  const handleLaunch = () => {
+    onLaunch({
+      launch_confirmed: true,
+      form_8973_signed: signed,
+      form_8973_signer_name: signerName.trim(),
+      form_8973_signer_title: signerTitle.trim(),
+      form_8973_signed_at: new Date().toISOString(),
+      form_8973_contract_begin_date: contractBegin,
+    });
+  };
+
 
   return (
     <div className="space-y-5">
