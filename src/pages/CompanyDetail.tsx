@@ -13,6 +13,9 @@ import { useEmployees, empCentsToUSD, getInitials, type EmployeeRow } from '@/ho
 import { payrollRuns, invoices, complianceTasks } from '@/lib/mock-data';
 import type { PayrollRun, Invoice, ComplianceTask } from '@/lib/types';
 import { EditCompanyDialog } from '@/components/companies/EditCompanyDialog';
+import { OffboardCompanyDialog } from '@/components/companies/OffboardCompanyDialog';
+import { useAuth } from '@/contexts/AuthContext';
+import { AlertTriangle } from 'lucide-react';
 
 const formatCurrency = (n: number) =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(n);
@@ -274,6 +277,8 @@ export default function CompanyDetail() {
   const { data: company, isLoading, error } = useCompany(id);
   const { data: companyEmployees = [] } = useEmployees(id);
   const [editOpen, setEditOpen] = useState(false);
+  const [offboardOpen, setOffboardOpen] = useState(false);
+  const { isSuperAdmin } = useAuth();
 
   if (isLoading) {
     return (
@@ -320,6 +325,17 @@ export default function CompanyDetail() {
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}>Edit Company</Button>
+          {isSuperAdmin && company.status !== 'terminated' && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="text-destructive border-destructive/40 hover:bg-destructive/10 hover:text-destructive"
+              onClick={() => setOffboardOpen(true)}
+            >
+              <AlertTriangle className="h-3.5 w-3.5 mr-1.5" />
+              Offboard
+            </Button>
+          )}
         </div>
       </div>
 
@@ -343,6 +359,9 @@ export default function CompanyDetail() {
       </Tabs>
 
       <EditCompanyDialog company={company} open={editOpen} onOpenChange={setEditOpen} />
+      {isSuperAdmin && (
+        <OffboardCompanyDialog company={company} open={offboardOpen} onOpenChange={setOffboardOpen} />
+      )}
     </div>
   );
 }

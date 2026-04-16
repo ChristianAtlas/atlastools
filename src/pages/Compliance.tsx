@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { PageHeader } from '@/components/PageHeader';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -26,7 +27,16 @@ export default function Compliance() {
   const { isSuperAdmin, isClientAdmin, isEmployee, profile } = useAuth();
   const [addItemOpen, setAddItemOpen] = useState(false);
   const [addLicenseOpen, setAddLicenseOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('overview');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState(searchParams.get('tab') || 'overview');
+  useEffect(() => {
+    const t = searchParams.get('tab');
+    if (t && t !== activeTab) setActiveTab(t);
+  }, [searchParams]);
+  const handleTabChange = (v: string) => {
+    setActiveTab(v);
+    setSearchParams(prev => { const p = new URLSearchParams(prev); p.set('tab', v); return p; }, { replace: true });
+  };
   const [itemDialogEntity, setItemDialogEntity] = useState<'enterprise' | 'client' | 'employee'>('enterprise');
   const [licenseDialogEntity, setLicenseDialogEntity] = useState<'enterprise' | 'client'>('enterprise');
 
@@ -139,7 +149,7 @@ export default function Compliance() {
       </div>
 
       {/* Main tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="animate-in-up stagger-2">
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="animate-in-up stagger-2">
         <TabsList className="flex-wrap">
           <TabsTrigger value="overview" className="gap-1.5"><AlertTriangle className="h-3.5 w-3.5" /> Risk & Alerts</TabsTrigger>
           <TabsTrigger value="enterprise" className="gap-1.5"><Shield className="h-3.5 w-3.5" /> Enterprise</TabsTrigger>
