@@ -20,6 +20,7 @@ import ClientOnboardingWizard from "@/pages/ClientOnboardingWizard";
 import Invoices from "@/pages/Invoices";
 import Documents from "@/pages/Documents";
 import Compliance from "@/pages/Compliance";
+import ComplianceTicketDetail from "@/pages/ComplianceTicketDetail";
 import AuditLog from "@/pages/AuditLog";
 import Reports from "@/pages/Reports";
 import SettingsPage from "@/pages/SettingsPage";
@@ -91,6 +92,7 @@ const App = () => (
               <Route path="/invoices" element={<Invoices />} />
               <Route path="/documents" element={<Documents />} />
               <Route path="/compliance" element={<Compliance />} />
+              <Route path="/compliance/tickets/:id" element={<ComplianceTicketDetail />} />
               <Route path="/tax-management" element={<TaxManagement />} />
               <Route path="/client-tax" element={<ClientTaxManagement />} />
               <Route path="/ach-tool" element={<AchTool />} />

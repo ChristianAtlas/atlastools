@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { PageHeader } from '@/components/PageHeader';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Plus, Building2, Users, Shield, Calendar, Key, AlertTriangle, FileText, FileCheck, UserPlus } from 'lucide-react';
+import { Plus, Building2, Users, Shield, Calendar, Key, AlertTriangle, FileText, FileCheck, UserPlus, Ticket } from 'lucide-react';
 import { useComplianceItems, useComplianceLicenses } from '@/hooks/useCompliance';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -17,6 +17,7 @@ import { ComplianceItemDialog } from '@/components/compliance/ComplianceItemDial
 import { LicenseDialog } from '@/components/compliance/LicenseDialog';
 import { Form8973Tab } from '@/components/compliance/Form8973Tab';
 import { NewHireReportingDirectory } from '@/components/compliance/NewHireReportingDirectory';
+import { TicketsList } from '@/components/compliance/TicketsList';
 import { computeComplianceScore } from '@/hooks/useCompliance';
 
 const ENTERPRISE_CATEGORIES = ['PEO Licensing', 'CPEO Status', 'Annual Filings', 'SUI Registration', 'Business Entity', 'Workers Comp', 'Compliance Calendar'];
@@ -152,6 +153,7 @@ export default function Compliance() {
       <Tabs value={activeTab} onValueChange={handleTabChange} className="animate-in-up stagger-2">
         <TabsList className="flex-wrap">
           <TabsTrigger value="overview" className="gap-1.5"><AlertTriangle className="h-3.5 w-3.5" /> Risk & Alerts</TabsTrigger>
+          <TabsTrigger value="tickets" className="gap-1.5"><Ticket className="h-3.5 w-3.5" /> Tickets</TabsTrigger>
           <TabsTrigger value="enterprise" className="gap-1.5"><Shield className="h-3.5 w-3.5" /> Enterprise</TabsTrigger>
           <TabsTrigger value="clients" className="gap-1.5"><Building2 className="h-3.5 w-3.5" /> Clients</TabsTrigger>
           <TabsTrigger value="employees" className="gap-1.5"><Users className="h-3.5 w-3.5" /> Employees</TabsTrigger>
@@ -163,6 +165,14 @@ export default function Compliance() {
 
         <TabsContent value="overview" className="mt-4">
           <RiskDashboard items={allItems} licenses={licenses} />
+        </TabsContent>
+
+        <TabsContent value="tickets" className="mt-4 space-y-4">
+          <div>
+            <h3 className="text-base font-semibold">Compliance Tickets</h3>
+            <p className="text-sm text-muted-foreground">Unified inbox of every actionable compliance gap. Click a ticket to drill in.</p>
+          </div>
+          <TicketsList title="All open tickets" variant="full" showSync />
         </TabsContent>
 
         <TabsContent value="enterprise" className="mt-4 space-y-4">
