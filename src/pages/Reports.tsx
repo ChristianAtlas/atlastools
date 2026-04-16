@@ -512,7 +512,7 @@ function ClientReporting({ lockToOwnCompany = false }: { lockToOwnCompany?: bool
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium">{company?.name} — Payroll History</CardTitle>
             </CardHeader>
-            <CardContent className="h-48">
+            <CardContent className="h-64">
               <ChartContainer config={{ gross: { label: 'Gross Pay', color: CHART_COLORS[0] } }} className="h-full w-full [&_.recharts-responsive-container]:!aspect-auto">
                 <BarChart data={cRuns.slice(0, 12).reverse().map(r => ({ date: r.pay_date?.slice(5, 10), gross: (r.gross_pay_cents || 0) / 100 }))}>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-border/40" />
