@@ -245,10 +245,89 @@ export function ReviewLaunchStep({ data, onLaunch, onBack, onEdit, isLaunching }
         </CardContent>
       </Card>
 
+      {/* IRS Form 8973 — Required Client Signature */}
+      <Card className={form8973Complete ? 'border-success/50' : 'border-warning/50'}>
+        <CardContent className="py-4 space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <FileCheck className="h-4 w-4 text-primary" />
+              <span className="text-sm font-semibold">IRS Form 8973 — Client Signature</span>
+              <Badge variant="outline" className="text-[10px] uppercase border-destructive/40 text-destructive">Required</Badge>
+              {form8973Complete && <CheckCircle2 className="h-4 w-4 text-success" />}
+            </div>
+          </div>
+          <Separator />
+          <p className="text-xs text-muted-foreground">
+            By signing Form 8973, the client acknowledges the CPEO co-employment relationship with AtlasOne HR.
+            The CPEO is responsible for federal employment tax obligations on wages paid under this contract.
+            <span className="font-medium text-foreground"> A signed Form 8973 is required before going live.</span>
+          </p>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="contract_begin">Contract Begin Date *</Label>
+              <Input
+                id="contract_begin"
+                type="date"
+                value={contractBegin}
+                onChange={(ev) => setContractBegin(ev.target.value)}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Client Legal Name</Label>
+              <Input value={c?.legal_name || ''} disabled />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="signer_name">Signer Name *</Label>
+              <Input
+                id="signer_name"
+                value={signerName}
+                onChange={(ev) => setSignerName(ev.target.value)}
+                placeholder="Authorized client representative"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="signer_title">Signer Title *</Label>
+              <Input
+                id="signer_title"
+                value={signerTitle}
+                onChange={(ev) => setSignerTitle(ev.target.value)}
+                placeholder="e.g. CEO, CFO, Owner"
+              />
+            </div>
+          </div>
+
+          <div className="flex items-start gap-2 pt-1">
+            <Checkbox
+              id="ack_coemployment"
+              checked={acknowledgeCoemployment}
+              onCheckedChange={(v) => setAcknowledgeCoemployment(!!v)}
+            />
+            <Label htmlFor="ack_coemployment" className="text-xs font-normal cursor-pointer leading-relaxed">
+              I acknowledge the CPEO co-employment relationship with AtlasOne HR and confirm I have authority to bind the company to this Form 8973 filing.
+            </Label>
+          </div>
+
+          <div className="flex items-start gap-2">
+            <Checkbox
+              id="signed"
+              checked={signed}
+              onCheckedChange={(v) => setSigned(!!v)}
+              disabled={!signerName.trim() || !signerTitle.trim() || !acknowledgeCoemployment}
+            />
+            <Label htmlFor="signed" className="text-xs font-medium cursor-pointer leading-relaxed flex items-center gap-1.5">
+              <PenLine className="h-3.5 w-3.5 text-primary" />
+              Sign Form 8973 electronically as <span className="font-semibold">{signerName || '—'}</span>
+              {signerTitle && <span className="text-muted-foreground">({signerTitle})</span>}
+            </Label>
+          </div>
+        </CardContent>
+      </Card>
+
       <div className="flex justify-between">
         <Button variant="outline" onClick={onBack}>Back</Button>
         <Button
-          onClick={onLaunch}
+          onClick={handleLaunch}
           disabled={!canLaunch || isLaunching}
           className="bg-success hover:bg-success/90 text-success-foreground"
         >
