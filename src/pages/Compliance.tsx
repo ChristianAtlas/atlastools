@@ -141,11 +141,9 @@ export default function Compliance() {
       {/* Overview cards */}
       <div className="flex items-start gap-4 animate-in-up stagger-1">
         <ComplianceScoreBadge score={overallScore} size="lg" />
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 flex-1">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 flex-1">
           <ComplianceStatusCard title="Compliant" count={compliant} total={allItems.length} variant="compliant" />
-          <ComplianceStatusCard title="At Risk" count={atRisk} variant="at_risk" />
-          <ComplianceStatusCard title="Non-Compliant" count={nonCompliant} variant="non_compliant" />
-          <ComplianceStatusCard title="Pending" count={pending} variant="pending" />
+          <ComplianceStatusCard title="All Tasks" count={allItems.length} variant="pending" />
         </div>
       </div>
 
