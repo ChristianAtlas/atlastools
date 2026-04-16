@@ -696,6 +696,54 @@ export type Database = {
         }
         Relationships: []
       }
+      company_locations: {
+        Row: {
+          address_line1: string | null
+          address_line2: string | null
+          city: string | null
+          company_id: string
+          created_at: string
+          id: string
+          is_active: boolean
+          is_primary: boolean
+          local_jurisdiction: string | null
+          name: string
+          state: string
+          updated_at: string
+          zip: string | null
+        }
+        Insert: {
+          address_line1?: string | null
+          address_line2?: string | null
+          city?: string | null
+          company_id: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          is_primary?: boolean
+          local_jurisdiction?: string | null
+          name: string
+          state: string
+          updated_at?: string
+          zip?: string | null
+        }
+        Update: {
+          address_line1?: string | null
+          address_line2?: string | null
+          city?: string | null
+          company_id?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          is_primary?: boolean
+          local_jurisdiction?: string | null
+          name?: string
+          state?: string
+          updated_at?: string
+          zip?: string | null
+        }
+        Relationships: []
+      }
       company_plans: {
         Row: {
           company_id: string
@@ -743,6 +791,51 @@ export type Database = {
           },
         ]
       }
+      company_tax_accounts: {
+        Row: {
+          account_number: string | null
+          company_id: string
+          created_at: string
+          effective_date: string | null
+          end_date: string | null
+          filing_frequency: string | null
+          id: string
+          notes: string | null
+          registration_status: string
+          state_code: string
+          tax_type: string
+          updated_at: string
+        }
+        Insert: {
+          account_number?: string | null
+          company_id: string
+          created_at?: string
+          effective_date?: string | null
+          end_date?: string | null
+          filing_frequency?: string | null
+          id?: string
+          notes?: string | null
+          registration_status?: string
+          state_code: string
+          tax_type: string
+          updated_at?: string
+        }
+        Update: {
+          account_number?: string | null
+          company_id?: string
+          created_at?: string
+          effective_date?: string | null
+          end_date?: string | null
+          filing_frequency?: string | null
+          id?: string
+          notes?: string | null
+          registration_status?: string
+          state_code?: string
+          tax_type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       compensation_records: {
         Row: {
           annual_salary_cents: number | null
@@ -757,9 +850,11 @@ export type Database = {
           hourly_rate_cents: number | null
           id: string
           notes: string | null
+          overtime_eligible: boolean | null
           pay_frequency: Database["public"]["Enums"]["pay_frequency"]
           pay_type: Database["public"]["Enums"]["pay_type"]
           reason: Database["public"]["Enums"]["compensation_reason"]
+          standard_hours: number | null
         }
         Insert: {
           annual_salary_cents?: number | null
@@ -774,9 +869,11 @@ export type Database = {
           hourly_rate_cents?: number | null
           id?: string
           notes?: string | null
+          overtime_eligible?: boolean | null
           pay_frequency?: Database["public"]["Enums"]["pay_frequency"]
           pay_type: Database["public"]["Enums"]["pay_type"]
           reason: Database["public"]["Enums"]["compensation_reason"]
+          standard_hours?: number | null
         }
         Update: {
           annual_salary_cents?: number | null
@@ -791,9 +888,11 @@ export type Database = {
           hourly_rate_cents?: number | null
           id?: string
           notes?: string | null
+          overtime_eligible?: boolean | null
           pay_frequency?: Database["public"]["Enums"]["pay_frequency"]
           pay_type?: Database["public"]["Enums"]["pay_type"]
           reason?: Database["public"]["Enums"]["compensation_reason"]
+          standard_hours?: number | null
         }
         Relationships: [
           {
@@ -1357,6 +1456,155 @@ export type Database = {
           },
         ]
       }
+      employee_addresses: {
+        Row: {
+          address_line1: string
+          address_line2: string | null
+          address_type: string
+          city: string
+          created_at: string
+          effective_date: string
+          employee_id: string
+          end_date: string | null
+          id: string
+          is_primary: boolean
+          state: string
+          updated_at: string
+          zip: string
+        }
+        Insert: {
+          address_line1: string
+          address_line2?: string | null
+          address_type: string
+          city: string
+          created_at?: string
+          effective_date?: string
+          employee_id: string
+          end_date?: string | null
+          id?: string
+          is_primary?: boolean
+          state: string
+          updated_at?: string
+          zip: string
+        }
+        Update: {
+          address_line1?: string
+          address_line2?: string | null
+          address_type?: string
+          city?: string
+          created_at?: string
+          effective_date?: string
+          employee_id?: string
+          end_date?: string | null
+          id?: string
+          is_primary?: boolean
+          state?: string
+          updated_at?: string
+          zip?: string
+        }
+        Relationships: []
+      }
+      employee_deductions: {
+        Row: {
+          amount_cents: number | null
+          company_id: string
+          created_at: string
+          earning_deduction_type_id: string
+          employee_id: string
+          end_date: string | null
+          id: string
+          is_active: boolean
+          notes: string | null
+          percent: number | null
+          start_date: string
+          updated_at: string
+        }
+        Insert: {
+          amount_cents?: number | null
+          company_id: string
+          created_at?: string
+          earning_deduction_type_id: string
+          employee_id: string
+          end_date?: string | null
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          percent?: number | null
+          start_date?: string
+          updated_at?: string
+        }
+        Update: {
+          amount_cents?: number | null
+          company_id?: string
+          created_at?: string
+          earning_deduction_type_id?: string
+          employee_id?: string
+          end_date?: string | null
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          percent?: number | null
+          start_date?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_deductions_earning_deduction_type_id_fkey"
+            columns: ["earning_deduction_type_id"]
+            isOneToOne: false
+            referencedRelation: "earning_deduction_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employee_direct_deposits: {
+        Row: {
+          account_last4: string | null
+          account_number_encrypted: string
+          account_type: string
+          allocation_type: string
+          allocation_value: number | null
+          bank_name: string | null
+          created_at: string
+          employee_id: string
+          id: string
+          is_active: boolean
+          priority: number
+          routing_number: string
+          updated_at: string
+        }
+        Insert: {
+          account_last4?: string | null
+          account_number_encrypted: string
+          account_type: string
+          allocation_type?: string
+          allocation_value?: number | null
+          bank_name?: string | null
+          created_at?: string
+          employee_id: string
+          id?: string
+          is_active?: boolean
+          priority?: number
+          routing_number: string
+          updated_at?: string
+        }
+        Update: {
+          account_last4?: string | null
+          account_number_encrypted?: string
+          account_type?: string
+          allocation_type?: string
+          allocation_value?: number | null
+          bank_name?: string | null
+          created_at?: string
+          employee_id?: string
+          id?: string
+          is_active?: boolean
+          priority?: number
+          routing_number?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       employee_invitations: {
         Row: {
           activated_at: string | null
@@ -1614,50 +1862,89 @@ export type Database = {
         Row: {
           action: Database["public"]["Enums"]["employment_action"]
           approved_by: string | null
+          benefit_eligibility_class: string | null
           company_id: string
           created_at: string
           department: string | null
           effective_date: string
           employee_id: string
+          employee_type: string | null
           end_date: string | null
+          flsa_status: string | null
+          hire_date: string | null
           id: string
+          location_id: string | null
           manager_id: string | null
           notes: string | null
+          original_hire_date: string | null
+          pay_group_id: string | null
           reason: string | null
+          rehire_date: string | null
+          resident_state: string | null
           status: Database["public"]["Enums"]["employee_status"]
+          termination_date: string | null
+          termination_reason: string | null
           title: string
+          work_state: string | null
+          worker_type: string | null
         }
         Insert: {
           action: Database["public"]["Enums"]["employment_action"]
           approved_by?: string | null
+          benefit_eligibility_class?: string | null
           company_id: string
           created_at?: string
           department?: string | null
           effective_date: string
           employee_id: string
+          employee_type?: string | null
           end_date?: string | null
+          flsa_status?: string | null
+          hire_date?: string | null
           id?: string
+          location_id?: string | null
           manager_id?: string | null
           notes?: string | null
+          original_hire_date?: string | null
+          pay_group_id?: string | null
           reason?: string | null
+          rehire_date?: string | null
+          resident_state?: string | null
           status: Database["public"]["Enums"]["employee_status"]
+          termination_date?: string | null
+          termination_reason?: string | null
           title: string
+          work_state?: string | null
+          worker_type?: string | null
         }
         Update: {
           action?: Database["public"]["Enums"]["employment_action"]
           approved_by?: string | null
+          benefit_eligibility_class?: string | null
           company_id?: string
           created_at?: string
           department?: string | null
           effective_date?: string
           employee_id?: string
+          employee_type?: string | null
           end_date?: string | null
+          flsa_status?: string | null
+          hire_date?: string | null
           id?: string
+          location_id?: string | null
           manager_id?: string | null
           notes?: string | null
+          original_hire_date?: string | null
+          pay_group_id?: string | null
           reason?: string | null
+          rehire_date?: string | null
+          resident_state?: string | null
           status?: Database["public"]["Enums"]["employee_status"]
+          termination_date?: string | null
+          termination_reason?: string | null
           title?: string
+          work_state?: string | null
+          worker_type?: string | null
         }
         Relationships: [
           {
@@ -1675,10 +1962,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "employment_records_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "company_locations"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "employment_records_manager_id_fkey"
             columns: ["manager_id"]
             isOneToOne: false
             referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employment_records_pay_group_id_fkey"
+            columns: ["pay_group_id"]
+            isOneToOne: false
+            referencedRelation: "pay_groups"
             referencedColumns: ["id"]
           },
         ]
@@ -1983,12 +2284,17 @@ export type Database = {
         Row: {
           created_at: string
           description: string
+          employee_id: string | null
           id: string
           invoice_id: string
           is_markup: boolean
+          line_type: string | null
           markup_rate: number | null
           markup_type: string | null
+          payroll_run_employee_id: string | null
           quantity: number
+          reference_id: string | null
+          reference_type: string | null
           tier_slug: string | null
           total_cents: number
           unit_price_cents: number
@@ -1996,12 +2302,17 @@ export type Database = {
         Insert: {
           created_at?: string
           description: string
+          employee_id?: string | null
           id?: string
           invoice_id: string
           is_markup?: boolean
+          line_type?: string | null
           markup_rate?: number | null
           markup_type?: string | null
+          payroll_run_employee_id?: string | null
           quantity?: number
+          reference_id?: string | null
+          reference_type?: string | null
           tier_slug?: string | null
           total_cents: number
           unit_price_cents: number
@@ -2009,12 +2320,17 @@ export type Database = {
         Update: {
           created_at?: string
           description?: string
+          employee_id?: string | null
           id?: string
           invoice_id?: string
           is_markup?: boolean
+          line_type?: string | null
           markup_rate?: number | null
           markup_type?: string | null
+          payroll_run_employee_id?: string | null
           quantity?: number
+          reference_id?: string | null
+          reference_type?: string | null
           tier_slug?: string | null
           total_cents?: number
           unit_price_cents?: number
@@ -2032,6 +2348,8 @@ export type Database = {
       invoices: {
         Row: {
           balance_due_cents: number
+          billing_period_end: string | null
+          billing_period_start: string | null
           billing_profile_id: string | null
           catch_up_cents: number | null
           catch_up_count: number | null
@@ -2044,6 +2362,7 @@ export type Database = {
           id: string
           invoice_number: string
           invoice_type: string
+          issued_at: string | null
           markup_cents: number
           paid_amount_cents: number
           paid_at: string | null
@@ -2059,6 +2378,8 @@ export type Database = {
         }
         Insert: {
           balance_due_cents?: number
+          billing_period_end?: string | null
+          billing_period_start?: string | null
           billing_profile_id?: string | null
           catch_up_cents?: number | null
           catch_up_count?: number | null
@@ -2071,6 +2392,7 @@ export type Database = {
           id?: string
           invoice_number: string
           invoice_type?: string
+          issued_at?: string | null
           markup_cents?: number
           paid_amount_cents?: number
           paid_at?: string | null
@@ -2086,6 +2408,8 @@ export type Database = {
         }
         Update: {
           balance_due_cents?: number
+          billing_period_end?: string | null
+          billing_period_start?: string | null
           billing_profile_id?: string | null
           catch_up_cents?: number | null
           catch_up_count?: number | null
@@ -2098,6 +2422,7 @@ export type Database = {
           id?: string
           invoice_number?: string
           invoice_type?: string
+          issued_at?: string | null
           markup_cents?: number
           paid_amount_cents?: number
           paid_at?: string | null
@@ -2456,6 +2781,83 @@ export type Database = {
         }
         Relationships: []
       }
+      pay_groups: {
+        Row: {
+          company_id: string
+          created_at: string
+          default_flag: boolean
+          id: string
+          is_active: boolean
+          name: string
+          pay_frequency: string
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          default_flag?: boolean
+          id?: string
+          is_active?: boolean
+          name: string
+          pay_frequency: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          default_flag?: boolean
+          id?: string
+          is_active?: boolean
+          name?: string
+          pay_frequency?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      pay_schedules: {
+        Row: {
+          approval_deadline: string | null
+          check_date: string
+          created_at: string
+          id: string
+          pay_group_id: string
+          period_end_date: string
+          period_start_date: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          approval_deadline?: string | null
+          check_date: string
+          created_at?: string
+          id?: string
+          pay_group_id: string
+          period_end_date: string
+          period_start_date: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          approval_deadline?: string | null
+          check_date?: string
+          created_at?: string
+          id?: string
+          pay_group_id?: string
+          period_end_date?: string
+          period_start_date?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pay_schedules_pay_group_id_fkey"
+            columns: ["pay_group_id"]
+            isOneToOne: false
+            referencedRelation: "pay_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payment_attempts: {
         Row: {
           amount_cents: number
@@ -2555,6 +2957,165 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      payroll_run_employee_contributions: {
+        Row: {
+          amount_cents: number
+          contribution_code: string
+          created_at: string
+          description: string | null
+          earning_deduction_type_id: string | null
+          id: string
+          payroll_run_employee_id: string
+        }
+        Insert: {
+          amount_cents?: number
+          contribution_code: string
+          created_at?: string
+          description?: string | null
+          earning_deduction_type_id?: string | null
+          id?: string
+          payroll_run_employee_id: string
+        }
+        Update: {
+          amount_cents?: number
+          contribution_code?: string
+          created_at?: string
+          description?: string | null
+          earning_deduction_type_id?: string | null
+          id?: string
+          payroll_run_employee_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payroll_run_employee_contributio_earning_deduction_type_id_fkey"
+            columns: ["earning_deduction_type_id"]
+            isOneToOne: false
+            referencedRelation: "earning_deduction_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payroll_run_employee_deductions: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          deduction_code: string
+          description: string | null
+          earning_deduction_type_id: string | null
+          id: string
+          payroll_run_employee_id: string
+          pre_tax: boolean
+        }
+        Insert: {
+          amount_cents?: number
+          created_at?: string
+          deduction_code: string
+          description?: string | null
+          earning_deduction_type_id?: string | null
+          id?: string
+          payroll_run_employee_id: string
+          pre_tax?: boolean
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          deduction_code?: string
+          description?: string | null
+          earning_deduction_type_id?: string | null
+          id?: string
+          payroll_run_employee_id?: string
+          pre_tax?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payroll_run_employee_deductions_earning_deduction_type_id_fkey"
+            columns: ["earning_deduction_type_id"]
+            isOneToOne: false
+            referencedRelation: "earning_deduction_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payroll_run_employee_earnings: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          description: string | null
+          earning_code: string
+          earning_deduction_type_id: string | null
+          hours: number | null
+          id: string
+          payroll_run_employee_id: string
+          rate_cents: number | null
+        }
+        Insert: {
+          amount_cents?: number
+          created_at?: string
+          description?: string | null
+          earning_code: string
+          earning_deduction_type_id?: string | null
+          hours?: number | null
+          id?: string
+          payroll_run_employee_id: string
+          rate_cents?: number | null
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          description?: string | null
+          earning_code?: string
+          earning_deduction_type_id?: string | null
+          hours?: number | null
+          id?: string
+          payroll_run_employee_id?: string
+          rate_cents?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payroll_run_employee_earnings_earning_deduction_type_id_fkey"
+            columns: ["earning_deduction_type_id"]
+            isOneToOne: false
+            referencedRelation: "earning_deduction_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payroll_run_employee_taxes: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          ee_or_er: string
+          id: string
+          jurisdiction: string
+          payroll_run_employee_id: string
+          state_code: string | null
+          tax_type: string
+          taxable_wages_cents: number | null
+        }
+        Insert: {
+          amount_cents?: number
+          created_at?: string
+          ee_or_er?: string
+          id?: string
+          jurisdiction: string
+          payroll_run_employee_id: string
+          state_code?: string | null
+          tax_type: string
+          taxable_wages_cents?: number | null
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          ee_or_er?: string
+          id?: string
+          jurisdiction?: string
+          payroll_run_employee_id?: string
+          state_code?: string | null
+          tax_type?: string
+          taxable_wages_cents?: number | null
+        }
+        Relationships: []
       }
       payroll_run_employees: {
         Row: {
@@ -3610,6 +4171,68 @@ export type Database = {
         }
         Relationships: []
       }
+      wc_code_rates: {
+        Row: {
+          created_at: string
+          effective_date: string
+          end_date: string | null
+          id: string
+          rate: number
+          wc_code_id: string
+        }
+        Insert: {
+          created_at?: string
+          effective_date: string
+          end_date?: string | null
+          id?: string
+          rate: number
+          wc_code_id: string
+        }
+        Update: {
+          created_at?: string
+          effective_date?: string
+          end_date?: string | null
+          id?: string
+          rate?: number
+          wc_code_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wc_code_rates_wc_code_id_fkey"
+            columns: ["wc_code_id"]
+            isOneToOne: false
+            referencedRelation: "wc_codes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wc_codes: {
+        Row: {
+          code: string
+          created_at: string
+          description: string
+          hazard_group: string | null
+          id: string
+          state_code: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          description: string
+          hazard_group?: string | null
+          id?: string
+          state_code?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          description?: string
+          hazard_group?: string | null
+          id?: string
+          state_code?: string | null
+        }
+        Relationships: []
+      }
       wc_invoice_items: {
         Row: {
           base_premium_cents: number
@@ -3730,6 +4353,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      wc_policies: {
+        Row: {
+          carrier: string
+          company_id: string
+          created_at: string
+          effective_date: string
+          expiration_date: string | null
+          id: string
+          is_active: boolean
+          notes: string | null
+          policy_number: string
+          state_code: string
+          updated_at: string
+        }
+        Insert: {
+          carrier: string
+          company_id: string
+          created_at?: string
+          effective_date: string
+          expiration_date?: string | null
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          policy_number: string
+          state_code: string
+          updated_at?: string
+        }
+        Update: {
+          carrier?: string
+          company_id?: string
+          created_at?: string
+          effective_date?: string
+          expiration_date?: string | null
+          id?: string
+          is_active?: boolean
+          notes?: string | null
+          policy_number?: string
+          state_code?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       workers_comp_codes: {
         Row: {
