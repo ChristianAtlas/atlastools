@@ -1,72 +1,132 @@
 
-This is a massive Phase 2 refactor. Before writing 1500+ lines of SQL and rewriting ~40 frontend files, I need to confirm scope and data-handling decisions. Below is my recommended plan; I've flagged 3 decisions you must confirm before implementation.
 
-## Current State (already in your DB)
+# Phase 2B Hardened Migration Plan
 
-You already have many of these tables — we should **extend, not duplicate**:
-- `employees`, `employment_records`, `compensation_records`
-- `payroll_runs`, `payroll_run_employees`
-- `client_sui_rates`, `peo_sui_rates`, `sui_adjustments`
-- `employee_wc_assignments`, `billing_profiles`
-- `audit_logs`, `earning_deduction_types` (60+ types)
-- `invoices`, `invoice_line_items`
+User flagged 4 real risks. I'm folding them into a revised plan. No execution yet.
 
-## Recommended Approach: Two-Phase Rollout
+## Issues Acknowledged
 
-### Phase 2A — Additive (Safe, No Breakage)
+1. `payroll_run_employees` has no `company_id` — must derive via `payroll_runs.company_id` + `check_date/period_end`.
+2. `employee_wc_assignments` should derive company via `wc_codes → wc_policies.company_id`, not `employees.company_id`.
+3. Direct UPDATE backfill is unsafe — use staging/candidate mapping tables.
+4. Bidirectional sync trigger is unsafe — only auto-fill `employment_record_id` from `employee_id`, never the reverse.
+5. Don't auto-synthesize employment records for orphans — quarantine for human review.
 
-**New tables:**
-- `pay_groups`, `pay_schedules` (replace ad-hoc `payroll_schedules`)
-- `payroll_run_employee_earnings` / `_deductions` / `_taxes` / `_contributions` (the missing detail breakdown)
-- `wc_policies`, `wc_codes`, `wc_code_rates` (formalize WC structure)
-- `company_tax_accounts` (multi-state SUI/SIT registration)
-- `company_locations`, `employee_addresses` (multi-state work/resident)
-- `employee_deductions`, `employee_direct_deposits` (encrypted)
+## Revised Migration Sequence (Migration 2B.1 only — additive)
 
-**Column extensions on existing tables:**
-- `employment_records` → add `worker_type`, `employee_type`, `flsa_status`, `work_state`, `resident_state`, `location_id`, `pay_group_id`, `benefit_eligibility_class`, `original_hire_date`, `rehire_date`
-- `compensation_records` → add `standard_hours`, `overtime_eligible`
-- `invoices` → add `invoice_type`, `billing_period_start/end`, `issued_at`
-- `invoice_line_items` → add `line_type`, `reference_type`, `reference_id`, `payroll_run_employee_id`
+### Step 1 — Add nullable columns + indexes
+```sql
+ALTER TABLE payroll_run_employees    ADD COLUMN employment_record_id uuid REFERENCES employment_records(id);
+ALTER TABLE compensation_records     ADD COLUMN employment_record_id uuid REFERENCES employment_records(id);
+ALTER TABLE employee_wc_assignments  ADD COLUMN employment_record_id uuid REFERENCES employment_records(id);
+-- employee_deductions.employment_record_id added in Phase 2A
+CREATE INDEX ... on each
+```
 
-**Constraints:**
-- Partial unique indexes for "one active X" rules (employment, SUI rate, WC assignment)
-- RLS policies on every new table mirroring existing `sa_all_*` / `ca_read_own_*` pattern
+### Step 2 — Build candidate mapping tables (one per target)
 
-**Frontend impact:** None. Existing UI keeps working. New tables wired up incrementally.
+```sql
+CREATE TABLE _b2_map_compensation_records (
+  source_id uuid PRIMARY KEY,
+  candidate_er_id uuid,
+  match_count int,
+  match_strategy text,   -- 'unique', 'ambiguous', 'orphan'
+  notes text
+);
+-- Same shape for the 3 other tables.
+```
 
-### Phase 2B — Re-Anchoring (Breaking, Deferred)
+**Per-table candidate logic:**
 
-Re-point `payroll_run_employees`, `compensation_records`, `employee_wc_assignments` from `employee_id` → `employment_record_id`. This requires rewriting ~40 hooks/pages/edge functions and is best done as a separate effort.
+| Target | Employee key | Company key source | Date key |
+|---|---|---|---|
+| `compensation_records` | `employee_id` | `employees.company_id` | `effective_date` |
+| `employee_deductions` | `employee_id` | `employees.company_id` | `COALESCE(effective_date, start_date)` |
+| `payroll_run_employees` | `employee_id` | `payroll_runs.company_id` (JOIN) | `COALESCE(pr.check_date, pr.period_end, pr.created_at)` |
+| `employee_wc_assignments` | `employee_id` | `wc_policies.company_id` via `wc_codes` | `COALESCE(assignment.effective_date, policy.effective_date)` |
 
-## Decisions I Need From You
+**Match query pattern:**
+```sql
+INSERT INTO _b2_map_<table>
+SELECT t.id,
+       er.id,
+       count(*) OVER (PARTITION BY t.id) AS match_count,
+       CASE WHEN count(*) OVER (PARTITION BY t.id) = 1 THEN 'unique'
+            WHEN count(*) OVER (PARTITION BY t.id) > 1 THEN 'ambiguous'
+       END
+FROM <table> t
+LEFT JOIN <derive company> ...
+LEFT JOIN employment_records er
+  ON er.employee_id = t.employee_id
+ AND er.company_id  = derived_company_id
+ AND er.effective_date <= derived_date
+ AND (er.end_date IS NULL OR er.end_date >= derived_date);
+```
+Rows with no ER match get `match_strategy='orphan'`.
 
-**1. Scope** — pick one:
-- **(A) Phase 2A only** (recommended) — additive schema + ERD + RLS, zero frontend breakage
-- **(B) Full Phase 2** — additive + re-anchor + rewrite ~40 frontend files (multi-day effort)
-- **(C) Schema-only** — SQL + ERD + RLS, you handle frontend
+### Step 3 — Validation gates (must run + report before any UPDATE)
 
-**2. Existing data** — pick one:
-- **(A) Backfill** — auto-create one `employment_record` per existing employee, preserve all history
-- **(B) Wipe demo, keep prod** — drop `is_demo=true` rows, backfill production only
-- **(C) Fresh start** — truncate (only safe if no real client data)
+```sql
+SELECT match_strategy, count(*) FROM _b2_map_compensation_records GROUP BY 1;
+-- Repeat for all 4 tables.
+```
+**Hard stop** if any `ambiguous` rows exist. Surface them to user, resolve manually, re-run mapping.
 
-**3. Earnings/Deductions** — pick one:
-- **(A) Reuse existing `earning_deduction_types`** (recommended) — reference it from new breakdown tables, preserve 60+ configured types
-- **(B) Split into separate `earning_types` + `deduction_types`** per spec, deprecate the old table
+### Step 4 — Update only `unique` matches
+```sql
+UPDATE compensation_records t
+SET employment_record_id = m.candidate_er_id
+FROM _b2_map_compensation_records m
+WHERE m.source_id = t.id AND m.match_strategy = 'unique';
+```
 
-## Deliverables (after you confirm)
+### Step 5 — Quarantine orphans
+```sql
+CREATE TABLE _b2_orphans_<table> AS
+SELECT t.* FROM <table> t
+JOIN _b2_map_<table> m ON m.source_id = t.id
+WHERE m.match_strategy IN ('orphan', 'ambiguous');
+```
+**Do NOT** auto-create synthetic `employment_records`. Report to user for manual triage.
 
-1. Migration SQL (one file per logical group: pay_groups, payroll_detail, wc, tax, locations, billing, audit)
-2. Updated ERD (`Schema_Diagram_v2.mmd`)
-3. RLS policies for every new table
-4. Referential integrity validation queries
-5. (If scope B) Updated hooks, pages, edge functions
+### Step 6 — One-way sync trigger (forward only)
 
-## My Recommendations
+```sql
+CREATE FUNCTION fill_employment_record_id() RETURNS trigger AS $$
+BEGIN
+  IF NEW.employment_record_id IS NULL AND NEW.employee_id IS NOT NULL THEN
+    SELECT id INTO NEW.employment_record_id
+    FROM employment_records
+    WHERE employee_id = NEW.employee_id
+      AND end_date IS NULL
+    ORDER BY effective_date DESC
+    LIMIT 1;
+  END IF;
+  -- NO reverse fill. If employment_record_id is set without employee_id,
+  -- raise EXCEPTION (frontend must provide both during dual-write window).
+  IF NEW.employment_record_id IS NOT NULL AND NEW.employee_id IS NULL THEN
+    RAISE EXCEPTION 'employee_id must be provided alongside employment_record_id during dual-write window';
+  END IF;
+  RETURN NEW;
+END $$ LANGUAGE plpgsql;
+```
+Attach BEFORE INSERT/UPDATE on the 4 re-anchored tables.
 
-- **Scope A** (Phase 2A only) — get the schema solid first, refactor UI in a separate, focused effort
-- **Backfill** existing data — preserves audit trail
-- **Reuse `earning_deduction_types`** — your existing config is more sophisticated than the spec suggests
+**Rationale:** rehire/transfer scenarios mean `employee_id → ER` has multiple valid candidates. Forcing the frontend to specify ER explicitly (after refactor) avoids silently picking the wrong job.
 
-Reply with your three choices (e.g., "A, A, A") and I'll generate the migrations.
+### Step 7 — Defer FK NOT NULL until cutover (Migration 2B.2)
+After all orphans triaged AND frontend writes both columns for 7 days clean, then:
+```sql
+ALTER TABLE ... ALTER COLUMN employment_record_id SET NOT NULL;
+DROP COLUMN employee_id;
+```
+
+## Open Questions Before I Execute
+
+1. **`external_benefit_deductions`** — schema check needed. Should I include it in 2B.1 or leave for a follow-up after I inspect its columns?
+2. **Quarantined orphans** — when found, do you want (a) migration aborts, (b) migration completes and emits a CSV report at `/mnt/documents/`, or (c) auto-create one synthetic ER per orphan with `effective_date = MIN(orphan dates)` and flag it?
+3. **WC assignment date** — confirm `COALESCE(assignment.effective_date, wc_policies.effective_date)` is the right precedence (vs. preferring policy date when assignment is NULL).
+4. **Dual-write trigger scope** — OK to raise EXCEPTION when `employment_record_id` is set without `employee_id`? This forces frontend cleanliness but could surface bugs loudly during the transition.
+
+Reply with answers and I'll execute Migration 2B.1 (additive + mapping tables + one-way sync trigger). Frontend stays untouched.
+
