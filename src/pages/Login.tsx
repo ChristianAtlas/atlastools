@@ -298,7 +298,7 @@ export default function Login() {
                   <div className="relative my-6">
                     <Separator />
                     <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-3 text-xs text-muted-foreground uppercase tracking-wider">
-                      demo access
+                      SANDBOX ACCESS
                     </span>
                   </div>
 
