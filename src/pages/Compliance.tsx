@@ -152,7 +152,7 @@ export default function Compliance() {
 
       {/* Overview cards */}
       <div className="flex items-start gap-4 animate-in-up stagger-1">
-        <ComplianceScoreBadge score={overallScore} size="lg" />
+        <ComplianceScoreBadge score={atRiskPercent} size="lg" invertColor label={`At Risk (${companiesWithUnresolved.size}/${totalCompanies} companies)`} />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 flex-1">
           <ComplianceStatusCard title="Compliant" count={compliant} total={allItems.length} variant="compliant" />
           <ComplianceStatusCard title="All Tasks" count={allItems.length} variant="pending" />
