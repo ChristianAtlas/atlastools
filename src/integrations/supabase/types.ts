@@ -356,9 +356,11 @@ export type Database = {
           notes: string | null
           rate: number
           rate_notice_path: string | null
+          rate_source: string | null
           state_code: string
           updated_at: string
           uploaded_via: string | null
+          wage_base_cents: number | null
         }
         Insert: {
           account_number?: string | null
@@ -371,9 +373,11 @@ export type Database = {
           notes?: string | null
           rate: number
           rate_notice_path?: string | null
+          rate_source?: string | null
           state_code: string
           updated_at?: string
           uploaded_via?: string | null
+          wage_base_cents?: number | null
         }
         Update: {
           account_number?: string | null
@@ -386,9 +390,11 @@ export type Database = {
           notes?: string | null
           rate?: number
           rate_notice_path?: string | null
+          rate_source?: string | null
           state_code?: string
           updated_at?: string
           uploaded_via?: string | null
+          wage_base_cents?: number | null
         }
         Relationships: [
           {
@@ -1510,7 +1516,9 @@ export type Database = {
           company_id: string
           created_at: string
           earning_deduction_type_id: string
+          effective_date: string
           employee_id: string
+          employment_record_id: string | null
           end_date: string | null
           id: string
           is_active: boolean
@@ -1524,7 +1532,9 @@ export type Database = {
           company_id: string
           created_at?: string
           earning_deduction_type_id: string
+          effective_date?: string
           employee_id: string
+          employment_record_id?: string | null
           end_date?: string | null
           id?: string
           is_active?: boolean
@@ -1538,7 +1548,9 @@ export type Database = {
           company_id?: string
           created_at?: string
           earning_deduction_type_id?: string
+          effective_date?: string
           employee_id?: string
+          employment_record_id?: string | null
           end_date?: string | null
           id?: string
           is_active?: boolean
@@ -1555,6 +1567,13 @@ export type Database = {
             referencedRelation: "earning_deduction_types"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "employee_deductions_employment_record_id_fkey"
+            columns: ["employment_record_id"]
+            isOneToOne: false
+            referencedRelation: "employment_records"
+            referencedColumns: ["id"]
+          },
         ]
       }
       employee_direct_deposits: {
@@ -1566,7 +1585,9 @@ export type Database = {
           allocation_value: number | null
           bank_name: string | null
           created_at: string
+          effective_date: string
           employee_id: string
+          end_date: string | null
           id: string
           is_active: boolean
           priority: number
@@ -1581,7 +1602,9 @@ export type Database = {
           allocation_value?: number | null
           bank_name?: string | null
           created_at?: string
+          effective_date?: string
           employee_id: string
+          end_date?: string | null
           id?: string
           is_active?: boolean
           priority?: number
@@ -1596,7 +1619,9 @@ export type Database = {
           allocation_value?: number | null
           bank_name?: string | null
           created_at?: string
+          effective_date?: string
           employee_id?: string
+          end_date?: string | null
           id?: string
           is_active?: boolean
           priority?: number
@@ -1869,19 +1894,23 @@ export type Database = {
           effective_date: string
           employee_id: string
           employee_type: string | null
+          employment_status: string | null
           end_date: string | null
           flsa_status: string | null
           hire_date: string | null
           id: string
+          job_title: string | null
           location_id: string | null
           manager_id: string | null
           notes: string | null
           original_hire_date: string | null
           pay_group_id: string | null
+          pay_type: string | null
           reason: string | null
           rehire_date: string | null
           resident_state: string | null
           status: Database["public"]["Enums"]["employee_status"]
+          supervisor_id: string | null
           termination_date: string | null
           termination_reason: string | null
           title: string
@@ -1898,19 +1927,23 @@ export type Database = {
           effective_date: string
           employee_id: string
           employee_type?: string | null
+          employment_status?: string | null
           end_date?: string | null
           flsa_status?: string | null
           hire_date?: string | null
           id?: string
+          job_title?: string | null
           location_id?: string | null
           manager_id?: string | null
           notes?: string | null
           original_hire_date?: string | null
           pay_group_id?: string | null
+          pay_type?: string | null
           reason?: string | null
           rehire_date?: string | null
           resident_state?: string | null
           status: Database["public"]["Enums"]["employee_status"]
+          supervisor_id?: string | null
           termination_date?: string | null
           termination_reason?: string | null
           title: string
@@ -1927,19 +1960,23 @@ export type Database = {
           effective_date?: string
           employee_id?: string
           employee_type?: string | null
+          employment_status?: string | null
           end_date?: string | null
           flsa_status?: string | null
           hire_date?: string | null
           id?: string
+          job_title?: string | null
           location_id?: string | null
           manager_id?: string | null
           notes?: string | null
           original_hire_date?: string | null
           pay_group_id?: string | null
+          pay_type?: string | null
           reason?: string | null
           rehire_date?: string | null
           resident_state?: string | null
           status?: Database["public"]["Enums"]["employee_status"]
+          supervisor_id?: string | null
           termination_date?: string | null
           termination_reason?: string | null
           title?: string
@@ -1980,6 +2017,13 @@ export type Database = {
             columns: ["pay_group_id"]
             isOneToOne: false
             referencedRelation: "pay_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employment_records_supervisor_id_fkey"
+            columns: ["supervisor_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
             referencedColumns: ["id"]
           },
         ]
