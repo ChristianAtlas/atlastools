@@ -1,17 +1,21 @@
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Building2, FileText, DollarSign, Users, Rocket, CheckCircle2, AlertCircle,
-  Edit, MapPin, Shield,
+  Edit, MapPin, Shield, FileCheck, PenLine,
 } from 'lucide-react';
 import type { WizardData } from '@/hooks/useClientOnboarding';
 import { BILLING_TIERS } from '@/lib/billing-config';
 
 interface Props {
   data: WizardData;
-  onLaunch: () => void;
+  onLaunch: (review: NonNullable<WizardData['review']>) => void;
   onBack: () => void;
   onEdit: (step: number) => void;
   isLaunching: boolean;
@@ -52,17 +56,30 @@ export function ReviewLaunchStep({ data, onLaunch, onBack, onEdit, isLaunching }
   const p = data.payroll;
   const e = data.employees;
 
+  const today = new Date().toISOString().slice(0, 10);
+  const [signerName, setSignerName] = useState(data.review?.form_8973_signer_name || c?.primary_contact?.name || '');
+  const [signerTitle, setSignerTitle] = useState(data.review?.form_8973_signer_title || '');
+  const [contractBegin, setContractBegin] = useState(data.review?.form_8973_contract_begin_date || today);
+  const [acknowledgeCoemployment, setAcknowledgeCoemployment] = useState(!!data.review?.form_8973_signed);
+  const [signed, setSigned] = useState(!!data.review?.form_8973_signed);
+
+  const form8973Complete = useMemo(
+    () => signed && !!signerName.trim() && !!signerTitle.trim() && !!contractBegin && acknowledgeCoemployment,
+    [signed, signerName, signerTitle, contractBegin, acknowledgeCoemployment],
+  );
+
   const companyComplete = !!(c?.legal_name && c?.ein && c?.entity_type && c?.state_of_incorporation);
   const taxComplete = !!(t?.state_registrations?.length);
   const payrollComplete = !!(p?.pay_frequency);
   const hasEmployees = (e?.employee_data?.length || 0) > 0;
-  const canLaunch = companyComplete && payrollComplete;
+  const canLaunch = companyComplete && payrollComplete && form8973Complete;
 
   const blockers: string[] = [];
   if (!companyComplete) blockers.push('Company information incomplete');
   if (!c?.ein) blockers.push('FEIN is required');
   if (!payrollComplete) blockers.push('Pay frequency not configured');
   if (!t?.state_registrations?.length) blockers.push('No state registrations configured');
+  if (!form8973Complete) blockers.push('IRS Form 8973 must be signed by client before going live');
 
   const warnings: string[] = [];
   if (!t?.csa_uploaded) warnings.push('Client Service Agreement not uploaded');
@@ -71,6 +88,18 @@ export function ReviewLaunchStep({ data, onLaunch, onBack, onEdit, isLaunching }
   if (!hasEmployees) warnings.push('No employees imported');
 
   const tierInfo = c?.selected_tier ? BILLING_TIERS[c.selected_tier as keyof typeof BILLING_TIERS] : null;
+
+  const handleLaunch = () => {
+    onLaunch({
+      launch_confirmed: true,
+      form_8973_signed: signed,
+      form_8973_signer_name: signerName.trim(),
+      form_8973_signer_title: signerTitle.trim(),
+      form_8973_signed_at: new Date().toISOString(),
+      form_8973_contract_begin_date: contractBegin,
+    });
+  };
+
 
   return (
     <div className="space-y-5">
@@ -216,10 +245,89 @@ export function ReviewLaunchStep({ data, onLaunch, onBack, onEdit, isLaunching }
         </CardContent>
       </Card>
 
+      {/* IRS Form 8973 — Required Client Signature */}
+      <Card className={form8973Complete ? 'border-success/50' : 'border-warning/50'}>
+        <CardContent className="py-4 space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <FileCheck className="h-4 w-4 text-primary" />
+              <span className="text-sm font-semibold">IRS Form 8973 — Client Signature</span>
+              <Badge variant="outline" className="text-[10px] uppercase border-destructive/40 text-destructive">Required</Badge>
+              {form8973Complete && <CheckCircle2 className="h-4 w-4 text-success" />}
+            </div>
+          </div>
+          <Separator />
+          <p className="text-xs text-muted-foreground">
+            By signing Form 8973, the client acknowledges the CPEO co-employment relationship with AtlasOne HR.
+            The CPEO is responsible for federal employment tax obligations on wages paid under this contract.
+            <span className="font-medium text-foreground"> A signed Form 8973 is required before going live.</span>
+          </p>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="contract_begin">Contract Begin Date *</Label>
+              <Input
+                id="contract_begin"
+                type="date"
+                value={contractBegin}
+                onChange={(ev) => setContractBegin(ev.target.value)}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Client Legal Name</Label>
+              <Input value={c?.legal_name || ''} disabled />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="signer_name">Signer Name *</Label>
+              <Input
+                id="signer_name"
+                value={signerName}
+                onChange={(ev) => setSignerName(ev.target.value)}
+                placeholder="Authorized client representative"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="signer_title">Signer Title *</Label>
+              <Input
+                id="signer_title"
+                value={signerTitle}
+                onChange={(ev) => setSignerTitle(ev.target.value)}
+                placeholder="e.g. CEO, CFO, Owner"
+              />
+            </div>
+          </div>
+
+          <div className="flex items-start gap-2 pt-1">
+            <Checkbox
+              id="ack_coemployment"
+              checked={acknowledgeCoemployment}
+              onCheckedChange={(v) => setAcknowledgeCoemployment(!!v)}
+            />
+            <Label htmlFor="ack_coemployment" className="text-xs font-normal cursor-pointer leading-relaxed">
+              I acknowledge the CPEO co-employment relationship with AtlasOne HR and confirm I have authority to bind the company to this Form 8973 filing.
+            </Label>
+          </div>
+
+          <div className="flex items-start gap-2">
+            <Checkbox
+              id="signed"
+              checked={signed}
+              onCheckedChange={(v) => setSigned(!!v)}
+              disabled={!signerName.trim() || !signerTitle.trim() || !acknowledgeCoemployment}
+            />
+            <Label htmlFor="signed" className="text-xs font-medium cursor-pointer leading-relaxed flex items-center gap-1.5">
+              <PenLine className="h-3.5 w-3.5 text-primary" />
+              Sign Form 8973 electronically as <span className="font-semibold">{signerName || '—'}</span>
+              {signerTitle && <span className="text-muted-foreground">({signerTitle})</span>}
+            </Label>
+          </div>
+        </CardContent>
+      </Card>
+
       <div className="flex justify-between">
         <Button variant="outline" onClick={onBack}>Back</Button>
         <Button
-          onClick={onLaunch}
+          onClick={handleLaunch}
           disabled={!canLaunch || isLaunching}
           className="bg-success hover:bg-success/90 text-success-foreground"
         >

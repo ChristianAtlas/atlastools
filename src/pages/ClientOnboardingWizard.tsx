@@ -69,8 +69,10 @@ export default function ClientOnboardingWizard() {
     if (activeStep > 1) setActiveStep(activeStep - 1);
   };
 
-  const handleLaunch = async () => {
-    const result = await launchClient.mutateAsync({ wizardId: wizard.id, wizardData });
+  const handleLaunch = async (review?: NonNullable<WizardData['review']>) => {
+    const merged = review ? { ...wizardData, review: { ...(wizardData.review || {}), ...review } } : wizardData;
+    if (review) setWizardData(merged);
+    const result = await launchClient.mutateAsync({ wizardId: wizard.id, wizardData: merged });
     setLaunchedCompanyId(result.id);
     setActiveStep(6);
   };
@@ -171,7 +173,7 @@ export default function ClientOnboardingWizard() {
         {activeStep === 5 && (
           <ReviewLaunchStep
             data={wizardData}
-            onLaunch={handleLaunch}
+            onLaunch={(review) => handleLaunch(review)}
             onBack={handleBack}
             onEdit={(step) => setActiveStep(step)}
             isLaunching={launchClient.isPending}

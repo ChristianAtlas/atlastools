@@ -92,6 +92,12 @@ export interface WizardData {
   review?: {
     notes?: string;
     launch_confirmed?: boolean;
+    // IRS Form 8973 — required signature before client can go live
+    form_8973_signed?: boolean;
+    form_8973_signer_name?: string;
+    form_8973_signer_title?: string;
+    form_8973_signed_at?: string;
+    form_8973_contract_begin_date?: string;
   };
 }
 
@@ -400,6 +406,55 @@ export function useLaunchClient() {
       if (complianceItems.length > 0) {
         await supabase.from('compliance_items').insert(complianceItems);
       }
+
+      // 4b. Create IRS Form 8973 filing (signed by client during onboarding)
+      const review = wizardData.review;
+      const today = new Date().toISOString().slice(0, 10);
+      const contractBegin = review?.form_8973_contract_begin_date || today;
+      const { data: form8973, error: form8973Error } = await supabase
+        .from('form_8973_filings')
+        .insert({
+          company_id: company.id,
+          contract_begin_date: contractBegin,
+          is_new_contract: true,
+          cpeo_name: '',
+          cpeo_ein: '',
+          client_legal_name: companyInfo.legal_name,
+          client_ein: companyInfo.ein,
+          client_address_line1: companyInfo.physical_address.line1,
+          client_address_line2: companyInfo.physical_address.line2 || null,
+          client_city: companyInfo.physical_address.city,
+          client_state: companyInfo.physical_address.state,
+          client_zip: companyInfo.physical_address.zip,
+          client_contact_name: companyInfo.primary_contact.name,
+          client_contact_phone: companyInfo.primary_contact.phone,
+          client_contact_email: companyInfo.primary_contact.email,
+          status: review?.form_8973_signed ? 'signed' : 'pending_signature',
+          signed_at: review?.form_8973_signed ? (review.form_8973_signed_at || new Date().toISOString()) : null,
+          signer_name: review?.form_8973_signer_name || null,
+          signer_title: review?.form_8973_signer_title || null,
+          notes: 'Auto-generated during client onboarding. New service contract — requires CPEO signature and IRS submission.',
+        })
+        .select()
+        .single();
+      if (form8973Error) console.error('Form 8973 creation failed:', form8973Error);
+
+      // 4c. Add a compliance task tracking IRS submission of Form 8973
+      await supabase.from('compliance_items').insert({
+        entity_type: 'client',
+        entity_id: company.id,
+        company_id: company.id,
+        title: 'IRS Form 8973 — Submit to IRS',
+        category: 'Onboarding Compliance',
+        subcategory: 'CPEO Filing',
+        priority: 'high',
+        status: 'pending',
+        risk_level: 'high',
+        blocker: false,
+        description: 'Client signed Form 8973 during onboarding. CPEO must complete and submit to IRS within required timeframe.',
+        metadata: form8973 ? { form_8973_filing_id: form8973.id } : {},
+      });
+
 
       // 5. Mark wizard as launched
       await supabase
