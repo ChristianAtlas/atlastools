@@ -5,6 +5,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Plus, Building2, Users, Shield, Calendar, Key, AlertTriangle, FileText, FileCheck, UserPlus, Ticket } from 'lucide-react';
 import { useComplianceItems, useComplianceLicenses } from '@/hooks/useCompliance';
+import { useCompanies } from '@/hooks/useCompanies';
 import { useAuth } from '@/contexts/AuthContext';
 
 import { ComplianceStatusCard } from '@/components/compliance/ComplianceStatusCard';
