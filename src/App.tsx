@@ -29,6 +29,7 @@ import Signup from "@/pages/Signup";
 import WorkflowDemo from "@/pages/WorkflowDemo";
 import WorkersComp from "@/pages/WorkersComp";
 import Timecards from "@/pages/Timecards";
+import TimekeepingOversight from "@/pages/TimekeepingOversight";
 import TaxManagement from "@/pages/TaxManagement";
 import AchTool from "@/pages/AchTool";
 import BenefitsAdmin from "@/pages/BenefitsAdmin";
@@ -89,6 +90,7 @@ const App = () => (
               <Route path="/onboarding/client/:id" element={<ClientOnboardingWizard />} />
               <Route path="/workers-comp" element={<WorkersComp />} />
               <Route path="/timecards" element={<Timecards />} />
+              <Route path="/timekeeping-oversight" element={<TimekeepingOversight />} />
               <Route path="/invoices" element={<Invoices />} />
               <Route path="/documents" element={<Documents />} />
               <Route path="/compliance" element={<Compliance />} />

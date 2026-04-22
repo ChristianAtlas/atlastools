@@ -32,6 +32,7 @@ const superAdminNavGroups: NavGroup[] = [
       { label: 'Employees', to: '/employees', icon: Users },
       { label: 'Onboarding', to: '/onboarding', icon: UserPlus },
       { label: 'Payroll', to: '/payroll', icon: DollarSign },
+      { label: 'Timekeeping', to: '/timekeeping-oversight', icon: Clock },
       { label: 'Workers\' Comp', to: '/workers-comp', icon: ShieldCheck },
       { label: 'Benefits Admin', to: '/benefits-admin', icon: Heart },
       { label: 'Atlas HR Hub', to: 'https://atlasone-hr-guide.lovable.app', icon: Globe, external: true },

@@ -22,6 +22,8 @@ import {
 } from 'lucide-react';
 import { TimeOffPoliciesManager } from '@/components/settings/time-off/TimeOffPoliciesManager';
 import { StateSickLeaveManager } from '@/components/settings/time-off/StateSickLeaveManager';
+import { TimekeepingSettings } from '@/components/settings/timekeeping/TimekeepingSettings';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   useEnterpriseSettings, useClientOverrides, useSettingAuditLogs,
   useUpsertEnterpriseSetting, useUpsertClientOverride, useDeleteClientOverride,
@@ -836,6 +838,7 @@ export default function SettingsPage() {
         <TabsList>
           <TabsTrigger value="enterprise">Enterprise Settings</TabsTrigger>
           <TabsTrigger value="client">Client Settings</TabsTrigger>
+          <TabsTrigger value="timekeeping">Timekeeping</TabsTrigger>
         </TabsList>
 
         <TabsContent value="enterprise" className="mt-4">
@@ -845,7 +848,78 @@ export default function SettingsPage() {
         <TabsContent value="client" className="mt-4">
           <ClientSettingsTab />
         </TabsContent>
+
+        <TabsContent value="timekeeping" className="mt-4">
+          <TimekeepingSettingsTab />
+        </TabsContent>
       </Tabs>
+    </div>
+  );
+}
+
+/* ───────── Timekeeping Settings Tab ───────── */
+function TimekeepingSettingsTab() {
+  const { role, profile } = useAuth();
+  const isSuperAdmin = role === 'super_admin';
+  const { data: companies = [] } = useCompanies();
+  const [selectedId, setSelectedId] = useState<string | null>(profile?.company_id ?? null);
+  const [search, setSearch] = useState('');
+
+  // Client admins manage their own company only
+  if (!isSuperAdmin) {
+    return <TimekeepingSettings companyId={profile?.company_id ?? undefined} />;
+  }
+
+  const filtered = companies.filter(c =>
+    !search || c.name.toLowerCase().includes(search.toLowerCase()) || c.cid.toLowerCase().includes(search.toLowerCase())
+  );
+
+  return (
+    <div className="space-y-6">
+      <TimekeepingSettings isSuperAdmin />
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Per-client configuration</CardTitle>
+          <CardDescription>Activate or configure the timekeeping add-on for a specific client.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {!selectedId ? (
+            <>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input placeholder="Search by client name or CID…" value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
+              </div>
+              <div className="grid gap-2 max-h-80 overflow-y-auto">
+                {filtered.slice(0, 30).map(c => (
+                  <button key={c.id} onClick={() => setSelectedId(c.id)} className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted transition-colors text-left">
+                    <div>
+                      <p className="text-sm font-medium">{c.name}</p>
+                      <p className="text-xs text-muted-foreground">{c.cid} · {c.employee_count} employees</p>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                  </button>
+                ))}
+                {filtered.length === 0 && <p className="text-sm text-muted-foreground py-4 text-center">No clients found.</p>}
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium">{companies.find(c => c.id === selectedId)?.name}</p>
+                  <p className="text-xs text-muted-foreground">{companies.find(c => c.id === selectedId)?.cid}</p>
+                </div>
+                <Button variant="outline" size="sm" onClick={() => setSelectedId(null)}>
+                  <RotateCcw className="h-3.5 w-3.5 mr-1" /> Change client
+                </Button>
+              </div>
+              <Separator />
+              <TimekeepingSettings companyId={selectedId} isSuperAdmin />
+            </>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
