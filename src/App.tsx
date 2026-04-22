@@ -24,6 +24,7 @@ import ComplianceTicketDetail from "@/pages/ComplianceTicketDetail";
 import AuditLog from "@/pages/AuditLog";
 import Reports from "@/pages/Reports";
 import SettingsPage from "@/pages/SettingsPage";
+import ClientSettingsPage from "@/pages/ClientSettingsPage";
 import Login from "@/pages/Login";
 import Signup from "@/pages/Signup";
 import WorkflowDemo from "@/pages/WorkflowDemo";
@@ -107,6 +108,7 @@ const App = () => (
               <Route path="/audit-log" element={<AuditLog />} />
               <Route path="/reports" element={<Reports />} />
               <Route path="/settings" element={<SettingsPage />} />
+              <Route path="/client-settings" element={<ClientSettingsPage />} />
               <Route path="/workflow-demo" element={<WorkflowDemo />} />
 
               {/* Employee portal routes */}
