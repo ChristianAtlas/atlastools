@@ -1,132 +1,58 @@
 
 
-# Phase 2B Hardened Migration Plan
+## Client Admin Settings Page
 
-User flagged 4 real risks. I'm folding them into a revised plan. No execution yet.
+Client admins currently have no settings entry in their sidebar, and the existing `/settings` route is built for super admins (browse all clients, edit enterprise defaults). This plan adds a focused, scoped settings experience for client admins covering only the options they're allowed to manage for their own company.
 
-## Issues Acknowledged
+### Scope of editable options (client admin only)
 
-1. `payroll_run_employees` has no `company_id` — must derive via `payroll_runs.company_id` + `check_date/period_end`.
-2. `employee_wc_assignments` should derive company via `wc_codes → wc_policies.company_id`, not `employees.company_id`.
-3. Direct UPDATE backfill is unsafe — use staging/candidate mapping tables.
-4. Bidirectional sync trigger is unsafe — only auto-fill `employment_record_id` from `employee_id`, never the reverse.
-5. Don't auto-synthesize employment records for orphans — quarantine for human review.
+Settings are scoped to `profile.company_id` — a client admin can never see or edit another client's data, nor enterprise defaults, nor pricing/markups.
 
-## Revised Migration Sequence (Migration 2B.1 only — additive)
+1. **Company Profile** — display name, DBA, primary contact name/email/phone, mailing address, timezone (read-only fields: legal name, EIN, CID, status — only super admin can change).
+2. **Payroll Preferences** — overrides for: auto-approve semi-monthly, auto-approve bi-weekly, pay date weekend shift, pay date holiday shift. Read-only display of cutoffs and approval deadlines (set by enterprise).
+3. **Time Off Policies** — reuse `TimeOffPoliciesManager` scoped to their company.
+4. **Timekeeping** — reuse `TimekeepingSettings` (toggle add-on + policy controls) scoped to their company. Pricing card hidden (super-admin only).
+5. **Earnings & Deductions** — reuse `ClientEDSettings` scoped to their company (enable/disable enterprise types, add client-custom codes).
+6. **Compliance Preferences** — overrides for: license renewal reminder days, new-hire reporting reminders. I-9 deadline and payroll blocking remain enterprise-locked (read-only).
+7. **Notifications** — per-company recipient emails for payroll-ready, invoice-issued, compliance-alerts, and timecard-approval reminders.
+8. **Integrations** — view connection status (read-only list); request changes via support.
+9. **User Access** — list of users at the company with their role; invite new client admin or employee user (creates auth invite via existing patterns). No role escalation to super_admin.
+10. **Change History** — audit log filtered to scope=`client` and their `company_id` only.
 
-### Step 1 — Add nullable columns + indexes
-```sql
-ALTER TABLE payroll_run_employees    ADD COLUMN employment_record_id uuid REFERENCES employment_records(id);
-ALTER TABLE compensation_records     ADD COLUMN employment_record_id uuid REFERENCES employment_records(id);
-ALTER TABLE employee_wc_assignments  ADD COLUMN employment_record_id uuid REFERENCES employment_records(id);
--- employee_deductions.employment_record_id added in Phase 2A
-CREATE INDEX ... on each
-```
+Sections explicitly **excluded** for client admins: enterprise defaults, SUI/WC markup rates, billing engine config, NSF fees, platform legal entity, all other clients, timekeeping pricing.
 
-### Step 2 — Build candidate mapping tables (one per target)
+### Routing and access
 
-```sql
-CREATE TABLE _b2_map_compensation_records (
-  source_id uuid PRIMARY KEY,
-  candidate_er_id uuid,
-  match_count int,
-  match_strategy text,   -- 'unique', 'ambiguous', 'orphan'
-  notes text
-);
--- Same shape for the 3 other tables.
-```
+- New route: `/client-settings` → `ClientSettingsPage`.
+- Add "Settings" entry to `clientAdminNavGroups` in `src/components/AppSidebar.tsx` under "Finance & Admin" pointing to `/client-settings`.
+- `RoleGate` guard: `client_admin` only. Super admins visiting are redirected to existing `/settings`.
+- Existing `/settings` route remains super-admin only (add `RoleGate` redirect if `client_admin` lands there).
 
-**Per-table candidate logic:**
+### Implementation outline
 
-| Target | Employee key | Company key source | Date key |
-|---|---|---|---|
-| `compensation_records` | `employee_id` | `employees.company_id` | `effective_date` |
-| `employee_deductions` | `employee_id` | `employees.company_id` | `COALESCE(effective_date, start_date)` |
-| `payroll_run_employees` | `employee_id` | `payroll_runs.company_id` (JOIN) | `COALESCE(pr.check_date, pr.period_end, pr.created_at)` |
-| `employee_wc_assignments` | `employee_id` | `wc_policies.company_id` via `wc_codes` | `COALESCE(assignment.effective_date, policy.effective_date)` |
+**New file** `src/pages/ClientSettingsPage.tsx`
+- `PageHeader` with company name/CID badge.
+- Tabs: Profile · Payroll · Time Off · Timekeeping · Earnings & Deductions · Compliance · Notifications · Users · History.
+- Each section uses the existing `useUpsertClientOverride` / `useDeleteClientOverride` hooks for setting overrides (already enforce `company_id` scoping via RLS).
+- Profile uses `useUpdateCompany` for company table fields client admins can edit (a new RLS policy may be needed — see below).
+- "Inherits from enterprise default" badge on every overridable field with a Revert button.
 
-**Match query pattern:**
-```sql
-INSERT INTO _b2_map_<table>
-SELECT t.id,
-       er.id,
-       count(*) OVER (PARTITION BY t.id) AS match_count,
-       CASE WHEN count(*) OVER (PARTITION BY t.id) = 1 THEN 'unique'
-            WHEN count(*) OVER (PARTITION BY t.id) > 1 THEN 'ambiguous'
-       END
-FROM <table> t
-LEFT JOIN <derive company> ...
-LEFT JOIN employment_records er
-  ON er.employee_id = t.employee_id
- AND er.company_id  = derived_company_id
- AND er.effective_date <= derived_date
- AND (er.end_date IS NULL OR er.end_date >= derived_date);
-```
-Rows with no ER match get `match_strategy='orphan'`.
+**Reused components** (no changes):
+- `TimeOffPoliciesManager`, `TimekeepingSettings`, `ClientEDSettings` — all already accept `companyId`.
+- `useClientOverrides`, `useUpsertClientOverride`, `useDeleteClientOverride`, `useSettingAuditLogs`.
 
-### Step 3 — Validation gates (must run + report before any UPDATE)
+**Sidebar** `src/components/AppSidebar.tsx`
+- Add `{ label: 'Settings', to: '/client-settings', icon: Settings }` to `clientAdminNavGroups` (new "Settings" group at bottom, mirroring super admin layout).
 
-```sql
-SELECT match_strategy, count(*) FROM _b2_map_compensation_records GROUP BY 1;
--- Repeat for all 4 tables.
-```
-**Hard stop** if any `ambiguous` rows exist. Surface them to user, resolve manually, re-run mapping.
+**Router** `src/App.tsx`
+- Add `<Route path="/client-settings" element={<ClientSettingsPage />} />` inside the protected layout.
 
-### Step 4 — Update only `unique` matches
-```sql
-UPDATE compensation_records t
-SET employment_record_id = m.candidate_er_id
-FROM _b2_map_compensation_records m
-WHERE m.source_id = t.id AND m.match_strategy = 'unique';
-```
+**Backend (migration)**
+- Add RLS policy on `companies`: client admins can `UPDATE` their own company row but only for non-sensitive fields. Implemented via a `BEFORE UPDATE` trigger that blocks changes to `status`, `ein`, `legal_name`, `cid`, `is_demo` for non-super-admin users (super admin bypass via `has_role`).
+- Confirm `client_setting_overrides` RLS allows client admins to insert/update/delete rows where `company_id = get_user_company(auth.uid())`. If missing, add it.
+- Confirm `setting_audit_logs` SELECT for client admins is scoped to their `company_id` only.
 
-### Step 5 — Quarantine orphans
-```sql
-CREATE TABLE _b2_orphans_<table> AS
-SELECT t.* FROM <table> t
-JOIN _b2_map_<table> m ON m.source_id = t.id
-WHERE m.match_strategy IN ('orphan', 'ambiguous');
-```
-**Do NOT** auto-create synthetic `employment_records`. Report to user for manual triage.
+### Out of scope (kept for super admin only)
 
-### Step 6 — One-way sync trigger (forward only)
-
-```sql
-CREATE FUNCTION fill_employment_record_id() RETURNS trigger AS $$
-BEGIN
-  IF NEW.employment_record_id IS NULL AND NEW.employee_id IS NOT NULL THEN
-    SELECT id INTO NEW.employment_record_id
-    FROM employment_records
-    WHERE employee_id = NEW.employee_id
-      AND end_date IS NULL
-    ORDER BY effective_date DESC
-    LIMIT 1;
-  END IF;
-  -- NO reverse fill. If employment_record_id is set without employee_id,
-  -- raise EXCEPTION (frontend must provide both during dual-write window).
-  IF NEW.employment_record_id IS NOT NULL AND NEW.employee_id IS NULL THEN
-    RAISE EXCEPTION 'employee_id must be provided alongside employment_record_id during dual-write window';
-  END IF;
-  RETURN NEW;
-END $$ LANGUAGE plpgsql;
-```
-Attach BEFORE INSERT/UPDATE on the 4 re-anchored tables.
-
-**Rationale:** rehire/transfer scenarios mean `employee_id → ER` has multiple valid candidates. Forcing the frontend to specify ER explicitly (after refactor) avoids silently picking the wrong job.
-
-### Step 7 — Defer FK NOT NULL until cutover (Migration 2B.2)
-After all orphans triaged AND frontend writes both columns for 7 days clean, then:
-```sql
-ALTER TABLE ... ALTER COLUMN employment_record_id SET NOT NULL;
-DROP COLUMN employee_id;
-```
-
-## Open Questions Before I Execute
-
-1. **`external_benefit_deductions`** — schema check needed. Should I include it in 2B.1 or leave for a follow-up after I inspect its columns?
-2. **Quarantined orphans** — when found, do you want (a) migration aborts, (b) migration completes and emits a CSV report at `/mnt/documents/`, or (c) auto-create one synthetic ER per orphan with `effective_date = MIN(orphan dates)` and flag it?
-3. **WC assignment date** — confirm `COALESCE(assignment.effective_date, wc_policies.effective_date)` is the right precedence (vs. preferring policy date when assignment is NULL).
-4. **Dual-write trigger scope** — OK to raise EXCEPTION when `employment_record_id` is set without `employee_id`? This forces frontend cleanliness but could surface bugs loudly during the transition.
-
-Reply with answers and I'll execute Migration 2B.1 (additive + mapping tables + one-way sync trigger). Frontend stays untouched.
+Enterprise defaults, SUI/WC markups, billing/NSF/collection rules, platform identity, pricing for add-ons, cross-client browsing, audit logs from other clients.
 
