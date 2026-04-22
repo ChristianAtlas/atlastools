@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { StatusBadge } from '@/components/StatusBadge';
-import { Loader2, Save, RotateCcw, Building, DollarSign, Clock, Calendar, Shield, Bell, Plug, Users, History, Lock, Info } from 'lucide-react';
+import { Loader2, Save, RotateCcw, Building, DollarSign, Clock, Calendar, Shield, Bell, Plug, Users, History, Lock, Info, UserPlus } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCompany, useUpdateCompany } from '@/hooks/useCompanies';
@@ -25,8 +25,9 @@ import { TimeOffPoliciesManager } from '@/components/settings/time-off/TimeOffPo
 import { TimekeepingSettings } from '@/components/settings/timekeeping/TimekeepingSettings';
 import { ClientEDSettings } from '@/components/settings/earnings-deductions/ClientEDSettings';
 import { supabase } from '@/integrations/supabase/client';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 
 const TIMEZONES = [
   'America/New_York','America/Chicago','America/Denver','America/Los_Angeles',
@@ -371,6 +372,12 @@ function NotificationsTab({ companyId, overridesMap }: { companyId: string; over
 
 // ─── Users Tab ───
 function UsersTab({ companyId }: { companyId: string }) {
+  const qc = useQueryClient();
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteName, setInviteName] = useState('');
+  const [inviteRole, setInviteRole] = useState<'employee' | 'client_admin'>('employee');
+
   const { data: users = [], isLoading } = useQuery({
     queryKey: ['client-users', companyId],
     queryFn: async () => {
@@ -392,6 +399,26 @@ function UsersTab({ companyId }: { companyId: string }) {
     },
   });
 
+  const invite = useMutation({
+    mutationFn: async () => {
+      const email = inviteEmail.trim().toLowerCase();
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error('Enter a valid email');
+      const { data, error } = await supabase.functions.invoke('invite-client-user', {
+        body: { email, full_name: inviteName.trim(), role: inviteRole },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      return data;
+    },
+    onSuccess: () => {
+      toast.success(`Invitation sent to ${inviteEmail}`);
+      setInviteOpen(false);
+      setInviteEmail(''); setInviteName(''); setInviteRole('employee');
+      qc.invalidateQueries({ queryKey: ['client-users', companyId] });
+    },
+    onError: (e: any) => toast.error(e?.message || 'Failed to send invite'),
+  });
+
   if (isLoading) {
     return <div className="flex items-center justify-center py-10"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>;
   }
@@ -399,8 +426,15 @@ function UsersTab({ companyId }: { companyId: string }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">Users at your company</CardTitle>
-        <CardDescription>To invite new users, contact your AtlasOne account manager.</CardDescription>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <CardTitle className="text-base">Users at your company</CardTitle>
+            <CardDescription>Invite client admins and employees. They'll receive an email to set their password.</CardDescription>
+          </div>
+          <Button size="sm" onClick={() => setInviteOpen(true)}>
+            <UserPlus className="h-4 w-4 mr-1.5" />Invite user
+          </Button>
+        </div>
       </CardHeader>
       <CardContent>
         <Table>
@@ -419,6 +453,40 @@ function UsersTab({ companyId }: { companyId: string }) {
             ))}
           </TableBody>
         </Table>
+
+        <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
+          <DialogContent>
+            <DialogHeader><DialogTitle>Invite user</DialogTitle></DialogHeader>
+            <div className="space-y-3 py-2">
+              <div className="space-y-1.5">
+                <Label>Full name</Label>
+                <Input value={inviteName} onChange={(e) => setInviteName(e.target.value)} placeholder="Jane Doe" />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Email <span className="text-destructive">*</span></Label>
+                <Input type="email" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} placeholder="jane@company.com" />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Role</Label>
+                <Select value={inviteRole} onValueChange={(v) => setInviteRole(v as any)}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="employee">Employee</SelectItem>
+                    <SelectItem value="client_admin">Client Admin</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <Alert><Info className="h-4 w-4" /><AlertDescription className="text-xs">The invitee will receive a secure link to set their password and access the platform.</AlertDescription></Alert>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setInviteOpen(false)} disabled={invite.isPending}>Cancel</Button>
+              <Button onClick={() => invite.mutate()} disabled={invite.isPending || !inviteEmail.trim()}>
+                {invite.isPending ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <UserPlus className="h-4 w-4 mr-1" />}
+                Send invite
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </CardContent>
     </Card>
   );
@@ -489,17 +557,6 @@ export default function ClientSettingsPage() {
   const { data: enterpriseSettings = [] } = useEnterpriseSettings();
   const { data: overrides = [] } = useClientOverrides(companyId);
 
-  // Redirect non-client-admins
-  if (role === 'super_admin') return <Navigate to="/settings" replace />;
-  if (role !== 'client_admin') return <Navigate to="/" replace />;
-  if (!companyId) {
-    return (
-      <Alert variant="destructive">
-        <AlertDescription>Your account is not linked to a company. Contact your administrator.</AlertDescription>
-      </Alert>
-    );
-  }
-
   const settingsMap = useMemo(() => {
     const m: Record<string, EnterpriseSetting> = {};
     enterpriseSettings.forEach(s => { m[s.key] = s; });
@@ -511,6 +568,17 @@ export default function ClientSettingsPage() {
     overrides.forEach(o => { m[o.setting_key] = o; });
     return m;
   }, [overrides]);
+
+  // Redirect / guard (after hooks)
+  if (role === 'super_admin') return <Navigate to="/settings" replace />;
+  if (role !== 'client_admin') return <Navigate to="/" replace />;
+  if (!companyId) {
+    return (
+      <Alert variant="destructive">
+        <AlertDescription>Your account is not linked to a company. Contact your administrator.</AlertDescription>
+      </Alert>
+    );
+  }
 
   return (
     <div className="space-y-4">
