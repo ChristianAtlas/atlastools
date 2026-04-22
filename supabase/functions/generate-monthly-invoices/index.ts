@@ -161,6 +161,60 @@ serve(async (req) => {
         }
       }
 
+      // C2. Timekeeping add-on (per-active-employee with time OR PTO entered this billing month)
+      const { data: tkSettings } = await supabase
+        .from("timekeeping_settings")
+        .select("is_enabled")
+        .eq("company_id", company.id)
+        .maybeSingle();
+
+      if (tkSettings?.is_enabled) {
+        const monthStart = billingDate;
+        const monthEnd = new Date(new Date(billingDate).getFullYear(), new Date(billingDate).getMonth() + 1, 0)
+          .toISOString().slice(0, 10);
+
+        // Active employees who entered time (any punch) this month
+        const { data: punchEmps } = await supabase
+          .from("tk_punches")
+          .select("employee_id")
+          .eq("company_id", company.id)
+          .eq("voided", false)
+          .gte("punched_at", `${monthStart}T00:00:00Z`)
+          .lte("punched_at", `${monthEnd}T23:59:59Z`);
+
+        // Active employees who entered PTO this month
+        const { data: ptoEmps } = await supabase
+          .from("pto_requests")
+          .select("employee_id")
+          .eq("company_id", company.id)
+          .gte("start_date", monthStart)
+          .lte("start_date", monthEnd);
+
+        const activeEmpIds = new Set<string>();
+        (punchEmps ?? []).forEach((p: any) => p.employee_id && activeEmpIds.add(p.employee_id));
+        (ptoEmps ?? []).forEach((p: any) => p.employee_id && activeEmpIds.add(p.employee_id));
+
+        const tkActiveCount = activeEmpIds.size;
+        if (tkActiveCount > 0) {
+          const { data: tkPricing } = await supabase
+            .from("timekeeping_pricing")
+            .select("per_employee_cents")
+            .order("effective_date", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          const perEmpCents = tkPricing?.per_employee_cents ?? 800;
+          lineItems.push({
+            description: `Timekeeping add-on × ${tkActiveCount} active employees`,
+            tier_slug: "timekeeping_addon",
+            quantity: tkActiveCount,
+            unit_price_cents: perEmpCents,
+            total_cents: perEmpCents * tkActiveCount,
+            is_markup: false,
+          });
+          log("Added timekeeping line item", { company_id: company.id, count: tkActiveCount, per_emp_cents: perEmpCents });
+        }
+      }
+
       // D. Catch-up charges - find employees not billed last month
       const prevMonth = new Date(billingDate);
       prevMonth.setMonth(prevMonth.getMonth() - 1);
