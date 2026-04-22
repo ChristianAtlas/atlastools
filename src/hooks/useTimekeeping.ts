@@ -126,7 +126,7 @@ export function useTKPricing() {
         .limit(1)
         .maybeSingle();
       if (error) throw error;
-      return data as { id: string; per_employee_cents: number; effective_date: string } | null;
+      return data as unknown as { id: string; per_employee_cents: number; effective_date: string } | null;
     },
   });
 }
