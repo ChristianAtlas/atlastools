@@ -557,17 +557,6 @@ export default function ClientSettingsPage() {
   const { data: enterpriseSettings = [] } = useEnterpriseSettings();
   const { data: overrides = [] } = useClientOverrides(companyId);
 
-  // Redirect non-client-admins
-  if (role === 'super_admin') return <Navigate to="/settings" replace />;
-  if (role !== 'client_admin') return <Navigate to="/" replace />;
-  if (!companyId) {
-    return (
-      <Alert variant="destructive">
-        <AlertDescription>Your account is not linked to a company. Contact your administrator.</AlertDescription>
-      </Alert>
-    );
-  }
-
   const settingsMap = useMemo(() => {
     const m: Record<string, EnterpriseSetting> = {};
     enterpriseSettings.forEach(s => { m[s.key] = s; });
@@ -579,6 +568,17 @@ export default function ClientSettingsPage() {
     overrides.forEach(o => { m[o.setting_key] = o; });
     return m;
   }, [overrides]);
+
+  // Redirect / guard (after hooks)
+  if (role === 'super_admin') return <Navigate to="/settings" replace />;
+  if (role !== 'client_admin') return <Navigate to="/" replace />;
+  if (!companyId) {
+    return (
+      <Alert variant="destructive">
+        <AlertDescription>Your account is not linked to a company. Contact your administrator.</AlertDescription>
+      </Alert>
+    );
+  }
 
   return (
     <div className="space-y-4">
