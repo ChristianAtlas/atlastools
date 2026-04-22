@@ -103,6 +103,12 @@ const clientAdminNavGroups: NavGroup[] = [
       { label: 'Documents', to: '/documents', icon: FileText },
     ],
   },
+  {
+    label: 'Settings',
+    items: [
+      { label: 'Settings', to: '/client-settings', icon: Settings },
+    ],
+  },
 ];
 
 // Employee-only nav items
