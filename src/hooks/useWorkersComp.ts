@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 export interface WCPolicy {
   id: string;
-  company_id: string;
+  company_id: string | null;
   carrier_name: string;
   policy_number: string;
   effective_date: string;
@@ -24,6 +24,8 @@ export interface WCPolicy {
   last_report_submitted_at: string | null;
   created_at: string;
   updated_at: string;
+  is_master?: boolean;
+  default_markup_rate?: number;
   // joined
   company_name?: string;
   code_count?: number;
@@ -33,18 +35,32 @@ export interface WCPolicy {
 export interface WCCode {
   id: string;
   policy_id: string;
-  company_id: string;
+  company_id: string | null;
   code: string;
   description: string;
   state: string;
   rate_per_hundred: number;
   rate_basis: 'per_hundred' | 'per_hour';
   internal_markup_rate: number;
+  markup_rate_override?: number | null;
+  notes?: string | null;
   effective_date: string;
   expiration_date: string | null;
   is_active: boolean;
   created_at: string;
   updated_at: string;
+}
+
+export interface WCCodeRate {
+  id: string;
+  wc_code_id: string;
+  rate_per_hundred: number;
+  rate_basis: 'per_hundred' | 'per_hour';
+  markup_rate: number;
+  effective_date: string;
+  end_date: string | null;
+  notes: string | null;
+  created_at: string;
 }
 
 export interface WCAssignment {
@@ -73,7 +89,9 @@ export interface WCPayrollCalc {
   wc_code_id: string;
   wc_code: string;
   wages_cents: number;
+  hours: number;
   rate_per_hundred: number;
+  rate_basis: 'per_hundred' | 'per_hour';
   premium_cents: number;
   markup_rate: number;
   markup_cents: number;
