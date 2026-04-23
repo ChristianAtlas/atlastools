@@ -626,9 +626,24 @@ export function useUpdateVendorPaymentRunStatus() {
 
 // =========================================================================
 // Year-end 1099 summary aggregation
-// Combines AtlasOne-paid earnings (placeholder until Phase 2 vendor_payments
-// ships) with manually entered prior YTD earnings, split into NEC vs MISC
-// totals plus backup withholding totals per vendor / per category.
+// Reconciliation rules (so totals tie out to Form 1099-NEC / 1099-MISC):
+//   1. Pull every vendor in scope (optionally filtered to one company).
+//   2. AtlasOne-paid totals come from `vendor_payments` rows where
+//        - `reporting_year` matches the selected tax year,
+//        - `status <> 'voided'` (voided payments never hit a 1099),
+//        - `vendor_id` is in scope.
+//      Each payment contributes `gross_amount_cents` to NEC or MISC based on
+//      its `category`, and `backup_withholding_cents` to the BW bucket.
+//   3. Prior-YTD imports (mid-year migrations) come from
+//      `vendor_ytd_prior_earnings` for the same year and add to the same
+//      NEC / MISC / BW buckets so the reportable total reconciles to:
+//          total_reportable_cents = atlas_paid_cents + prior_ytd_cents
+//          nec_cents              = Σ(category='nec')      across both sources
+//          misc_cents             = Σ(category like 'misc_%') across both sources
+//          backup_withholding     = Σ(backup_withholding_cents) across both sources
+//   4. Category → form mapping uses VENDOR_1099_CATEGORIES (single source of
+//      truth), so a vendor with both NEC and MISC activity is flagged 'BOTH'
+//      and will need two forms filed.
 // =========================================================================
 export interface Vendor1099SummaryRow {
   vendor_id: string;
@@ -699,43 +714,92 @@ export function use1099Summary({ reportingYear, companyId }: Use1099SummaryFilte
         backup_withholding_cents: number;
       }>;
 
-      // Phase 2 hook: aggregate vendor_payments here when the table exists.
-      // For now, atlas_paid totals are zero so the summary still surfaces prior
-      // YTD imports correctly.
+      // Aggregate AtlasOne-issued payments for the reporting year.
+      // Linkage rules:
+      //   - JOIN key: vendor_payments.vendor_id = vendors.id
+      //   - YEAR filter: vendor_payments.reporting_year = :reportingYear
+      //   - EXCLUDE: status = 'voided' (voided payments never reach a 1099)
+      //   - Category drives NEC vs MISC bucketing (same enum as prior YTD)
+      //   - backup_withholding_cents accumulates separately and is reported
+      //     in Box 4 (NEC) / Box 4 (MISC) regardless of category split.
+      const { data: payData, error: payErr } = await supabase
+        .from('vendor_payments' as any)
+        .select('vendor_id, category, gross_amount_cents, backup_withholding_cents, status, reporting_year')
+        .eq('reporting_year', reportingYear)
+        .neq('status', 'voided')
+        .in('vendor_id', ids);
+      if (payErr) throw payErr;
+      const payments = (payData ?? []) as unknown as Array<{
+        vendor_id: string;
+        category: Vendor1099Category;
+        gross_amount_cents: number;
+        backup_withholding_cents: number;
+      }>;
 
-      const byVendor = new Map<string, { nec: number; misc: number; bw: number; misc_breakdown: Record<Vendor1099Category, number>; prior: number }>();
+      const emptyBreakdown = (): Record<Vendor1099Category, number> => ({
+        nec: 0,
+        misc_rent: 0,
+        misc_royalties: 0,
+        misc_other_income: 0,
+        misc_legal: 0,
+        misc_prizes: 0,
+        misc_medical: 0,
+        misc_other: 0,
+      });
+
+      type Agg = {
+        nec: number;
+        misc: number;
+        bw: number;
+        misc_breakdown: Record<Vendor1099Category, number>;
+        prior: number;
+        atlas: number;
+      };
+      const byVendor = new Map<string, Agg>();
+      const ensure = (vid: string): Agg => {
+        let cur = byVendor.get(vid);
+        if (!cur) {
+          cur = { nec: 0, misc: 0, bw: 0, misc_breakdown: emptyBreakdown(), prior: 0, atlas: 0 };
+          byVendor.set(vid, cur);
+        }
+        return cur;
+      };
+
+      // 1. Prior YTD imports — pre-AtlasOne earnings already paid by the client.
       for (const row of prior) {
-        const cur = byVendor.get(row.vendor_id) ?? {
-          nec: 0,
-          misc: 0,
-          bw: 0,
-          misc_breakdown: {
-            nec: 0,
-            misc_rent: 0,
-            misc_royalties: 0,
-            misc_other_income: 0,
-            misc_legal: 0,
-            misc_prizes: 0,
-            misc_medical: 0,
-            misc_other: 0,
-          } as Record<Vendor1099Category, number>,
-          prior: 0,
-        };
+        const cur = ensure(row.vendor_id);
         cur.prior += row.amount_cents;
         cur.bw += row.backup_withholding_cents;
         if (NEC_CATEGORIES.includes(row.category)) {
           cur.nec += row.amount_cents;
         } else {
           cur.misc += row.amount_cents;
-          cur.misc_breakdown[row.category] = (cur.misc_breakdown[row.category] ?? 0) + row.amount_cents;
+          cur.misc_breakdown[row.category] =
+            (cur.misc_breakdown[row.category] ?? 0) + row.amount_cents;
         }
-        byVendor.set(row.vendor_id, cur);
+      }
+
+      // 2. AtlasOne-issued vendor_payments (non-voided) for the same year.
+      for (const row of payments) {
+        const cur = ensure(row.vendor_id);
+        cur.atlas += row.gross_amount_cents;
+        cur.bw += row.backup_withholding_cents;
+        if (NEC_CATEGORIES.includes(row.category)) {
+          cur.nec += row.gross_amount_cents;
+        } else {
+          cur.misc += row.gross_amount_cents;
+          cur.misc_breakdown[row.category] =
+            (cur.misc_breakdown[row.category] ?? 0) + row.gross_amount_cents;
+        }
       }
 
       const summary: Vendor1099SummaryRow[] = vendors.map((v) => {
         const agg = byVendor.get(v.id);
         const nec_cents = agg?.nec ?? 0;
         const misc_cents = agg?.misc ?? 0;
+        // Reconciliation invariant:
+        //   nec_cents + misc_cents === prior_ytd_cents + atlas_paid_cents
+        // (backup withholding is informational only; not added to gross totals)
         const total = nec_cents + misc_cents;
         const exceptions: string[] = [];
         if (v.w9_status !== 'on_file') exceptions.push('missing_w9');
@@ -743,6 +807,9 @@ export function use1099Summary({ reportingYear, companyId }: Use1099SummaryFilte
         // IRS reporting threshold: $600 for NEC, $600 for most MISC boxes,
         // $10 for royalties. Flag low-but-nonzero totals so reviewers see them.
         if (total > 0 && total < 60000) exceptions.push('under_threshold');
+        // Backup withholding without any reportable gross is a data integrity
+        // problem — surface it so the operator can investigate before filing.
+        if ((agg?.bw ?? 0) > 0 && total === 0) exceptions.push('bw_without_gross');
 
         let form: 'NEC' | 'MISC' | 'BOTH' | 'NONE' = 'NONE';
         if (nec_cents > 0 && misc_cents > 0) form = 'BOTH';
@@ -786,7 +853,7 @@ export function use1099Summary({ reportingYear, companyId }: Use1099SummaryFilte
           } as Record<Vendor1099Category, number>,
           backup_withholding_cents: agg?.bw ?? 0,
           prior_ytd_cents: agg?.prior ?? 0,
-          atlas_paid_cents: 0,
+          atlas_paid_cents: agg?.atlas ?? 0,
           total_reportable_cents: total,
           reportable_form: form,
         exceptions,
