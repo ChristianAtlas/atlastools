@@ -17,6 +17,13 @@ import {
   VENDOR_1099_CATEGORIES,
   type VendorWorkerType, type Vendor1099Category,
 } from '@/hooks/useVendors';
+import {
+  formatTaxId,
+  taxIdLabel,
+  taxIdPlaceholder,
+  validateTaxId,
+  type TaxIdType,
+} from '@/lib/tax-id';
 
 type WizardData = {
   worker_type: VendorWorkerType | null;
@@ -66,17 +73,6 @@ const INITIAL: WizardData = {
 
 const STEPS = ['Type', 'Identity', 'Tax & address', 'Prior YTD', 'Review'];
 
-function formatTaxId(raw: string, type: 'ssn' | 'ein' | 'itin'): string {
-  const d = raw.replace(/\D/g, '').slice(0, 9);
-  if (type === 'ein') {
-    if (d.length <= 2) return d;
-    return `${d.slice(0, 2)}-${d.slice(2)}`;
-  }
-  // SSN / ITIN: ###-##-####
-  if (d.length <= 3) return d;
-  if (d.length <= 5) return `${d.slice(0, 3)}-${d.slice(3)}`;
-  return `${d.slice(0, 3)}-${d.slice(3, 5)}-${d.slice(5)}`;
-}
 
 export default function VendorOnboardingWizard() {
   const navigate = useNavigate();
