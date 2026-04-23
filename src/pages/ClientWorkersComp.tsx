@@ -206,19 +206,19 @@ export default function ClientWorkersComp() {
         <StatCard
           title="Covered employees"
           value={covered.filter((c) => c.status === 'covered').length.toString()}
-          description={`${covered.filter((c) => c.status === 'exempt').length} exempt · ${covered.filter((c) => c.status === 'missing').length} pending`}
+          change={`${covered.filter((c) => c.status === 'exempt').length} exempt · ${covered.filter((c) => c.status === 'missing').length} pending`}
           icon={Users}
         />
         <StatCard
           title={periodFilter === 'all' ? 'Total WC charged YTD' : 'WC charged (selected period)'}
           value={centsToUSD(totals.totalCharge)}
-          description={`${totals.payrollCount} payroll${totals.payrollCount === 1 ? '' : 's'}`}
+          change={`${totals.payrollCount} payroll${totals.payrollCount === 1 ? '' : 's'}`}
           icon={Receipt}
         />
         <StatCard
           title="Active policy"
           value="AtlasOne PEO"
-          description="Coverage administered by AtlasOne HR"
+          change="Coverage administered by AtlasOne HR"
           icon={ShieldCheck}
         />
       </div>
