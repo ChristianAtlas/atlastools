@@ -5361,6 +5361,7 @@ export type Database = {
           file_path: string | null
           file_size: number | null
           id: string
+          is_active_w9: boolean
           mime_type: string | null
           notes: string | null
           title: string
@@ -5377,6 +5378,7 @@ export type Database = {
           file_path?: string | null
           file_size?: number | null
           id?: string
+          is_active_w9?: boolean
           mime_type?: string | null
           notes?: string | null
           title: string
@@ -5393,6 +5395,7 @@ export type Database = {
           file_path?: string | null
           file_size?: number | null
           id?: string
+          is_active_w9?: boolean
           mime_type?: string | null
           notes?: string | null
           title?: string
