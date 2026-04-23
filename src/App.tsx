@@ -44,6 +44,7 @@ import NotFound from "@/pages/NotFound";
 import Vendors from "@/pages/vendors/Vendors";
 import VendorDetail from "@/pages/vendors/VendorDetail";
 import VendorOnboardingWizard from "@/pages/vendors/VendorOnboardingWizard";
+import Vendor1099Summary from "@/pages/vendors/Vendor1099Summary";
 
 // Employee portal pages
 import EmployeeDashboard from "@/pages/employee/EmployeeDashboard";
@@ -112,6 +113,7 @@ const App = () => (
               <Route path="/reports" element={<Reports />} />
               <Route path="/vendors" element={<Vendors />} />
               <Route path="/vendors/new" element={<VendorOnboardingWizard />} />
+              <Route path="/vendors/1099-summary" element={<Vendor1099Summary />} />
               <Route path="/vendors/:id" element={<VendorDetail />} />
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="/client-settings" element={<ClientSettingsPage />} />
