@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils';
 import {
   LayoutDashboard, Users, Building2, CreditCard, FileText, Workflow,
   ClipboardCheck, ScrollText, BarChart3, Settings, DollarSign,
-  CalendarDays, UserPlus, ShieldCheck, Clock, Heart, User, Landmark, Banknote, Mail, Globe
+  CalendarDays, UserPlus, ShieldCheck, Clock, Heart, User, Landmark, Banknote, Mail, Globe, Briefcase
 } from 'lucide-react';
 import type { AppRole } from '@/contexts/AuthContext';
 import logoImg from '@/assets/logo.png';
@@ -35,6 +35,7 @@ const superAdminNavGroups: NavGroup[] = [
       { label: 'Timekeeping', to: '/timekeeping-oversight', icon: Clock },
       { label: 'Workers\' Comp', to: '/workers-comp', icon: ShieldCheck },
       { label: 'Benefits Admin', to: '/benefits-admin', icon: Heart },
+      { label: 'Vendors / 1099', to: '/vendors', icon: Briefcase },
       { label: 'Atlas HR Hub', to: 'https://atlasone-hr-guide.lovable.app', icon: Globe, external: true },
     ],
   },
@@ -72,6 +73,7 @@ const clientAdminNavGroups: NavGroup[] = [
       { label: 'Dashboard', to: '/', icon: LayoutDashboard },
       { label: 'Employees', to: '/employees', icon: Users },
       { label: 'Onboarding', to: '/onboarding', icon: UserPlus },
+      { label: 'Vendors / 1099', to: '/vendors', icon: Briefcase },
     ],
   },
   {

@@ -41,6 +41,9 @@ import CommunicationWizard from "@/pages/CommunicationWizard";
 import CommunicationDetail from "@/pages/CommunicationDetail";
 import AtlasHrHub from "@/pages/AtlasHrHub";
 import NotFound from "@/pages/NotFound";
+import Vendors from "@/pages/vendors/Vendors";
+import VendorDetail from "@/pages/vendors/VendorDetail";
+import VendorOnboardingWizard from "@/pages/vendors/VendorOnboardingWizard";
 
 // Employee portal pages
 import EmployeeDashboard from "@/pages/employee/EmployeeDashboard";
@@ -107,6 +110,9 @@ const App = () => (
               <Route path="/communications/:id" element={<CommunicationDetail />} />
               <Route path="/audit-log" element={<AuditLog />} />
               <Route path="/reports" element={<Reports />} />
+              <Route path="/vendors" element={<Vendors />} />
+              <Route path="/vendors/new" element={<VendorOnboardingWizard />} />
+              <Route path="/vendors/:id" element={<VendorDetail />} />
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="/client-settings" element={<ClientSettingsPage />} />
               <Route path="/workflow-demo" element={<WorkflowDemo />} />

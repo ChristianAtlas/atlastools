@@ -5292,6 +5292,329 @@ export type Database = {
         }
         Relationships: []
       }
+      vendor_audit_logs: {
+        Row: {
+          action: string
+          changed_fields: string[] | null
+          company_id: string
+          created_at: string
+          id: string
+          new_data: Json | null
+          notes: string | null
+          old_data: Json | null
+          user_email: string | null
+          user_id: string | null
+          user_role: string | null
+          vendor_id: string
+        }
+        Insert: {
+          action: string
+          changed_fields?: string[] | null
+          company_id: string
+          created_at?: string
+          id?: string
+          new_data?: Json | null
+          notes?: string | null
+          old_data?: Json | null
+          user_email?: string | null
+          user_id?: string | null
+          user_role?: string | null
+          vendor_id: string
+        }
+        Update: {
+          action?: string
+          changed_fields?: string[] | null
+          company_id?: string
+          created_at?: string
+          id?: string
+          new_data?: Json | null
+          notes?: string | null
+          old_data?: Json | null
+          user_email?: string | null
+          user_id?: string | null
+          user_role?: string | null
+          vendor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendor_audit_logs_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendor_audit_logs_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vendor_documents: {
+        Row: {
+          company_id: string
+          created_at: string
+          document_type: string
+          file_name: string | null
+          file_path: string | null
+          file_size: number | null
+          id: string
+          mime_type: string | null
+          notes: string | null
+          title: string
+          updated_at: string
+          uploaded_by: string | null
+          uploaded_by_name: string | null
+          vendor_id: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          document_type: string
+          file_name?: string | null
+          file_path?: string | null
+          file_size?: number | null
+          id?: string
+          mime_type?: string | null
+          notes?: string | null
+          title: string
+          updated_at?: string
+          uploaded_by?: string | null
+          uploaded_by_name?: string | null
+          vendor_id: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          document_type?: string
+          file_name?: string | null
+          file_path?: string | null
+          file_size?: number | null
+          id?: string
+          mime_type?: string | null
+          notes?: string | null
+          title?: string
+          updated_at?: string
+          uploaded_by?: string | null
+          uploaded_by_name?: string | null
+          vendor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendor_documents_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendor_documents_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vendor_ytd_prior_earnings: {
+        Row: {
+          amount_cents: number
+          backup_withholding_cents: number
+          category: Database["public"]["Enums"]["vendor_1099_category"]
+          company_id: string
+          created_at: string
+          entered_by: string | null
+          entered_by_name: string | null
+          id: string
+          notes: string | null
+          reporting_year: number
+          source_description: string | null
+          updated_at: string
+          vendor_id: string
+        }
+        Insert: {
+          amount_cents: number
+          backup_withholding_cents?: number
+          category: Database["public"]["Enums"]["vendor_1099_category"]
+          company_id: string
+          created_at?: string
+          entered_by?: string | null
+          entered_by_name?: string | null
+          id?: string
+          notes?: string | null
+          reporting_year: number
+          source_description?: string | null
+          updated_at?: string
+          vendor_id: string
+        }
+        Update: {
+          amount_cents?: number
+          backup_withholding_cents?: number
+          category?: Database["public"]["Enums"]["vendor_1099_category"]
+          company_id?: string
+          created_at?: string
+          entered_by?: string | null
+          entered_by_name?: string | null
+          id?: string
+          notes?: string | null
+          reporting_year?: number
+          source_description?: string | null
+          updated_at?: string
+          vendor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendor_ytd_prior_earnings_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendor_ytd_prior_earnings_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vendors: {
+        Row: {
+          address_line1: string | null
+          address_line2: string | null
+          backup_withholding_enabled: boolean
+          backup_withholding_rate: number | null
+          business_name: string | null
+          city: string | null
+          company_id: string
+          contact_name: string | null
+          country: string | null
+          created_at: string
+          created_by: string | null
+          date_of_birth: string | null
+          default_1099_category:
+            | Database["public"]["Enums"]["vendor_1099_category"]
+            | null
+          deleted_at: string | null
+          email: string | null
+          first_name: string | null
+          id: string
+          is_c2c: boolean
+          last_name: string | null
+          legal_name: string
+          metadata: Json | null
+          notes: string | null
+          onboarding_status: Database["public"]["Enums"]["vendor_onboarding_status"]
+          phone: string | null
+          portal_access_enabled: boolean
+          state: string | null
+          status: Database["public"]["Enums"]["vendor_status"]
+          tax_id_encrypted: string | null
+          tax_id_last4: string | null
+          tax_id_type: string | null
+          updated_at: string
+          vid: string | null
+          w9_collected_at: string | null
+          w9_expires_at: string | null
+          w9_status: Database["public"]["Enums"]["vendor_w9_status"]
+          worker_type: Database["public"]["Enums"]["vendor_worker_type"]
+          zip: string | null
+        }
+        Insert: {
+          address_line1?: string | null
+          address_line2?: string | null
+          backup_withholding_enabled?: boolean
+          backup_withholding_rate?: number | null
+          business_name?: string | null
+          city?: string | null
+          company_id: string
+          contact_name?: string | null
+          country?: string | null
+          created_at?: string
+          created_by?: string | null
+          date_of_birth?: string | null
+          default_1099_category?:
+            | Database["public"]["Enums"]["vendor_1099_category"]
+            | null
+          deleted_at?: string | null
+          email?: string | null
+          first_name?: string | null
+          id?: string
+          is_c2c?: boolean
+          last_name?: string | null
+          legal_name: string
+          metadata?: Json | null
+          notes?: string | null
+          onboarding_status?: Database["public"]["Enums"]["vendor_onboarding_status"]
+          phone?: string | null
+          portal_access_enabled?: boolean
+          state?: string | null
+          status?: Database["public"]["Enums"]["vendor_status"]
+          tax_id_encrypted?: string | null
+          tax_id_last4?: string | null
+          tax_id_type?: string | null
+          updated_at?: string
+          vid?: string | null
+          w9_collected_at?: string | null
+          w9_expires_at?: string | null
+          w9_status?: Database["public"]["Enums"]["vendor_w9_status"]
+          worker_type: Database["public"]["Enums"]["vendor_worker_type"]
+          zip?: string | null
+        }
+        Update: {
+          address_line1?: string | null
+          address_line2?: string | null
+          backup_withholding_enabled?: boolean
+          backup_withholding_rate?: number | null
+          business_name?: string | null
+          city?: string | null
+          company_id?: string
+          contact_name?: string | null
+          country?: string | null
+          created_at?: string
+          created_by?: string | null
+          date_of_birth?: string | null
+          default_1099_category?:
+            | Database["public"]["Enums"]["vendor_1099_category"]
+            | null
+          deleted_at?: string | null
+          email?: string | null
+          first_name?: string | null
+          id?: string
+          is_c2c?: boolean
+          last_name?: string | null
+          legal_name?: string
+          metadata?: Json | null
+          notes?: string | null
+          onboarding_status?: Database["public"]["Enums"]["vendor_onboarding_status"]
+          phone?: string | null
+          portal_access_enabled?: boolean
+          state?: string | null
+          status?: Database["public"]["Enums"]["vendor_status"]
+          tax_id_encrypted?: string | null
+          tax_id_last4?: string | null
+          tax_id_type?: string | null
+          updated_at?: string
+          vid?: string | null
+          w9_collected_at?: string | null
+          w9_expires_at?: string | null
+          w9_status?: Database["public"]["Enums"]["vendor_w9_status"]
+          worker_type?: Database["public"]["Enums"]["vendor_worker_type"]
+          zip?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendors_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       wc_code_rates: {
         Row: {
           created_at: string
@@ -5775,6 +6098,27 @@ export type Database = {
         | "bereavement"
         | "jury_duty"
         | "holiday"
+      vendor_1099_category:
+        | "nec"
+        | "misc_rent"
+        | "misc_royalties"
+        | "misc_other_income"
+        | "misc_legal"
+        | "misc_prizes"
+        | "misc_medical"
+        | "misc_other"
+      vendor_onboarding_status:
+        | "not_started"
+        | "in_progress"
+        | "pending_w9"
+        | "complete"
+      vendor_status: "active" | "inactive" | "terminated" | "pending"
+      vendor_w9_status:
+        | "not_collected"
+        | "pending_review"
+        | "on_file"
+        | "expired"
+      vendor_worker_type: "1099_ic" | "c2c_vendor"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -6010,6 +6354,30 @@ export const Constants = {
         "jury_duty",
         "holiday",
       ],
+      vendor_1099_category: [
+        "nec",
+        "misc_rent",
+        "misc_royalties",
+        "misc_other_income",
+        "misc_legal",
+        "misc_prizes",
+        "misc_medical",
+        "misc_other",
+      ],
+      vendor_onboarding_status: [
+        "not_started",
+        "in_progress",
+        "pending_w9",
+        "complete",
+      ],
+      vendor_status: ["active", "inactive", "terminated", "pending"],
+      vendor_w9_status: [
+        "not_collected",
+        "pending_review",
+        "on_file",
+        "expired",
+      ],
+      vendor_worker_type: ["1099_ic", "c2c_vendor"],
     },
   },
 } as const
