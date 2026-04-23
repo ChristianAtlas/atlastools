@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Building2, User, FileSpreadsheet, Wallet } from 'lucide-react';
+import { Plus, Search, Building2, User, FileSpreadsheet, Wallet, ShieldCheck } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -57,6 +57,10 @@ export default function Vendors() {
             <Button variant="outline" onClick={() => navigate('/vendors/payments')}>
               <Wallet className="mr-2 h-4 w-4" />
               Payment runs
+            </Button>
+            <Button variant="outline" onClick={() => navigate('/vendors/1099-eligibility')}>
+              <ShieldCheck className="mr-2 h-4 w-4" />
+              1099 eligibility
             </Button>
             <Button variant="outline" onClick={() => navigate('/vendors/1099-summary')}>
               <FileSpreadsheet className="mr-2 h-4 w-4" />

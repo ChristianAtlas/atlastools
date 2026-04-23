@@ -45,6 +45,7 @@ import Vendors from "@/pages/vendors/Vendors";
 import VendorDetail from "@/pages/vendors/VendorDetail";
 import VendorOnboardingWizard from "@/pages/vendors/VendorOnboardingWizard";
 import Vendor1099Summary from "@/pages/vendors/Vendor1099Summary";
+import Vendor1099EligibilityReport from "@/pages/vendors/Vendor1099EligibilityReport";
 import VendorPaymentRuns from "@/pages/vendors/VendorPaymentRuns";
 import VendorPaymentRunDetail from "@/pages/vendors/VendorPaymentRunDetail";
 
@@ -116,6 +117,7 @@ const App = () => (
               <Route path="/vendors" element={<Vendors />} />
               <Route path="/vendors/new" element={<VendorOnboardingWizard />} />
               <Route path="/vendors/1099-summary" element={<Vendor1099Summary />} />
+              <Route path="/vendors/1099-eligibility" element={<Vendor1099EligibilityReport />} />
               <Route path="/vendors/payments" element={<VendorPaymentRuns />} />
               <Route path="/vendors/payments/:id" element={<VendorPaymentRunDetail />} />
               <Route path="/vendors/:id" element={<VendorDetail />} />
