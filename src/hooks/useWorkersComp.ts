@@ -283,6 +283,69 @@ export function useWCInvoiceItems(companyId?: string) {
   });
 }
 
+// ── Rate History ──
+
+export function useWCCodeRateHistory(wcCodeId: string | undefined) {
+  return useQuery({
+    queryKey: ['wc_code_rates', wcCodeId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('workers_comp_code_rates')
+        .select('*')
+        .eq('wc_code_id', wcCodeId!)
+        .order('effective_date', { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as unknown as WCCodeRate[];
+    },
+    enabled: !!wcCodeId,
+  });
+}
+
+// ── Master PEO policy helper ──
+
+export function useMasterWCPolicy() {
+  return useQuery({
+    queryKey: ['wc_policies', 'master'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('workers_comp_policies')
+        .select('*')
+        .eq('is_master', true)
+        .eq('status', 'active')
+        .maybeSingle();
+      if (error) throw error;
+      return (data ?? null) as unknown as WCPolicy | null;
+    },
+  });
+}
+
+// ── Calc engine trigger ──
+
+export function useRecalculateWCForRun() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (payroll_run_id: string) => {
+      const { data, error } = await supabase.functions.invoke('calculate-wc-charges', {
+        body: { payroll_run_id },
+      });
+      if (error) throw error;
+      return data as {
+        processed: number;
+        missing_assignments: number;
+        total_base_cents: number;
+        total_markup_cents: number;
+        total_charge_cents: number;
+        exceptions: Array<{ employee_id: string; reason: string }>;
+      };
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['wc_payroll_calcs'] });
+      qc.invalidateQueries({ queryKey: ['wc_invoice_items'] });
+      qc.invalidateQueries({ queryKey: ['payroll_runs'] });
+    },
+  });
+}
+
 // ── Dashboard Stats ──
 
 export function useWCDashboardStats() {
