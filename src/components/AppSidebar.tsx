@@ -73,6 +73,7 @@ const clientAdminNavGroups: NavGroup[] = [
       { label: 'Dashboard', to: '/', icon: LayoutDashboard },
       { label: 'Employees', to: '/employees', icon: Users },
       { label: 'Onboarding', to: '/onboarding', icon: UserPlus },
+      { label: 'Vendors / 1099', to: '/vendors', icon: Briefcase },
     ],
   },
   {
