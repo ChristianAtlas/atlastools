@@ -1,11 +1,13 @@
 import { Link } from 'react-router-dom';
 import { useCurrentVendor, useMyVendorPayments } from '@/hooks/useCurrentVendor';
 import { useVendorDocuments, evaluateVendorEligibility, ELIGIBILITY_LABELS } from '@/hooks/useVendors';
+import { useVendorBanking } from '@/hooks/useCurrentVendor';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
 import { PageHeader } from '@/components/PageHeader';
-import { AlertCircle, FileText, CreditCard, User, Banknote, CheckCircle2, Clock, XCircle } from 'lucide-react';
+import { AlertCircle, FileText, CreditCard, User, Banknote, CheckCircle2, Clock, XCircle, ArrowRight } from 'lucide-react';
 import { useMemo } from 'react';
 
 function formatCents(c: number) {
@@ -50,6 +52,7 @@ export default function ContractorDashboard() {
   const { data: vendor, isLoading } = useCurrentVendor();
   const { data: docs } = useVendorDocuments(vendor?.id);
   const { data: payments } = useMyVendorPayments(vendor?.id);
+  const { data: banking } = useVendorBanking(vendor?.id);
 
   const eligibility = vendor ? evaluateVendorEligibility(vendor) : null;
   const ytd = useMemo(() => {
@@ -78,6 +81,26 @@ export default function ContractorDashboard() {
   const onFileDocs = (docs ?? []).filter((d: any) => !d.deleted_at).slice(0, 6);
   const recentPayments = (payments ?? []).slice(0, 5);
 
+  const onboardingSteps = vendor
+    ? [
+        {
+          done: !!(vendor.email && vendor.phone && vendor.address_line1 && vendor.city && vendor.state && vendor.zip),
+          label: 'Profile',
+          to: '/contractor/profile',
+        },
+        {
+          done: vendor.w9_status === 'on_file' && (docs ?? []).some((d: any) => d.document_type === 'w9' && d.is_active_w9),
+          label: 'W-9',
+          to: '/contractor/documents?type=w9',
+        },
+        { done: !!banking, label: 'Banking', to: '/contractor/banking' },
+      ]
+    : [];
+  const onboardingDone = onboardingSteps.filter((s) => s.done).length;
+  const onboardingTotal = onboardingSteps.length;
+  const onboardingPct = onboardingTotal ? Math.round((onboardingDone / onboardingTotal) * 100) : 0;
+  const nextOnboardingStep = onboardingSteps.find((s) => !s.done);
+
   if (isLoading) {
     return <div className="p-6 text-sm text-muted-foreground">Loading…</div>;
   }
@@ -101,6 +124,38 @@ export default function ContractorDashboard() {
   return (
     <div className="p-6 space-y-6">
       <PageHeader title={`Welcome, ${display}`} description={`Vendor ID: ${vendor.vid}`} />
+
+      {onboardingTotal > 0 && (
+        <Card>
+          <CardContent className="p-4 space-y-3">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2 min-w-0">
+                <CardTitle className="text-sm font-medium">Onboarding</CardTitle>
+                {nextOnboardingStep ? (
+                  <Badge variant="secondary" className="gap-1">
+                    <Clock className="h-3 w-3" /> {onboardingDone} of {onboardingTotal} complete
+                  </Badge>
+                ) : (
+                  <Badge className="gap-1"><CheckCircle2 className="h-3 w-3" /> Complete</Badge>
+                )}
+              </div>
+              {nextOnboardingStep ? (
+                <Button asChild size="sm">
+                  <Link to={nextOnboardingStep.to}>
+                    Continue: {nextOnboardingStep.label}
+                    <ArrowRight className="ml-1 h-3.5 w-3.5" />
+                  </Link>
+                </Button>
+              ) : (
+                <Button asChild size="sm" variant="outline">
+                  <Link to="/contractor/onboarding">Review checklist</Link>
+                </Button>
+              )}
+            </div>
+            <Progress value={onboardingPct} />
+          </CardContent>
+        </Card>
+      )}
 
       {eligibility && !eligibility.eligible && (
         <Card className="border-destructive/30 bg-destructive/5">
