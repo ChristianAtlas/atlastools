@@ -27,6 +27,8 @@ import SettingsPage from "@/pages/SettingsPage";
 import ClientSettingsPage from "@/pages/ClientSettingsPage";
 import Login from "@/pages/Login";
 import Signup from "@/pages/Signup";
+import ForgotPassword from "@/pages/ForgotPassword";
+import ResetPassword from "@/pages/ResetPassword";
 import WorkflowDemo from "@/pages/WorkflowDemo";
 import WorkersComp from "@/pages/WorkersComp";
 import Timecards from "@/pages/Timecards";
@@ -93,6 +95,8 @@ const App = () => (
             {/* Public routes */}
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
 
             {/* Protected routes */}
             <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
