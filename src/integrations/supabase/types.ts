@@ -5418,6 +5418,208 @@ export type Database = {
           },
         ]
       }
+      vendor_payment_runs: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          company_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          notes: string | null
+          paid_at: string | null
+          pay_date: string
+          payroll_run_id: string | null
+          period_end: string | null
+          period_start: string | null
+          processed_at: string | null
+          run_kind: string
+          status: Database["public"]["Enums"]["vendor_payment_run_status"]
+          total_amount_cents: number
+          total_backup_withholding_cents: number
+          updated_at: string
+          vendor_count: number
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          paid_at?: string | null
+          pay_date: string
+          payroll_run_id?: string | null
+          period_end?: string | null
+          period_start?: string | null
+          processed_at?: string | null
+          run_kind?: string
+          status?: Database["public"]["Enums"]["vendor_payment_run_status"]
+          total_amount_cents?: number
+          total_backup_withholding_cents?: number
+          updated_at?: string
+          vendor_count?: number
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          paid_at?: string | null
+          pay_date?: string
+          payroll_run_id?: string | null
+          period_end?: string | null
+          period_start?: string | null
+          processed_at?: string | null
+          run_kind?: string
+          status?: Database["public"]["Enums"]["vendor_payment_run_status"]
+          total_amount_cents?: number
+          total_backup_withholding_cents?: number
+          updated_at?: string
+          vendor_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendor_payment_runs_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendor_payment_runs_payroll_run_id_fkey"
+            columns: ["payroll_run_id"]
+            isOneToOne: false
+            referencedRelation: "payroll_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vendor_payments: {
+        Row: {
+          backup_withholding_cents: number
+          category: Database["public"]["Enums"]["vendor_1099_category"]
+          check_number: string | null
+          company_id: string
+          created_at: string
+          created_by: string | null
+          external_reference: string | null
+          gross_amount_cents: number
+          id: string
+          memo: string | null
+          net_amount_cents: number
+          notes: string | null
+          paid_at: string | null
+          payment_method: Database["public"]["Enums"]["vendor_payment_method"]
+          reporting_year: number
+          status: Database["public"]["Enums"]["vendor_payment_status"]
+          updated_at: string
+          vendor_id: string
+          vendor_onboarding_status_snapshot:
+            | Database["public"]["Enums"]["vendor_onboarding_status"]
+            | null
+          vendor_payment_run_id: string
+          vendor_tax_id_type_snapshot: string | null
+          vendor_w9_status_snapshot:
+            | Database["public"]["Enums"]["vendor_w9_status"]
+            | null
+          void_reason: string | null
+          voided_at: string | null
+          vpid: string
+          wire_reference: string | null
+        }
+        Insert: {
+          backup_withholding_cents?: number
+          category?: Database["public"]["Enums"]["vendor_1099_category"]
+          check_number?: string | null
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          external_reference?: string | null
+          gross_amount_cents: number
+          id?: string
+          memo?: string | null
+          net_amount_cents: number
+          notes?: string | null
+          paid_at?: string | null
+          payment_method?: Database["public"]["Enums"]["vendor_payment_method"]
+          reporting_year: number
+          status?: Database["public"]["Enums"]["vendor_payment_status"]
+          updated_at?: string
+          vendor_id: string
+          vendor_onboarding_status_snapshot?:
+            | Database["public"]["Enums"]["vendor_onboarding_status"]
+            | null
+          vendor_payment_run_id: string
+          vendor_tax_id_type_snapshot?: string | null
+          vendor_w9_status_snapshot?:
+            | Database["public"]["Enums"]["vendor_w9_status"]
+            | null
+          void_reason?: string | null
+          voided_at?: string | null
+          vpid: string
+          wire_reference?: string | null
+        }
+        Update: {
+          backup_withholding_cents?: number
+          category?: Database["public"]["Enums"]["vendor_1099_category"]
+          check_number?: string | null
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          external_reference?: string | null
+          gross_amount_cents?: number
+          id?: string
+          memo?: string | null
+          net_amount_cents?: number
+          notes?: string | null
+          paid_at?: string | null
+          payment_method?: Database["public"]["Enums"]["vendor_payment_method"]
+          reporting_year?: number
+          status?: Database["public"]["Enums"]["vendor_payment_status"]
+          updated_at?: string
+          vendor_id?: string
+          vendor_onboarding_status_snapshot?:
+            | Database["public"]["Enums"]["vendor_onboarding_status"]
+            | null
+          vendor_payment_run_id?: string
+          vendor_tax_id_type_snapshot?: string | null
+          vendor_w9_status_snapshot?:
+            | Database["public"]["Enums"]["vendor_w9_status"]
+            | null
+          void_reason?: string | null
+          voided_at?: string | null
+          vpid?: string
+          wire_reference?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendor_payments_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendor_payments_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: false
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendor_payments_vendor_payment_run_id_fkey"
+            columns: ["vendor_payment_run_id"]
+            isOneToOne: false
+            referencedRelation: "vendor_payment_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vendor_ytd_prior_earnings: {
         Row: {
           amount_cents: number
@@ -6112,6 +6314,21 @@ export type Database = {
         | "in_progress"
         | "pending_w9"
         | "complete"
+      vendor_payment_method: "ach" | "check" | "wire" | "external"
+      vendor_payment_run_status:
+        | "draft"
+        | "pending_approval"
+        | "approved"
+        | "processing"
+        | "paid"
+        | "voided"
+      vendor_payment_status:
+        | "draft"
+        | "approved"
+        | "processing"
+        | "paid"
+        | "voided"
+        | "failed"
       vendor_status: "active" | "inactive" | "terminated" | "pending"
       vendor_w9_status:
         | "not_collected"
@@ -6369,6 +6586,23 @@ export const Constants = {
         "in_progress",
         "pending_w9",
         "complete",
+      ],
+      vendor_payment_method: ["ach", "check", "wire", "external"],
+      vendor_payment_run_status: [
+        "draft",
+        "pending_approval",
+        "approved",
+        "processing",
+        "paid",
+        "voided",
+      ],
+      vendor_payment_status: [
+        "draft",
+        "approved",
+        "processing",
+        "paid",
+        "voided",
+        "failed",
       ],
       vendor_status: ["active", "inactive", "terminated", "pending"],
       vendor_w9_status: [
