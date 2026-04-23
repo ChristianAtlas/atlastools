@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useCurrentVendor } from '@/hooks/useCurrentVendor';
 import {
   useVendorDocuments,
@@ -27,6 +28,14 @@ export default function ContractorDocuments() {
   const [docType, setDocType] = useState<VendorDocumentType>('w9');
   const [file, setFile] = useState<File | null>(null);
   const [title, setTitle] = useState('');
+  const [searchParams] = useSearchParams();
+
+  useEffect(() => {
+    const t = searchParams.get('type');
+    if (t && VENDOR_DOCUMENT_TYPES.some((x) => x.value === t)) {
+      setDocType(t as VendorDocumentType);
+    }
+  }, [searchParams]);
 
   const activeW9 = (docs ?? []).find((d) => d.document_type === 'w9' && d.is_active_w9);
   const w9History = (docs ?? []).filter((d) => d.document_type === 'w9' && !d.is_active_w9);
