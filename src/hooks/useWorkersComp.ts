@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 export interface WCPolicy {
   id: string;
-  company_id: string;
+  company_id: string | null;
   carrier_name: string;
   policy_number: string;
   effective_date: string;
@@ -24,6 +24,8 @@ export interface WCPolicy {
   last_report_submitted_at: string | null;
   created_at: string;
   updated_at: string;
+  is_master?: boolean;
+  default_markup_rate?: number;
   // joined
   company_name?: string;
   code_count?: number;
@@ -33,18 +35,32 @@ export interface WCPolicy {
 export interface WCCode {
   id: string;
   policy_id: string;
-  company_id: string;
+  company_id: string | null;
   code: string;
   description: string;
   state: string;
   rate_per_hundred: number;
   rate_basis: 'per_hundred' | 'per_hour';
   internal_markup_rate: number;
+  markup_rate_override?: number | null;
+  notes?: string | null;
   effective_date: string;
   expiration_date: string | null;
   is_active: boolean;
   created_at: string;
   updated_at: string;
+}
+
+export interface WCCodeRate {
+  id: string;
+  wc_code_id: string;
+  rate_per_hundred: number;
+  rate_basis: 'per_hundred' | 'per_hour';
+  markup_rate: number;
+  effective_date: string;
+  end_date: string | null;
+  notes: string | null;
+  created_at: string;
 }
 
 export interface WCAssignment {
@@ -73,7 +89,9 @@ export interface WCPayrollCalc {
   wc_code_id: string;
   wc_code: string;
   wages_cents: number;
+  hours: number;
   rate_per_hundred: number;
+  rate_basis: 'per_hundred' | 'per_hour';
   premium_cents: number;
   markup_rate: number;
   markup_cents: number;
@@ -261,6 +279,69 @@ export function useWCInvoiceItems(companyId?: string) {
       const { data, error } = await q;
       if (error) throw error;
       return (data ?? []) as unknown as WCInvoiceItem[];
+    },
+  });
+}
+
+// ── Rate History ──
+
+export function useWCCodeRateHistory(wcCodeId: string | undefined) {
+  return useQuery({
+    queryKey: ['wc_code_rates', wcCodeId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('workers_comp_code_rates')
+        .select('*')
+        .eq('wc_code_id', wcCodeId!)
+        .order('effective_date', { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as unknown as WCCodeRate[];
+    },
+    enabled: !!wcCodeId,
+  });
+}
+
+// ── Master PEO policy helper ──
+
+export function useMasterWCPolicy() {
+  return useQuery({
+    queryKey: ['wc_policies', 'master'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('workers_comp_policies')
+        .select('*')
+        .eq('is_master', true)
+        .eq('status', 'active')
+        .maybeSingle();
+      if (error) throw error;
+      return (data ?? null) as unknown as WCPolicy | null;
+    },
+  });
+}
+
+// ── Calc engine trigger ──
+
+export function useRecalculateWCForRun() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (payroll_run_id: string) => {
+      const { data, error } = await supabase.functions.invoke('calculate-wc-charges', {
+        body: { payroll_run_id },
+      });
+      if (error) throw error;
+      return data as {
+        processed: number;
+        missing_assignments: number;
+        total_base_cents: number;
+        total_markup_cents: number;
+        total_charge_cents: number;
+        exceptions: Array<{ employee_id: string; reason: string }>;
+      };
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['wc_payroll_calcs'] });
+      qc.invalidateQueries({ queryKey: ['wc_invoice_items'] });
+      qc.invalidateQueries({ queryKey: ['payroll_runs'] });
     },
   });
 }

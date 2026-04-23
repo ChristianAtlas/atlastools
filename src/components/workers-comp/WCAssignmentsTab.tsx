@@ -2,15 +2,19 @@ import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useWCAssignments, useWCCodes } from '@/hooks/useWorkersComp';
 import { useEmployees } from '@/hooks/useEmployees';
 import { useCompanies } from '@/hooks/useCompanies';
-import { Search, AlertTriangle } from 'lucide-react';
+import { Search, AlertTriangle, Plus } from 'lucide-react';
 import { format } from 'date-fns';
+import { WCAssignmentDrawer } from './WCAssignmentDrawer';
 
 export function WCAssignmentsTab() {
   const [search, setSearch] = useState('');
+  const [assignOpen, setAssignOpen] = useState(false);
+  const [selectedCompany, setSelectedCompany] = useState<string>('');
   const { data: assignments = [], isLoading } = useWCAssignments();
   const { data: codes = [] } = useWCCodes();
   const { data: employees = [] } = useEmployees();
@@ -20,10 +24,10 @@ export function WCAssignmentsTab() {
   const empMap = new Map(employees.map(e => [e.id, e]));
   const companyMap = new Map(companies.map(c => [c.id, c.name]));
 
-  // Find unassigned employees (in companies with policies)
+  // Find unassigned employees — any active employee whose company has any available code
   const assignedIds = new Set(assignments.filter(a => a.is_active).map(a => a.employee_id));
-  const companiesWithCodes = new Set(codes.map(c => c.company_id));
-  const unassigned = employees.filter(e => e.status === 'active' && companiesWithCodes.has(e.company_id) && !assignedIds.has(e.id));
+  // With a master PEO policy, every active W-2 employee needs an assignment.
+  const unassigned = employees.filter(e => e.status === 'active' && !assignedIds.has(e.id));
 
   const enriched = assignments.map(a => {
     const emp = empMap.get(a.employee_id);
@@ -50,7 +54,8 @@ export function WCAssignmentsTab() {
     <div className="space-y-4">
       {unassigned.length > 0 && (
         <Card className="border-destructive/50 bg-destructive/5">
-          <CardContent className="pt-4 pb-3 px-4 flex items-start gap-3">
+          <CardContent className="pt-4 pb-3 px-4 flex items-start gap-3 justify-between">
+           <div className="flex items-start gap-3">
             <AlertTriangle className="h-5 w-5 text-destructive mt-0.5 shrink-0" />
             <div>
               <p className="text-sm font-medium text-foreground">{unassigned.length} active employee(s) without WC assignments</p>
@@ -59,6 +64,12 @@ export function WCAssignmentsTab() {
                 {unassigned.length > 5 ? ` and ${unassigned.length - 5} more` : ''}
               </p>
             </div>
+           </div>
+           {unassigned[0] && (
+             <Button size="sm" onClick={() => { setSelectedCompany(unassigned[0].company_id); setAssignOpen(true); }}>
+               <Plus className="h-3.5 w-3.5 mr-1" /> Assign
+             </Button>
+           )}
           </CardContent>
         </Card>
       )}
@@ -106,6 +117,13 @@ export function WCAssignmentsTab() {
           </Table>
         </CardContent>
       </Card>
+
+      <WCAssignmentDrawer
+        open={assignOpen}
+        onOpenChange={setAssignOpen}
+        companyId={selectedCompany}
+        codes={codes.filter(c => !c.company_id || c.company_id === selectedCompany)}
+      />
     </div>
   );
 }

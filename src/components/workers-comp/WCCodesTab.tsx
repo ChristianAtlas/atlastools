@@ -11,6 +11,8 @@ import { WCBulkUploadDialog } from './WCBulkUploadDialog';
 import { Search, Plus, Pencil, Upload } from 'lucide-react';
 import { format } from 'date-fns';
 import type { WCCode } from '@/hooks/useWorkersComp';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Lock } from 'lucide-react';
 
 export function WCCodesTab() {
   const [search, setSearch] = useState('');
@@ -59,14 +61,18 @@ export function WCCodesTab() {
         </Button>
       </div>
 
+      <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+        <Lock className="h-3 w-3" /> Rates and markup are visible to super admins only and never exposed to clients.
+      </p>
+
       <Card>
         <CardContent className="p-0">
-          <Table>
+          <TooltipProvider><Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Code</TableHead>
                 <TableHead>Description</TableHead>
-                <TableHead>Client</TableHead>
+                <TableHead>Scope</TableHead>
                 <TableHead>State</TableHead>
                 <TableHead>Rate</TableHead>
                 <TableHead>Basis</TableHead>
@@ -85,14 +91,25 @@ export function WCCodesTab() {
                 <TableRow key={c.id} className="cursor-pointer hover:bg-muted/50" onClick={() => handleEdit(c)}>
                   <TableCell className="font-mono font-medium">{c.code}</TableCell>
                   <TableCell className="text-sm">{c.description}</TableCell>
-                  <TableCell className="text-sm">{companyMap.get(c.company_id) || '—'}</TableCell>
+                  <TableCell className="text-sm">
+                    {c.company_id ? (
+                      <Badge variant="outline" className="text-[10px]">Client: {companyMap.get(c.company_id) || '—'}</Badge>
+                    ) : (
+                      <Badge variant="outline" className="text-[10px] border-primary text-primary">AtlasOne PEO</Badge>
+                    )}
+                  </TableCell>
                   <TableCell>{c.state}</TableCell>
-                  <TableCell className="font-mono">${c.rate_per_hundred.toFixed(2)}</TableCell>
+                  <TableCell className="font-mono tabular-nums">${Number(c.rate_per_hundred).toFixed(2)}</TableCell>
                   <TableCell className="text-xs text-muted-foreground">
                     {(c.rate_basis || 'per_hundred') === 'per_hundred' ? '/ $100' : '/ hour'}
                   </TableCell>
-                  <TableCell className="font-mono text-xs">
-                    {(c.internal_markup_rate || 0) > 0 ? `${c.internal_markup_rate}%` : '—'}
+                  <TableCell className="font-mono text-xs tabular-nums">
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span>{((c.markup_rate_override ?? c.internal_markup_rate ?? 0.015) * 100).toFixed(2)}%</span>
+                      </TooltipTrigger>
+                      <TooltipContent>Hidden from client. Defaults to 1.5%.</TooltipContent>
+                    </Tooltip>
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">{format(new Date(c.effective_date), 'MMM d, yyyy')}</TableCell>
                   <TableCell>
@@ -108,7 +125,7 @@ export function WCCodesTab() {
                 </TableRow>
               ))}
             </TableBody>
-          </Table>
+          </Table></TooltipProvider>
         </CardContent>
       </Card>
 
