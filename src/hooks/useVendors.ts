@@ -714,37 +714,83 @@ export function use1099Summary({ reportingYear, companyId }: Use1099SummaryFilte
         backup_withholding_cents: number;
       }>;
 
-      // Phase 2 hook: aggregate vendor_payments here when the table exists.
-      // For now, atlas_paid totals are zero so the summary still surfaces prior
-      // YTD imports correctly.
+      // Aggregate AtlasOne-issued payments for the reporting year.
+      // Linkage rules:
+      //   - JOIN key: vendor_payments.vendor_id = vendors.id
+      //   - YEAR filter: vendor_payments.reporting_year = :reportingYear
+      //   - EXCLUDE: status = 'voided' (voided payments never reach a 1099)
+      //   - Category drives NEC vs MISC bucketing (same enum as prior YTD)
+      //   - backup_withholding_cents accumulates separately and is reported
+      //     in Box 4 (NEC) / Box 4 (MISC) regardless of category split.
+      const { data: payData, error: payErr } = await supabase
+        .from('vendor_payments' as any)
+        .select('vendor_id, category, gross_amount_cents, backup_withholding_cents, status, reporting_year')
+        .eq('reporting_year', reportingYear)
+        .neq('status', 'voided')
+        .in('vendor_id', ids);
+      if (payErr) throw payErr;
+      const payments = (payData ?? []) as unknown as Array<{
+        vendor_id: string;
+        category: Vendor1099Category;
+        gross_amount_cents: number;
+        backup_withholding_cents: number;
+      }>;
 
-      const byVendor = new Map<string, { nec: number; misc: number; bw: number; misc_breakdown: Record<Vendor1099Category, number>; prior: number }>();
+      const emptyBreakdown = (): Record<Vendor1099Category, number> => ({
+        nec: 0,
+        misc_rent: 0,
+        misc_royalties: 0,
+        misc_other_income: 0,
+        misc_legal: 0,
+        misc_prizes: 0,
+        misc_medical: 0,
+        misc_other: 0,
+      });
+
+      type Agg = {
+        nec: number;
+        misc: number;
+        bw: number;
+        misc_breakdown: Record<Vendor1099Category, number>;
+        prior: number;
+        atlas: number;
+      };
+      const byVendor = new Map<string, Agg>();
+      const ensure = (vid: string): Agg => {
+        let cur = byVendor.get(vid);
+        if (!cur) {
+          cur = { nec: 0, misc: 0, bw: 0, misc_breakdown: emptyBreakdown(), prior: 0, atlas: 0 };
+          byVendor.set(vid, cur);
+        }
+        return cur;
+      };
+
+      // 1. Prior YTD imports — pre-AtlasOne earnings already paid by the client.
       for (const row of prior) {
-        const cur = byVendor.get(row.vendor_id) ?? {
-          nec: 0,
-          misc: 0,
-          bw: 0,
-          misc_breakdown: {
-            nec: 0,
-            misc_rent: 0,
-            misc_royalties: 0,
-            misc_other_income: 0,
-            misc_legal: 0,
-            misc_prizes: 0,
-            misc_medical: 0,
-            misc_other: 0,
-          } as Record<Vendor1099Category, number>,
-          prior: 0,
-        };
+        const cur = ensure(row.vendor_id);
         cur.prior += row.amount_cents;
         cur.bw += row.backup_withholding_cents;
         if (NEC_CATEGORIES.includes(row.category)) {
           cur.nec += row.amount_cents;
         } else {
           cur.misc += row.amount_cents;
-          cur.misc_breakdown[row.category] = (cur.misc_breakdown[row.category] ?? 0) + row.amount_cents;
+          cur.misc_breakdown[row.category] =
+            (cur.misc_breakdown[row.category] ?? 0) + row.amount_cents;
         }
-        byVendor.set(row.vendor_id, cur);
+      }
+
+      // 2. AtlasOne-issued vendor_payments (non-voided) for the same year.
+      for (const row of payments) {
+        const cur = ensure(row.vendor_id);
+        cur.atlas += row.gross_amount_cents;
+        cur.bw += row.backup_withholding_cents;
+        if (NEC_CATEGORIES.includes(row.category)) {
+          cur.nec += row.gross_amount_cents;
+        } else {
+          cur.misc += row.gross_amount_cents;
+          cur.misc_breakdown[row.category] =
+            (cur.misc_breakdown[row.category] ?? 0) + row.gross_amount_cents;
+        }
       }
 
       const summary: Vendor1099SummaryRow[] = vendors.map((v) => {
