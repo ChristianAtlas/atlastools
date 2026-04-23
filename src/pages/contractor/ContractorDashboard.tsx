@@ -124,12 +124,21 @@ export default function ContractorDashboard() {
           <CardContent>
             <p className="text-2xl font-semibold tabular-nums">{formatCents(ytd.gross)}</p>
             <p className="text-xs text-muted-foreground">{ytd.count} payments this year</p>
+            <div className="mt-3 space-y-1 text-xs">
+              <div className="flex justify-between"><span className="text-muted-foreground">1099-NEC</span><span className="tabular-nums font-medium">{formatCents(ytd.nec)}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">1099-MISC</span><span className="tabular-nums font-medium">{formatCents(ytd.misc)}</span></div>
+            </div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2"><CardTitle className="text-xs uppercase tracking-wider text-muted-foreground">Backup withholding</CardTitle></CardHeader>
           <CardContent>
             <p className="text-2xl font-semibold tabular-nums">{formatCents(ytd.withholding)}</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              {vendor.backup_withholding_enabled
+                ? `Active at ${((vendor.backup_withholding_rate ?? 0.24) * 100).toFixed(0)}%`
+                : 'Not currently withheld'}
+            </p>
           </CardContent>
         </Card>
         <Card>
@@ -142,6 +151,85 @@ export default function ContractorDashboard() {
               <p className="text-xs text-muted-foreground mt-2">
                 Last uploaded {new Date(w9.created_at).toLocaleDateString()}
               </p>
+            )}
+            {vendor.w9_expires_at && (
+              <p className="text-xs text-muted-foreground">
+                Expires {new Date(vendor.w9_expires_at).toLocaleDateString()}
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Recent payment activity</CardTitle>
+            <Button asChild size="sm" variant="ghost"><Link to="/contractor/payments">View all</Link></Button>
+          </CardHeader>
+          <CardContent>
+            {recentPayments.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-6 text-center">No payments recorded yet.</p>
+            ) : (
+              <ul className="divide-y">
+                {recentPayments.map((p: any) => {
+                  const run = p.vendor_payment_runs;
+                  const dateStr = run?.pay_date
+                    ? new Date(run.pay_date).toLocaleDateString()
+                    : new Date(p.created_at).toLocaleDateString();
+                  return (
+                    <li key={p.id} className="py-3 flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <PaymentStatusIcon status={p.status} />
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium truncate">{formatCents(p.gross_amount_cents ?? 0)}</p>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {dateStr}
+                            {p.reporting_category ? ` · ${String(p.reporting_category).toUpperCase()}` : ''}
+                          </p>
+                        </div>
+                      </div>
+                      <Badge variant={paymentStatusVariant(p.status)} className="capitalize shrink-0">
+                        {String(p.status).replace(/_/g, ' ')}
+                      </Badge>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-sm font-medium">Documents on file</CardTitle>
+            <Button asChild size="sm" variant="ghost"><Link to="/contractor/documents">Manage</Link></Button>
+          </CardHeader>
+          <CardContent>
+            {onFileDocs.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-6 text-center">No documents uploaded yet.</p>
+            ) : (
+              <ul className="divide-y">
+                {onFileDocs.map((d: any) => (
+                  <li key={d.id} className="py-3 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium truncate">
+                          {DOC_TYPE_LABELS[d.document_type] ?? d.document_type}
+                          {d.document_type === 'w9' && d.is_active_w9 && (
+                            <span className="ml-2 text-xs text-primary">(active)</span>
+                          )}
+                        </p>
+                        <p className="text-xs text-muted-foreground truncate">
+                          Uploaded {new Date(d.created_at).toLocaleDateString()}
+                          {d.expires_at ? ` · expires ${new Date(d.expires_at).toLocaleDateString()}` : ''}
+                        </p>
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
             )}
           </CardContent>
         </Card>
