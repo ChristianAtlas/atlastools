@@ -37,7 +37,7 @@ type WizardData = {
   state: string;
   zip: string;
   tax_id_type: 'ssn' | 'ein' | 'itin';
-  tax_id_last4: string;
+  tax_id_full: string;
   default_1099_category: Vendor1099Category;
   backup_withholding_enabled: boolean;
   notes: string;
@@ -54,7 +54,7 @@ const INITIAL: WizardData = {
   business_name: '', contact_name: '',
   email: '', phone: '',
   address_line1: '', address_line2: '', city: '', state: '', zip: '',
-  tax_id_type: 'ssn', tax_id_last4: '',
+  tax_id_type: 'ssn', tax_id_full: '',
   default_1099_category: 'nec',
   backup_withholding_enabled: false,
   notes: '',
@@ -65,6 +65,18 @@ const INITIAL: WizardData = {
 };
 
 const STEPS = ['Type', 'Identity', 'Tax & address', 'Prior YTD', 'Review'];
+
+function formatTaxId(raw: string, type: 'ssn' | 'ein' | 'itin'): string {
+  const d = raw.replace(/\D/g, '').slice(0, 9);
+  if (type === 'ein') {
+    if (d.length <= 2) return d;
+    return `${d.slice(0, 2)}-${d.slice(2)}`;
+  }
+  // SSN / ITIN: ###-##-####
+  if (d.length <= 3) return d;
+  if (d.length <= 5) return `${d.slice(0, 3)}-${d.slice(3)}`;
+  return `${d.slice(0, 3)}-${d.slice(3, 5)}-${d.slice(5)}`;
+}
 
 export default function VendorOnboardingWizard() {
   const navigate = useNavigate();
@@ -89,7 +101,10 @@ export default function VendorOnboardingWizard() {
       if (isEntity) return !!data.business_name.trim();
       return !!data.first_name.trim() && !!data.last_name.trim();
     }
-    if (step === 2) return !!data.tax_id_last4.trim() && data.tax_id_last4.replace(/\D/g, '').length === 4;
+    if (step === 2) {
+      const digits = data.tax_id_full.replace(/\D/g, '');
+      return digits.length === 9;
+    }
     return true;
   }
 
@@ -118,7 +133,7 @@ export default function VendorOnboardingWizard() {
         state: data.state || null,
         zip: data.zip || null,
         tax_id_type: data.tax_id_type,
-        tax_id_last4: data.tax_id_last4.replace(/\D/g, ''),
+        tax_id_last4: data.tax_id_full.replace(/\D/g, '').slice(-4),
         default_1099_category: data.default_1099_category,
         backup_withholding_enabled: data.backup_withholding_enabled,
         notes: data.notes || null,
@@ -251,13 +266,22 @@ export default function VendorOnboardingWizard() {
                   </SelectContent>
                 </Select>
               </Field>
-              <Field label="Last 4 of Tax ID *">
+              <Field
+                label={`Full ${data.tax_id_type.toUpperCase()} *`}
+              >
                 <Input
                   inputMode="numeric"
-                  maxLength={4}
-                  value={data.tax_id_last4}
-                  onChange={(e) => update({ tax_id_last4: e.target.value.replace(/\D/g, '').slice(0, 4) })}
+                  autoComplete="off"
+                  placeholder={data.tax_id_type === 'ein' ? '12-3456789' : '123-45-6789'}
+                  maxLength={data.tax_id_type === 'ein' ? 10 : 11}
+                  value={formatTaxId(data.tax_id_full, data.tax_id_type)}
+                  onChange={(e) =>
+                    update({ tax_id_full: e.target.value.replace(/\D/g, '').slice(0, 9) })
+                  }
                 />
+                <p className="mt-1 text-[10px] text-muted-foreground">
+                  Required for 1099 reporting. Only the last 4 digits are stored in plain text.
+                </p>
               </Field>
               <Field label="Default 1099 category">
                 <Select value={data.default_1099_category} onValueChange={(v) => update({ default_1099_category: v as Vendor1099Category })}>
@@ -323,7 +347,10 @@ export default function VendorOnboardingWizard() {
             <h3 className="font-semibold">Review &amp; create</h3>
             <ReviewRow label="Worker type" value={isEntity ? 'C2C Vendor' : '1099 Independent Contractor'} />
             <ReviewRow label="Legal name" value={isEntity ? data.business_name : `${data.first_name} ${data.last_name}`.trim()} />
-            <ReviewRow label="Tax ID" value={`${data.tax_id_type.toUpperCase()} ••• ••• ${data.tax_id_last4 || '----'}`} />
+            <ReviewRow
+              label="Tax ID"
+              value={`${data.tax_id_type.toUpperCase()} ••• ••• ${data.tax_id_full.replace(/\D/g, '').slice(-4) || '----'}`}
+            />
             <ReviewRow label="Default 1099 category" value={VENDOR_1099_CATEGORIES.find((c) => c.value === data.default_1099_category)?.label ?? '—'} />
             <ReviewRow label="Backup withholding" value={data.backup_withholding_enabled ? 'Enabled (24%)' : 'Disabled'} />
             <ReviewRow
