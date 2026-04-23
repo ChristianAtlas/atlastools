@@ -214,3 +214,143 @@ export const VENDOR_1099_CATEGORIES: { value: Vendor1099Category; label: string;
   { value: 'misc_medical', label: 'Medical & health care', form: 'MISC' },
   { value: 'misc_other', label: 'Other (MISC)', form: 'MISC' },
 ];
+
+// =========================================================================
+// Vendor documents (W-9 / MSA / COI / other)
+// =========================================================================
+export type VendorDocumentType = 'w9' | 'msa' | 'coi' | 'other';
+
+export interface VendorDocumentRow {
+  id: string;
+  vendor_id: string;
+  company_id: string;
+  document_type: VendorDocumentType;
+  title: string;
+  file_path: string | null;
+  file_name: string | null;
+  file_size: number | null;
+  mime_type: string | null;
+  uploaded_by: string | null;
+  uploaded_by_name: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export const VENDOR_DOCUMENT_BUCKET = 'vendor-documents';
+
+export function useVendorDocuments(vendorId: string | undefined) {
+  return useQuery({
+    queryKey: ['vendor-documents', vendorId],
+    enabled: !!vendorId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('vendor_documents' as any)
+        .select('*')
+        .eq('vendor_id', vendorId!)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as unknown as VendorDocumentRow[];
+    },
+  });
+}
+
+export function useUploadVendorDocument() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: {
+      vendor_id: string;
+      company_id: string;
+      document_type: VendorDocumentType;
+      title: string;
+      file: File;
+      notes?: string | null;
+      mark_w9_collected?: boolean;
+      w9_expires_at?: string | null;
+    }) => {
+      const safeName = input.file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+      const path = `${input.company_id}/${input.vendor_id}/${Date.now()}_${safeName}`;
+      const { error: upErr } = await supabase.storage
+        .from(VENDOR_DOCUMENT_BUCKET)
+        .upload(path, input.file, { upsert: false, contentType: input.file.type || undefined });
+      if (upErr) throw upErr;
+
+      const { data: userData } = await supabase.auth.getUser();
+      const uploaderName =
+        (userData.user?.user_metadata as any)?.full_name ?? userData.user?.email ?? null;
+
+      const { data, error } = await supabase
+        .from('vendor_documents' as any)
+        .insert({
+          vendor_id: input.vendor_id,
+          company_id: input.company_id,
+          document_type: input.document_type,
+          title: input.title,
+          file_path: path,
+          file_name: input.file.name,
+          file_size: input.file.size,
+          mime_type: input.file.type || null,
+          uploaded_by: userData.user?.id ?? null,
+          uploaded_by_name: uploaderName,
+          notes: input.notes ?? null,
+        } as any)
+        .select()
+        .single();
+      if (error) {
+        // attempt to clean up the orphan file
+        await supabase.storage.from(VENDOR_DOCUMENT_BUCKET).remove([path]);
+        throw error;
+      }
+
+      if (input.document_type === 'w9' && input.mark_w9_collected) {
+        await supabase
+          .from('vendors' as any)
+          .update({
+            w9_status: 'on_file',
+            w9_collected_at: new Date().toISOString(),
+            w9_expires_at: input.w9_expires_at ?? null,
+          } as any)
+          .eq('id', input.vendor_id);
+      }
+
+      return data as unknown as VendorDocumentRow;
+    },
+    onSuccess: (_d, vars) => {
+      qc.invalidateQueries({ queryKey: ['vendor-documents', vars.vendor_id] });
+      qc.invalidateQueries({ queryKey: ['vendor', vars.vendor_id] });
+      qc.invalidateQueries({ queryKey: ['vendors'] });
+    },
+  });
+}
+
+export function useDeleteVendorDocument() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (doc: VendorDocumentRow) => {
+      if (doc.file_path) {
+        await supabase.storage.from(VENDOR_DOCUMENT_BUCKET).remove([doc.file_path]);
+      }
+      const { error } = await supabase.from('vendor_documents' as any).delete().eq('id', doc.id);
+      if (error) throw error;
+      return doc;
+    },
+    onSuccess: (doc) => {
+      qc.invalidateQueries({ queryKey: ['vendor-documents', doc.vendor_id] });
+    },
+  });
+}
+
+export async function getVendorDocumentSignedUrl(filePath: string, expiresInSec = 60) {
+  const { data, error } = await supabase.storage
+    .from(VENDOR_DOCUMENT_BUCKET)
+    .createSignedUrl(filePath, expiresInSec);
+  if (error) throw error;
+  return data.signedUrl;
+}
+
+export const VENDOR_DOCUMENT_TYPES: { value: VendorDocumentType; label: string }[] = [
+  { value: 'w9', label: 'Form W-9' },
+  { value: 'msa', label: 'Master Services Agreement' },
+  { value: 'coi', label: 'Certificate of Insurance' },
+  { value: 'other', label: 'Other' },
+];
