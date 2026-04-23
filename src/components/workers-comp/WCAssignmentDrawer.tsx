@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,9 +14,11 @@ interface Props {
   onOpenChange: (open: boolean) => void;
   companyId: string;
   codes: WCCode[];
+  /** Optional: preselect these employee IDs when the drawer opens. */
+  preselectEmployeeIds?: string[];
 }
 
-export function WCAssignmentDrawer({ open, onOpenChange, companyId, codes }: Props) {
+export function WCAssignmentDrawer({ open, onOpenChange, companyId, codes, preselectEmployeeIds }: Props) {
   const { data: employees = [] } = useEmployees(companyId);
   const { data: existing = [] } = useWCAssignments(companyId);
   const create = useCreateWCAssignment();
@@ -24,6 +26,12 @@ export function WCAssignmentDrawer({ open, onOpenChange, companyId, codes }: Pro
   const [selectedEmps, setSelectedEmps] = useState<string[]>([]);
   const [wcCodeId, setWcCodeId] = useState('');
   const [effectiveDate, setEffectiveDate] = useState(new Date().toISOString().slice(0, 10));
+
+  useEffect(() => {
+    if (open && preselectEmployeeIds && preselectEmployeeIds.length > 0) {
+      setSelectedEmps(preselectEmployeeIds);
+    }
+  }, [open, preselectEmployeeIds]);
 
   const activeEmps = employees.filter(e => e.status === 'active');
   const assignedIds = new Set(existing.filter(a => a.is_active).map(a => a.employee_id));
