@@ -37,7 +37,7 @@ type WizardData = {
   state: string;
   zip: string;
   tax_id_type: 'ssn' | 'ein' | 'itin';
-  tax_id_last4: string;
+  tax_id_full: string;
   default_1099_category: Vendor1099Category;
   backup_withholding_enabled: boolean;
   notes: string;
@@ -54,7 +54,7 @@ const INITIAL: WizardData = {
   business_name: '', contact_name: '',
   email: '', phone: '',
   address_line1: '', address_line2: '', city: '', state: '', zip: '',
-  tax_id_type: 'ssn', tax_id_last4: '',
+  tax_id_type: 'ssn', tax_id_full: '',
   default_1099_category: 'nec',
   backup_withholding_enabled: false,
   notes: '',
@@ -89,7 +89,10 @@ export default function VendorOnboardingWizard() {
       if (isEntity) return !!data.business_name.trim();
       return !!data.first_name.trim() && !!data.last_name.trim();
     }
-    if (step === 2) return !!data.tax_id_last4.trim() && data.tax_id_last4.replace(/\D/g, '').length === 4;
+    if (step === 2) {
+      const digits = data.tax_id_full.replace(/\D/g, '');
+      return digits.length === 9;
+    }
     return true;
   }
 
@@ -118,7 +121,7 @@ export default function VendorOnboardingWizard() {
         state: data.state || null,
         zip: data.zip || null,
         tax_id_type: data.tax_id_type,
-        tax_id_last4: data.tax_id_last4.replace(/\D/g, ''),
+        tax_id_last4: data.tax_id_full.replace(/\D/g, '').slice(-4),
         default_1099_category: data.default_1099_category,
         backup_withholding_enabled: data.backup_withholding_enabled,
         notes: data.notes || null,
