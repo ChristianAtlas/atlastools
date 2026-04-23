@@ -142,7 +142,7 @@ export function EmployeeImportStep({ data, onSave, onBack, isSaving }: Props) {
     }]);
   };
 
-  const updateRow = (idx: number, field: string, value: string | number) => {
+  const updateRow = (idx: number, field: string, value: string | number | boolean) => {
     setEmployees(prev => prev.map((r, i) => i === idx ? { ...r, [field]: value } : r));
   };
 
