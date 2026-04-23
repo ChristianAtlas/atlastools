@@ -356,6 +356,259 @@ export const VENDOR_DOCUMENT_TYPES: { value: VendorDocumentType; label: string }
 ];
 
 // =========================================================================
+// VENDOR PAYMENTS (Phase 2)
+// Eligibility helper, payment runs, and individual payments.
+// Hard-block rules mirror the validate_vendor_payment_eligibility DB trigger.
+// =========================================================================
+export type VendorPaymentRunStatus = 'draft' | 'pending_approval' | 'approved' | 'processing' | 'paid' | 'voided';
+export type VendorPaymentMethod = 'ach' | 'check' | 'wire' | 'external';
+export type VendorPaymentStatus = 'draft' | 'approved' | 'processing' | 'paid' | 'voided' | 'failed';
+export type VendorPaymentRunKind = 'standalone' | 'ride_along';
+
+export interface VendorPaymentRunRow {
+  id: string;
+  company_id: string;
+  payroll_run_id: string | null;
+  run_kind: VendorPaymentRunKind;
+  status: VendorPaymentRunStatus;
+  period_start: string | null;
+  period_end: string | null;
+  pay_date: string;
+  total_amount_cents: number;
+  total_backup_withholding_cents: number;
+  vendor_count: number;
+  notes: string | null;
+  created_by: string | null;
+  approved_by: string | null;
+  approved_at: string | null;
+  processed_at: string | null;
+  paid_at: string | null;
+  created_at: string;
+  updated_at: string;
+  companies?: { name: string; cid: string } | null;
+}
+
+export interface VendorPaymentRow {
+  id: string;
+  vpid: string;
+  vendor_payment_run_id: string;
+  vendor_id: string;
+  company_id: string;
+  gross_amount_cents: number;
+  backup_withholding_cents: number;
+  net_amount_cents: number;
+  category: Vendor1099Category;
+  reporting_year: number;
+  payment_method: VendorPaymentMethod;
+  check_number: string | null;
+  wire_reference: string | null;
+  external_reference: string | null;
+  memo: string | null;
+  status: VendorPaymentStatus;
+  paid_at: string | null;
+  voided_at: string | null;
+  void_reason: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+  vendors?: Pick<VendorRow, 'id' | 'vid' | 'legal_name' | 'business_name' | 'first_name' | 'last_name' | 'worker_type'> | null;
+}
+
+/** Hard-block rule definition. Keep in sync with validate_vendor_payment_eligibility(). */
+export type VendorEligibilityCode =
+  | 'vendor_not_active'
+  | 'onboarding_incomplete'
+  | 'w9_not_on_file'
+  | 'w9_expired'
+  | 'missing_tin';
+
+export interface VendorEligibility {
+  eligible: boolean;
+  blockers: VendorEligibilityCode[];
+  warnings: VendorEligibilityCode[];
+}
+
+export const ELIGIBILITY_LABELS: Record<VendorEligibilityCode, string> = {
+  vendor_not_active: 'Vendor not active',
+  onboarding_incomplete: 'Onboarding incomplete',
+  w9_not_on_file: 'W-9 not on file',
+  w9_expired: 'W-9 expired',
+  missing_tin: 'Missing TIN',
+};
+
+export function evaluateVendorEligibility(v: Pick<VendorRow, 'status' | 'onboarding_status' | 'w9_status' | 'w9_expires_at' | 'tax_id_type' | 'tax_id_last4'>): VendorEligibility {
+  const blockers: VendorEligibilityCode[] = [];
+  if (v.status !== 'active') blockers.push('vendor_not_active');
+  if (v.onboarding_status !== 'complete') blockers.push('onboarding_incomplete');
+  if (v.w9_status !== 'on_file') blockers.push('w9_not_on_file');
+  if (v.w9_expires_at && new Date(v.w9_expires_at) < new Date(new Date().toDateString())) blockers.push('w9_expired');
+  if (!v.tax_id_type || !v.tax_id_last4) blockers.push('missing_tin');
+  return { eligible: blockers.length === 0, blockers, warnings: [] };
+}
+
+export function useVendorPaymentRuns(filters?: { companyId?: string; status?: VendorPaymentRunStatus; payrollRunId?: string }) {
+  return useQuery({
+    queryKey: ['vendor-payment-runs', filters],
+    queryFn: async () => {
+      let q = supabase
+        .from('vendor_payment_runs' as any)
+        .select('*, companies:company_id(name, cid)')
+        .order('pay_date', { ascending: false });
+      if (filters?.companyId) q = q.eq('company_id', filters.companyId);
+      if (filters?.status) q = q.eq('status', filters.status);
+      if (filters?.payrollRunId) q = q.eq('payroll_run_id', filters.payrollRunId);
+      const { data, error } = await q;
+      if (error) throw error;
+      return (data ?? []) as unknown as VendorPaymentRunRow[];
+    },
+  });
+}
+
+export function useVendorPaymentRun(id: string | undefined) {
+  return useQuery({
+    queryKey: ['vendor-payment-run', id],
+    enabled: !!id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('vendor_payment_runs' as any)
+        .select('*, companies:company_id(name, cid)')
+        .eq('id', id!)
+        .maybeSingle();
+      if (error) throw error;
+      return data as unknown as VendorPaymentRunRow | null;
+    },
+  });
+}
+
+export function useVendorPayments(runId: string | undefined) {
+  return useQuery({
+    queryKey: ['vendor-payments', runId],
+    enabled: !!runId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('vendor_payments' as any)
+        .select('*, vendors:vendor_id(id, vid, legal_name, business_name, first_name, last_name, worker_type)')
+        .eq('vendor_payment_run_id', runId!)
+        .order('created_at', { ascending: true });
+      if (error) throw error;
+      return (data ?? []) as unknown as VendorPaymentRow[];
+    },
+  });
+}
+
+export interface CreateVendorPaymentRunInput {
+  company_id: string;
+  pay_date: string;
+  period_start?: string | null;
+  period_end?: string | null;
+  payroll_run_id?: string | null;
+  run_kind?: VendorPaymentRunKind;
+  notes?: string | null;
+}
+
+export function useCreateVendorPaymentRun() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: CreateVendorPaymentRunInput) => {
+      const payload = { ...input, run_kind: input.run_kind ?? (input.payroll_run_id ? 'ride_along' : 'standalone') };
+      const { data, error } = await supabase
+        .from('vendor_payment_runs' as any)
+        .insert(payload as any)
+        .select()
+        .single();
+      if (error) throw error;
+      return data as unknown as VendorPaymentRunRow;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['vendor-payment-runs'] }),
+  });
+}
+
+export interface CreateVendorPaymentInput {
+  vendor_payment_run_id: string;
+  vendor_id: string;
+  company_id: string;
+  gross_amount_cents: number;
+  backup_withholding_cents?: number;
+  category?: Vendor1099Category;
+  reporting_year?: number;
+  payment_method?: VendorPaymentMethod;
+  check_number?: string | null;
+  external_reference?: string | null;
+  memo?: string | null;
+  notes?: string | null;
+}
+
+export function useCreateVendorPayment() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: CreateVendorPaymentInput) => {
+      const gross = input.gross_amount_cents;
+      const bw = input.backup_withholding_cents ?? 0;
+      const payload = {
+        ...input,
+        backup_withholding_cents: bw,
+        net_amount_cents: Math.max(0, gross - bw),
+        category: input.category ?? 'nec',
+        reporting_year: input.reporting_year ?? new Date().getFullYear(),
+        payment_method: input.payment_method ?? 'ach',
+      };
+      const { data, error } = await supabase
+        .from('vendor_payments' as any)
+        .insert(payload as any)
+        .select()
+        .single();
+      if (error) throw error;
+      return data as unknown as VendorPaymentRow;
+    },
+    onSuccess: (_d, vars) => {
+      qc.invalidateQueries({ queryKey: ['vendor-payments', vars.vendor_payment_run_id] });
+      qc.invalidateQueries({ queryKey: ['vendor-payment-runs'] });
+      qc.invalidateQueries({ queryKey: ['vendor-payment-run', vars.vendor_payment_run_id] });
+    },
+  });
+}
+
+export function useDeleteVendorPayment() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, runId }: { id: string; runId: string }) => {
+      const { error } = await supabase.from('vendor_payments' as any).delete().eq('id', id);
+      if (error) throw error;
+      return { id, runId };
+    },
+    onSuccess: ({ runId }) => {
+      qc.invalidateQueries({ queryKey: ['vendor-payments', runId] });
+      qc.invalidateQueries({ queryKey: ['vendor-payment-runs'] });
+      qc.invalidateQueries({ queryKey: ['vendor-payment-run', runId] });
+    },
+  });
+}
+
+export function useUpdateVendorPaymentRunStatus() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: VendorPaymentRunStatus }) => {
+      const updates: Record<string, unknown> = { status };
+      if (status === 'approved') updates.approved_at = new Date().toISOString();
+      if (status === 'processing') updates.processed_at = new Date().toISOString();
+      if (status === 'paid') updates.paid_at = new Date().toISOString();
+      const { data, error } = await supabase
+        .from('vendor_payment_runs' as any)
+        .update(updates as any)
+        .eq('id', id)
+        .select()
+        .single();
+      if (error) throw error;
+      return data as unknown as VendorPaymentRunRow;
+    },
+    onSuccess: (_d, vars) => {
+      qc.invalidateQueries({ queryKey: ['vendor-payment-runs'] });
+      qc.invalidateQueries({ queryKey: ['vendor-payment-run', vars.id] });
+    },
+  });
+}
+
+// =========================================================================
 // Year-end 1099 summary aggregation
 // Combines AtlasOne-paid earnings (placeholder until Phase 2 vendor_payments
 // ships) with manually entered prior YTD earnings, split into NEC vs MISC
