@@ -1,5 +1,9 @@
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, ShieldAlert } from 'lucide-react';
+import { ArrowLeft, ShieldAlert, Mail } from 'lucide-react';
+import { useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
 import { PageHeader } from '@/components/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -27,6 +31,36 @@ export default function VendorDetail() {
   const { data: vendor, isLoading } = useVendor(id);
   const { data: prior } = useVendorPriorYtd(id);
   const { data: vendorPayments } = useVendorPaymentsByVendor(id);
+  const { isSuperAdmin, isClientAdmin } = useAuth();
+  const [inviting, setInviting] = useState(false);
+
+  async function inviteToPortal() {
+    if (!vendor) return;
+    if (!vendor.email) {
+      toast.error('Vendor has no email on file');
+      return;
+    }
+    setInviting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('invite-contractor', {
+        body: {
+          vendor_id: vendor.id,
+          email: vendor.email,
+          full_name:
+            vendor.business_name ||
+            [vendor.first_name, vendor.last_name].filter(Boolean).join(' ') ||
+            vendor.legal_name,
+        },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      toast.success(`Invitation sent to ${vendor.email}`);
+    } catch (e: any) {
+      toast.error(e?.message || 'Failed to send invitation');
+    } finally {
+      setInviting(false);
+    }
+  }
 
   if (isLoading) {
     return <Skeleton className="h-64 w-full" />;
@@ -63,6 +97,18 @@ export default function VendorDetail() {
             <W9StatusBadge status={vendor.w9_status} />
             <VendorStatusBadge status={vendor.status} />
             <VendorEligibilityBadge eligibility={eligibility} />
+            {(isSuperAdmin || isClientAdmin) && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={inviteToPortal}
+                disabled={inviting || !!(vendor as any).user_id}
+                title={(vendor as any).user_id ? 'Portal account already linked' : 'Send portal invite email'}
+              >
+                <Mail className="mr-1.5 h-4 w-4" />
+                {(vendor as any).user_id ? 'Portal linked' : inviting ? 'Inviting…' : 'Invite to portal'}
+              </Button>
+            )}
           </div>
         }
       />

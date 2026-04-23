@@ -3,7 +3,8 @@ import { cn } from '@/lib/utils';
 import {
   LayoutDashboard, Users, Building2, CreditCard, FileText, Workflow,
   ClipboardCheck, ScrollText, BarChart3, Settings, DollarSign,
-  CalendarDays, UserPlus, ShieldCheck, Clock, Heart, User, Landmark, Banknote, Mail, Globe, Briefcase
+  CalendarDays, UserPlus, ShieldCheck, Clock, Heart, User, Landmark, Banknote, Mail, Globe, Briefcase,
+  CheckSquare
 } from 'lucide-react';
 import type { AppRole } from '@/contexts/AuthContext';
 import logoImg from '@/assets/logo.png';
@@ -124,6 +125,16 @@ const employeeNavItems: NavItem[] = [
   { label: 'Profile', to: '/my-profile', icon: User, roles: ['employee'] },
 ];
 
+// Contractor portal nav
+const contractorNavItems: NavItem[] = [
+  { label: 'Dashboard', to: '/', icon: LayoutDashboard, roles: ['contractor'] },
+  { label: 'Get Started', to: '/contractor/onboarding', icon: CheckSquare, roles: ['contractor'] },
+  { label: 'Payments', to: '/contractor/payments', icon: DollarSign, roles: ['contractor'] },
+  { label: 'Documents', to: '/contractor/documents', icon: FileText, roles: ['contractor'] },
+  { label: 'Banking', to: '/contractor/banking', icon: Banknote, roles: ['contractor'] },
+  { label: 'Profile', to: '/contractor/profile', icon: User, roles: ['contractor'] },
+];
+
 interface AppSidebarProps {
   userName: string;
   userInitials: string;
@@ -177,7 +188,8 @@ export function AppSidebar({ userName, userInitials, roleLabel, role, onNavClick
 
   const isSuperAdmin = role === 'super_admin';
   const isEmployee = role === 'employee';
-  const isClientAdmin = !isSuperAdmin && !isEmployee;
+  const isContractor = role === 'contractor';
+  const isClientAdmin = !isSuperAdmin && !isEmployee && !isContractor;
 
   return (
     <aside className="fixed inset-y-0 left-0 z-30 flex w-60 flex-col bg-sidebar border-r border-sidebar-border">
@@ -202,6 +214,10 @@ export function AppSidebar({ userName, userInitials, roleLabel, role, onNavClick
               </div>
             ))}
           </div>
+        ) : isContractor ? (
+          <ul className="space-y-0.5">
+            {contractorNavItems.map(renderNavItem)}
+          </ul>
         ) : (
           <ul className="space-y-0.5">
             {employeeNavItems.map(renderNavItem)}

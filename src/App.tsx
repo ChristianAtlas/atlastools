@@ -59,6 +59,14 @@ import MyDocuments from "@/pages/employee/MyDocuments";
 import MyProfile from "@/pages/employee/MyProfile";
 import VerificationLetter from "@/pages/employee/VerificationLetter";
 
+// Contractor portal pages
+import ContractorDashboard from "@/pages/contractor/ContractorDashboard";
+import ContractorOnboarding from "@/pages/contractor/ContractorOnboarding";
+import ContractorPayments from "@/pages/contractor/ContractorPayments";
+import ContractorDocuments from "@/pages/contractor/ContractorDocuments";
+import ContractorBanking from "@/pages/contractor/ContractorBanking";
+import ContractorProfile from "@/pages/contractor/ContractorProfile";
+
 const queryClient = new QueryClient();
 
 /**
@@ -68,7 +76,9 @@ const queryClient = new QueryClient();
 import { useAuth } from "@/contexts/AuthContext";
 function RoleDashboard() {
   const { role } = useAuth();
-  return role === 'employee' ? <EmployeeDashboard /> : <Dashboard />;
+  if (role === 'employee') return <EmployeeDashboard />;
+  if (role === 'contractor') return <ContractorDashboard />;
+  return <Dashboard />;
 }
 
 const App = () => (
@@ -133,6 +143,13 @@ const App = () => (
               <Route path="/my-documents" element={<MyDocuments />} />
               <Route path="/my-profile" element={<MyProfile />} />
               <Route path="/verification-letter" element={<VerificationLetter />} />
+
+              {/* Contractor portal routes */}
+              <Route path="/contractor/onboarding" element={<ContractorOnboarding />} />
+              <Route path="/contractor/payments" element={<ContractorPayments />} />
+              <Route path="/contractor/documents" element={<ContractorDocuments />} />
+              <Route path="/contractor/banking" element={<ContractorBanking />} />
+              <Route path="/contractor/profile" element={<ContractorProfile />} />
             </Route>
 
             <Route path="*" element={<NotFound />} />
