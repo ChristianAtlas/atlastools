@@ -6203,6 +6203,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      validate_full_tin: {
+        Args: { _full: string; _type: string }
+        Returns: string
+      }
     }
     Enums: {
       app_role: "super_admin" | "client_admin" | "employee"
