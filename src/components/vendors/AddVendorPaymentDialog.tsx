@@ -15,7 +15,9 @@ import {
   VENDOR_1099_CATEGORIES,
   type Vendor1099Category,
   type VendorPaymentMethod,
+  type VendorWorkerType,
 } from '@/hooks/useVendors';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface Props {
   runId: string;
@@ -43,10 +45,13 @@ export function AddVendorPaymentDialog({ runId, companyId, alreadyAddedVendorIds
   const [method, setMethod] = useState<VendorPaymentMethod>('ach');
   const [reference, setReference] = useState('');
   const [memo, setMemo] = useState('');
+  const [typeFilter, setTypeFilter] = useState<'all' | VendorWorkerType>('all');
 
   const enriched = useMemo(() => {
-    return (vendors ?? []).map((v) => ({ v, e: evaluateVendorEligibility(v) }));
-  }, [vendors]);
+    return (vendors ?? [])
+      .filter((v) => typeFilter === 'all' || v.worker_type === typeFilter)
+      .map((v) => ({ v, e: evaluateVendorEligibility(v) }));
+  }, [vendors, typeFilter]);
 
   const selectedVendor = enriched.find((x) => x.v.id === vendorId);
 
@@ -107,6 +112,13 @@ export function AddVendorPaymentDialog({ runId, companyId, alreadyAddedVendorIds
         <div className="space-y-4">
           <div>
             <Label>Vendor</Label>
+            <Tabs value={typeFilter} onValueChange={(v) => setTypeFilter(v as 'all' | VendorWorkerType)} className="mb-2">
+              <TabsList className="h-8">
+                <TabsTrigger value="all" className="text-xs h-7">All</TabsTrigger>
+                <TabsTrigger value="1099_ic" className="text-xs h-7">IC (1099)</TabsTrigger>
+                <TabsTrigger value="c2c_vendor" className="text-xs h-7">C2C</TabsTrigger>
+              </TabsList>
+            </Tabs>
             <Select value={vendorId} onValueChange={setVendorId}>
               <SelectTrigger><SelectValue placeholder="Select vendor…" /></SelectTrigger>
               <SelectContent>
@@ -116,6 +128,9 @@ export function AddVendorPaymentDialog({ runId, companyId, alreadyAddedVendorIds
                     <SelectItem key={v.id} value={v.id} disabled={!e.eligible}>
                       <div className="flex items-center gap-2">
                         <span className="font-mono text-xs">{v.vid}</span>
+                        <span className={`text-[10px] px-1 rounded border ${v.worker_type === 'c2c_vendor' ? 'border-primary text-primary' : 'border-success text-success'}`}>
+                          {v.worker_type === 'c2c_vendor' ? 'C2C' : 'IC'}
+                        </span>
                         <span>{v.legal_name}</span>
                         {!e.eligible && <span className="text-xs text-destructive">· blocked</span>}
                       </div>
