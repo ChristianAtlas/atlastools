@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Upload, FileText, Download, Trash2, ShieldCheck } from 'lucide-react';
+import { Upload, FileText, Download, Trash2, ShieldCheck, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   useVendorDocuments,
   useUploadVendorDocument,
@@ -32,6 +33,13 @@ function fmtBytes(n: number | null) {
 }
 
 export function VendorDocumentsTab({ vendor }: { vendor: VendorRow }) {
+  const { isSuperAdmin, isClientAdmin, profile } = useAuth();
+  // Admins (super admin or client admin of the vendor's company) can manage docs.
+  // Other roles get a read-only view with redacted download access.
+  const canManage =
+    isSuperAdmin ||
+    (isClientAdmin && profile?.company_id === vendor.company_id);
+  const canDownload = canManage; // employees should not view sensitive vendor PII
   const { data: docs, isLoading } = useVendorDocuments(vendor.id);
   const upload = useUploadVendorDocument();
   const remove = useDeleteVendorDocument();
@@ -54,6 +62,10 @@ export function VendorDocumentsTab({ vendor }: { vendor: VendorRow }) {
   };
 
   const handleSubmit = async () => {
+    if (!canManage) {
+      toast.error('You do not have permission to upload vendor documents');
+      return;
+    }
     if (!file) {
       toast.error('Choose a file to upload');
       return;
@@ -65,6 +77,15 @@ export function VendorDocumentsTab({ vendor }: { vendor: VendorRow }) {
     if (file.type && !ACCEPTED.includes(file.type)) {
       toast.error('Only PDF, PNG, or JPG files are allowed');
       return;
+    }
+    // W-9 expiration sanity check (must be in the future)
+    if (docType === 'w9' && markW9 && w9Expires) {
+      const exp = new Date(w9Expires);
+      const today = new Date(new Date().toDateString());
+      if (Number.isNaN(exp.getTime()) || exp < today) {
+        toast.error('W-9 expiration must be a future date');
+        return;
+      }
     }
     try {
       await upload.mutateAsync({
@@ -87,6 +108,10 @@ export function VendorDocumentsTab({ vendor }: { vendor: VendorRow }) {
 
   const handleDownload = async (doc: VendorDocumentRow) => {
     if (!doc.file_path) return;
+    if (!canDownload) {
+      toast.error('You do not have permission to view this document');
+      return;
+    }
     try {
       const url = await getVendorDocumentSignedUrl(doc.file_path, 60);
       window.open(url, '_blank', 'noopener,noreferrer');
@@ -96,6 +121,10 @@ export function VendorDocumentsTab({ vendor }: { vendor: VendorRow }) {
   };
 
   const handleDelete = async (doc: VendorDocumentRow) => {
+    if (!canManage) {
+      toast.error('You do not have permission to delete vendor documents');
+      return;
+    }
     if (!confirm(`Delete "${doc.title}"? This cannot be undone.`)) return;
     try {
       await remove.mutateAsync(doc);
