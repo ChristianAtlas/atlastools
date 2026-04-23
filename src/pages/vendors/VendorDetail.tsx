@@ -1,13 +1,21 @@
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, ShieldAlert } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useVendor, useVendorPriorYtd, VENDOR_1099_CATEGORIES } from '@/hooks/useVendors';
+import {
+  useVendor,
+  useVendorPriorYtd,
+  VENDOR_1099_CATEGORIES,
+  evaluateVendorEligibility,
+  ELIGIBILITY_LABELS,
+} from '@/hooks/useVendors';
 import { VidBadge, WorkerTypeBadge, W9StatusBadge, VendorStatusBadge } from '@/components/vendors/VendorBadges';
 import { VendorDocumentsTab } from '@/components/vendors/VendorDocumentsTab';
+import { VendorEligibilityBadge } from '@/components/vendors/VendorEligibilityBadge';
+import { VendorPaymentsList } from '@/components/vendors/VendorPaymentsList';
 
 function fmtCents(c: number) {
   return (c / 100).toLocaleString('en-US', { style: 'currency', currency: 'USD' });
@@ -35,6 +43,9 @@ export default function VendorDetail() {
     ? vendor.business_name || vendor.legal_name
     : `${vendor.first_name ?? ''} ${vendor.last_name ?? ''}`.trim() || vendor.legal_name;
 
+  const eligibility = evaluateVendorEligibility(vendor);
+  const paymentsEnabled = eligibility.eligible;
+
   return (
     <div className="space-y-6">
       <Button variant="ghost" size="sm" onClick={() => navigate('/vendors')}>
@@ -50,6 +61,7 @@ export default function VendorDetail() {
             <WorkerTypeBadge type={vendor.worker_type} isC2C={vendor.is_c2c} />
             <W9StatusBadge status={vendor.w9_status} />
             <VendorStatusBadge status={vendor.status} />
+            <VendorEligibilityBadge eligibility={eligibility} />
           </div>
         }
       />
@@ -60,7 +72,9 @@ export default function VendorDetail() {
           <TabsTrigger value="tax">Tax & W-9</TabsTrigger>
           <TabsTrigger value="documents">Documents</TabsTrigger>
           <TabsTrigger value="prior">Prior YTD</TabsTrigger>
-          <TabsTrigger value="payments" disabled>Payments (Phase 2)</TabsTrigger>
+          <TabsTrigger value="payments" disabled={!paymentsEnabled} title={paymentsEnabled ? undefined : 'Complete vendor profile to enable payments'}>
+            Payments
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="profile">
@@ -117,6 +131,26 @@ export default function VendorDetail() {
                   </div>
                 ))}
               </div>
+            )}
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="payments">
+          <Card className="p-5 space-y-4">
+            {!paymentsEnabled ? (
+              <div className="rounded-md border border-destructive/40 bg-destructive/5 p-4 text-sm">
+                <div className="flex items-center gap-2 font-medium text-destructive mb-2">
+                  <ShieldAlert className="h-4 w-4" /> Payments are blocked for this vendor
+                </div>
+                <p className="text-xs text-muted-foreground mb-2">
+                  Complete the items below before this vendor can receive standalone or ride-along payments.
+                </p>
+                <ul className="text-xs space-y-0.5 ml-4 list-disc">
+                  {eligibility.blockers.map((b) => <li key={b}>{ELIGIBILITY_LABELS[b]}</li>)}
+                </ul>
+              </div>
+            ) : (
+              <VendorPaymentsList vendorId={vendor.id} companyId={vendor.company_id} />
             )}
           </Card>
         </TabsContent>
