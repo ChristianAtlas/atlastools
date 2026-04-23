@@ -2308,6 +2308,7 @@ export type Database = {
           hourly_rate_cents: number | null
           id: string
           is_demo: boolean
+          is_owner_officer: boolean
           last_name: string
           manager_id: string | null
           mid: string
@@ -2325,6 +2326,8 @@ export type Database = {
           title: string | null
           updated_at: string
           user_id: string | null
+          wc_exempt: boolean
+          wc_exempt_reason: string | null
           zip: string | null
         }
         Insert: {
@@ -2347,6 +2350,7 @@ export type Database = {
           hourly_rate_cents?: number | null
           id?: string
           is_demo?: boolean
+          is_owner_officer?: boolean
           last_name: string
           manager_id?: string | null
           mid?: string
@@ -2364,6 +2368,8 @@ export type Database = {
           title?: string | null
           updated_at?: string
           user_id?: string | null
+          wc_exempt?: boolean
+          wc_exempt_reason?: string | null
           zip?: string | null
         }
         Update: {
@@ -2386,6 +2392,7 @@ export type Database = {
           hourly_rate_cents?: number | null
           id?: string
           is_demo?: boolean
+          is_owner_officer?: boolean
           last_name?: string
           manager_id?: string | null
           mid?: string
@@ -2403,6 +2410,8 @@ export type Database = {
           title?: string | null
           updated_at?: string
           user_id?: string | null
+          wc_exempt?: boolean
+          wc_exempt_reason?: string | null
           zip?: string | null
         }
         Relationships: [
