@@ -5352,6 +5352,75 @@ export type Database = {
           },
         ]
       }
+      vendor_banking: {
+        Row: {
+          account_holder_name: string | null
+          account_number_encrypted: string | null
+          account_number_last4: string | null
+          account_type: string
+          changed_by: string | null
+          company_id: string
+          created_at: string
+          id: string
+          last_changed_at: string
+          routing_number_encrypted: string | null
+          routing_number_last4: string | null
+          updated_at: string
+          vendor_id: string
+          verification_status: string
+          verified_at: string | null
+        }
+        Insert: {
+          account_holder_name?: string | null
+          account_number_encrypted?: string | null
+          account_number_last4?: string | null
+          account_type?: string
+          changed_by?: string | null
+          company_id: string
+          created_at?: string
+          id?: string
+          last_changed_at?: string
+          routing_number_encrypted?: string | null
+          routing_number_last4?: string | null
+          updated_at?: string
+          vendor_id: string
+          verification_status?: string
+          verified_at?: string | null
+        }
+        Update: {
+          account_holder_name?: string | null
+          account_number_encrypted?: string | null
+          account_number_last4?: string | null
+          account_type?: string
+          changed_by?: string | null
+          company_id?: string
+          created_at?: string
+          id?: string
+          last_changed_at?: string
+          routing_number_encrypted?: string | null
+          routing_number_last4?: string | null
+          updated_at?: string
+          vendor_id?: string
+          verification_status?: string
+          verified_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendor_banking_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendor_banking_vendor_id_fkey"
+            columns: ["vendor_id"]
+            isOneToOne: true
+            referencedRelation: "vendors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vendor_documents: {
         Row: {
           company_id: string
@@ -5715,12 +5784,15 @@ export type Database = {
           onboarding_status: Database["public"]["Enums"]["vendor_onboarding_status"]
           phone: string | null
           portal_access_enabled: boolean
+          portal_first_login_at: string | null
+          portal_invited_at: string | null
           state: string | null
           status: Database["public"]["Enums"]["vendor_status"]
           tax_id_encrypted: string | null
           tax_id_last4: string | null
           tax_id_type: string | null
           updated_at: string
+          user_id: string | null
           vid: string | null
           w9_collected_at: string | null
           w9_expires_at: string | null
@@ -5756,12 +5828,15 @@ export type Database = {
           onboarding_status?: Database["public"]["Enums"]["vendor_onboarding_status"]
           phone?: string | null
           portal_access_enabled?: boolean
+          portal_first_login_at?: string | null
+          portal_invited_at?: string | null
           state?: string | null
           status?: Database["public"]["Enums"]["vendor_status"]
           tax_id_encrypted?: string | null
           tax_id_last4?: string | null
           tax_id_type?: string | null
           updated_at?: string
+          user_id?: string | null
           vid?: string | null
           w9_collected_at?: string | null
           w9_expires_at?: string | null
@@ -5797,12 +5872,15 @@ export type Database = {
           onboarding_status?: Database["public"]["Enums"]["vendor_onboarding_status"]
           phone?: string | null
           portal_access_enabled?: boolean
+          portal_first_login_at?: string | null
+          portal_invited_at?: string | null
           state?: string | null
           status?: Database["public"]["Enums"]["vendor_status"]
           tax_id_encrypted?: string | null
           tax_id_last4?: string | null
           tax_id_type?: string | null
           updated_at?: string
+          user_id?: string | null
           vid?: string | null
           w9_collected_at?: string | null
           w9_expires_at?: string | null
@@ -6194,6 +6272,7 @@ export type Database = {
     }
     Functions: {
       current_employee_id: { Args: never; Returns: string }
+      current_vendor_id: { Args: never; Returns: string }
       get_user_company: { Args: { _user_id: string }; Returns: string }
       get_user_role: { Args: { _user_id: string }; Returns: string }
       has_role: {
@@ -6209,7 +6288,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "super_admin" | "client_admin" | "employee"
+      app_role: "super_admin" | "client_admin" | "employee" | "contractor"
       company_status: "active" | "onboarding" | "suspended" | "terminated"
       compensation_reason:
         | "hire"
@@ -6470,7 +6549,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["super_admin", "client_admin", "employee"],
+      app_role: ["super_admin", "client_admin", "employee", "contractor"],
       company_status: ["active", "onboarding", "suspended", "terminated"],
       compensation_reason: [
         "hire",
