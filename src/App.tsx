@@ -38,6 +38,7 @@ import AchTool from "@/pages/AchTool";
 import BenefitsAdmin from "@/pages/BenefitsAdmin";
 import ClientTaxManagement from "@/pages/ClientTaxManagement";
 import ClientBenefitsAdmin from "@/pages/ClientBenefitsAdmin";
+import ClientWorkersComp from "@/pages/ClientWorkersComp";
 import Communications from "@/pages/Communications";
 import CommunicationWizard from "@/pages/CommunicationWizard";
 import CommunicationDetail from "@/pages/CommunicationDetail";
@@ -123,6 +124,7 @@ const App = () => (
               <Route path="/ach-tool" element={<AchTool />} />
               <Route path="/benefits-admin" element={<BenefitsAdmin />} />
               <Route path="/client-benefits" element={<ClientBenefitsAdmin />} />
+              <Route path="/client-workers-comp" element={<ClientWorkersComp />} />
               <Route path="/atlas-hr-hub" element={<AtlasHrHub />} />
               <Route path="/communications" element={<Communications />} />
               <Route path="/communications/new" element={<CommunicationWizard />} />

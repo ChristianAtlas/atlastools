@@ -103,6 +103,7 @@ const clientAdminNavGroups: NavGroup[] = [
     label: 'Tax & Compliance',
     items: [
       { label: 'Tax Management', to: '/client-tax', icon: Landmark },
+      { label: "Workers' Comp", to: '/client-workers-comp', icon: Shield },
       { label: 'Documents', to: '/documents', icon: FileText },
     ],
   },
