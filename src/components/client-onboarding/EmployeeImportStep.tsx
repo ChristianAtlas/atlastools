@@ -5,10 +5,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Upload, Download, Users, AlertCircle, CheckCircle2, Plus, Trash2, DollarSign } from 'lucide-react';
+import { Upload, Download, Users, AlertCircle, CheckCircle2, Plus, Trash2, DollarSign, ShieldCheck, Briefcase } from 'lucide-react';
 import { parseEmployeeCSV, CSV_TEMPLATE_HEADERS, type WizardData } from '@/hooks/useClientOnboarding';
 import { useToast } from '@/hooks/use-toast';
+import { useWCCodes } from '@/hooks/useWorkersComp';
 
 const US_STATES = [
   'AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA','KS','KY','LA','ME','MD',
@@ -61,6 +63,10 @@ export function EmployeeImportStep({ data, onSave, onBack, isSaving }: Props) {
   const [errors, setErrors] = useState<string[]>(data.employees?.csv_errors || []);
   const [validated, setValidated] = useState(data.employees?.csv_validated || false);
 
+  // Available WC codes for assignment (master PEO codes have null company_id and apply to everyone).
+  const { data: allWcCodes = [] } = useWCCodes();
+  const wcCodes = allWcCodes.filter(c => c.is_active);
+
   // YTD state
   const [ytdData, setYtdData] = useState<YTDRow[]>(data.employees?.ytd_data || []);
   const [ytdMethod, setYtdMethod] = useState<'csv' | 'manual'>('manual');
@@ -68,7 +74,9 @@ export function EmployeeImportStep({ data, onSave, onBack, isSaving }: Props) {
   const [showYtd, setShowYtd] = useState((data.employees?.ytd_data?.length || 0) > 0);
 
   const downloadTemplate = () => {
-    const csv = CSV_TEMPLATE_HEADERS.join(',') + '\nJohn,Doe,john@example.com,555-0100,2025-04-01,Manager,Engineering,salary,85000,,biweekly,CA\n';
+    const csv = CSV_TEMPLATE_HEADERS.join(',') +
+      '\nJohn,Doe,john@example.com,555-0100,2025-04-01,Manager,Engineering,salary,85000,,biweekly,CA,8810,false,false,\n' +
+      'Jane,Owner,jane@example.com,555-0101,2025-04-01,President,Executive,salary,150000,,biweekly,CA,,true,true,Officer exemption — CA WC-1 on file\n';
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -164,6 +172,28 @@ export function EmployeeImportStep({ data, onSave, onBack, isSaving }: Props) {
     const missingRequired = employees.some(e => !e.first_name || !e.last_name || !e.email || !e.hire_date);
     if (missingRequired) {
       toast({ title: 'Missing required fields', description: 'Each employee needs first name, last name, email, and hire date.', variant: 'destructive' });
+      return;
+    }
+
+    // Workers' Comp gate: every covered (non-exempt) W-2 employee MUST have an active WC code.
+    const missingWc = employees.filter(e => !e.wc_exempt && !e.wc_code_id);
+    if (missingWc.length > 0) {
+      toast({
+        title: `${missingWc.length} employee(s) missing a Workers' Comp code`,
+        description: 'Assign a WC code or mark the employee as Owner/Officer exempt before continuing.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    // Exempt employees must have a reason recorded.
+    const exemptNoReason = employees.filter(e => e.wc_exempt && !e.wc_exempt_reason?.trim());
+    if (exemptNoReason.length > 0) {
+      toast({
+        title: `${exemptNoReason.length} exempt employee(s) missing a reason`,
+        description: 'Document why each exempt employee is excluded from WC (e.g. officer exemption form on file).',
+        variant: 'destructive',
+      });
       return;
     }
 
