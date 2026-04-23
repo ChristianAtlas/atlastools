@@ -33,6 +33,14 @@ export function EditEmployeeDialog({ employee, open, onOpenChange, defaultTab = 
 
   const set = (key: string, value: string | number | null) => setForm(f => ({ ...f, [key]: value }));
 
+  const handlePayTypeChange = (payType: string) => {
+    setForm(f => ({
+      ...f,
+      pay_type: payType,
+      pay_frequency: payType === 'salary' ? 'semimonthly' : 'biweekly',
+    }));
+  };
+
   const handleSave = async () => {
     try {
       const payload: Record<string, any> = {
@@ -158,7 +166,7 @@ export function EditEmployeeDialog({ employee, open, onOpenChange, defaultTab = 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label>Pay Type</Label>
-                <Select value={form.pay_type} onValueChange={v => set('pay_type', v)}>
+                <Select value={form.pay_type} onValueChange={handlePayTypeChange}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="salary">Salary</SelectItem>
@@ -171,10 +179,8 @@ export function EditEmployeeDialog({ employee, open, onOpenChange, defaultTab = 
                 <Select value={form.pay_frequency} onValueChange={v => set('pay_frequency', v)}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="weekly">Weekly</SelectItem>
                     <SelectItem value="biweekly">Bi-weekly</SelectItem>
                     <SelectItem value="semimonthly">Semi-monthly</SelectItem>
-                    <SelectItem value="monthly">Monthly</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
