@@ -626,9 +626,24 @@ export function useUpdateVendorPaymentRunStatus() {
 
 // =========================================================================
 // Year-end 1099 summary aggregation
-// Combines AtlasOne-paid earnings (placeholder until Phase 2 vendor_payments
-// ships) with manually entered prior YTD earnings, split into NEC vs MISC
-// totals plus backup withholding totals per vendor / per category.
+// Reconciliation rules (so totals tie out to Form 1099-NEC / 1099-MISC):
+//   1. Pull every vendor in scope (optionally filtered to one company).
+//   2. AtlasOne-paid totals come from `vendor_payments` rows where
+//        - `reporting_year` matches the selected tax year,
+//        - `status <> 'voided'` (voided payments never hit a 1099),
+//        - `vendor_id` is in scope.
+//      Each payment contributes `gross_amount_cents` to NEC or MISC based on
+//      its `category`, and `backup_withholding_cents` to the BW bucket.
+//   3. Prior-YTD imports (mid-year migrations) come from
+//      `vendor_ytd_prior_earnings` for the same year and add to the same
+//      NEC / MISC / BW buckets so the reportable total reconciles to:
+//          total_reportable_cents = atlas_paid_cents + prior_ytd_cents
+//          nec_cents              = Σ(category='nec')      across both sources
+//          misc_cents             = Σ(category like 'misc_%') across both sources
+//          backup_withholding     = Σ(backup_withholding_cents) across both sources
+//   4. Category → form mapping uses VENDOR_1099_CATEGORIES (single source of
+//      truth), so a vendor with both NEC and MISC activity is flagged 'BOTH'
+//      and will need two forms filed.
 // =========================================================================
 export interface Vendor1099SummaryRow {
   vendor_id: string;
