@@ -11,11 +11,11 @@ import {
   VENDOR_1099_CATEGORIES,
   evaluateVendorEligibility,
   ELIGIBILITY_LABELS,
+  useVendorPaymentsByVendor,
 } from '@/hooks/useVendors';
 import { VidBadge, WorkerTypeBadge, W9StatusBadge, VendorStatusBadge } from '@/components/vendors/VendorBadges';
 import { VendorDocumentsTab } from '@/components/vendors/VendorDocumentsTab';
 import { VendorEligibilityBadge } from '@/components/vendors/VendorEligibilityBadge';
-import { VendorPaymentsList } from '@/components/vendors/VendorPaymentsList';
 
 function fmtCents(c: number) {
   return (c / 100).toLocaleString('en-US', { style: 'currency', currency: 'USD' });
@@ -26,6 +26,7 @@ export default function VendorDetail() {
   const navigate = useNavigate();
   const { data: vendor, isLoading } = useVendor(id);
   const { data: prior } = useVendorPriorYtd(id);
+  const { data: vendorPayments } = useVendorPaymentsByVendor(id);
 
   if (isLoading) {
     return <Skeleton className="h-64 w-full" />;
@@ -150,7 +151,31 @@ export default function VendorDetail() {
                 </ul>
               </div>
             ) : (
-              <VendorPaymentsList vendorId={vendor.id} companyId={vendor.company_id} />
+              <div>
+                <h3 className="font-semibold text-sm mb-3">Payment history</h3>
+                {!vendorPayments || vendorPayments.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No payments recorded for this vendor yet.</p>
+                ) : (
+                  <div className="space-y-1.5">
+                    {vendorPayments.map((p) => (
+                      <div key={p.id} className="flex justify-between items-center border-b pb-1.5 text-sm">
+                        <div>
+                          <div className="font-mono text-xs">{p.vpid}</div>
+                          <div className="text-xs text-muted-foreground">
+                            {new Date(p.created_at).toLocaleDateString()} · {p.payment_method.toUpperCase()} · {p.status}
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-semibold tabular-nums">{fmtCents(p.gross_amount_cents)}</div>
+                          {p.backup_withholding_cents > 0 && (
+                            <div className="text-[11px] text-muted-foreground tabular-nums">BW {fmtCents(p.backup_withholding_cents)}</div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             )}
           </Card>
         </TabsContent>
