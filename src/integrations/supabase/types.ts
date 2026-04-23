@@ -2215,6 +2215,7 @@ export type Database = {
       }
       employee_wc_assignments: {
         Row: {
+          assigned_by: string | null
           company_id: string
           created_at: string
           effective_date: string
@@ -2223,10 +2224,12 @@ export type Database = {
           end_date: string | null
           id: string
           is_active: boolean
+          notes: string | null
           updated_at: string
           wc_code_id: string
         }
         Insert: {
+          assigned_by?: string | null
           company_id: string
           created_at?: string
           effective_date?: string
@@ -2235,10 +2238,12 @@ export type Database = {
           end_date?: string | null
           id?: string
           is_active?: boolean
+          notes?: string | null
           updated_at?: string
           wc_code_id: string
         }
         Update: {
+          assigned_by?: string | null
           company_id?: string
           created_at?: string
           effective_date?: string
@@ -2247,6 +2252,7 @@ export type Database = {
           end_date?: string | null
           id?: string
           is_active?: boolean
+          notes?: string | null
           updated_at?: string
           wc_code_id?: string
         }
@@ -6016,46 +6022,55 @@ export type Database = {
           company_id: string
           created_at: string
           employee_id: string
+          hours: number
           id: string
           markup_cents: number
           markup_rate: number
           payroll_run_id: string
           premium_cents: number
+          rate_basis: string
           rate_per_hundred: number
           total_charge_cents: number
           wages_cents: number
           wc_code: string
           wc_code_id: string
+          wc_code_rate_id: string | null
         }
         Insert: {
           company_id: string
           created_at?: string
           employee_id: string
+          hours?: number
           id?: string
           markup_cents?: number
           markup_rate?: number
           payroll_run_id: string
           premium_cents?: number
+          rate_basis?: string
           rate_per_hundred?: number
           total_charge_cents?: number
           wages_cents?: number
           wc_code: string
           wc_code_id: string
+          wc_code_rate_id?: string | null
         }
         Update: {
           company_id?: string
           created_at?: string
           employee_id?: string
+          hours?: number
           id?: string
           markup_cents?: number
           markup_rate?: number
           payroll_run_id?: string
           premium_cents?: number
+          rate_basis?: string
           rate_per_hundred?: number
           total_charge_cents?: number
           wages_cents?: number
           wc_code?: string
           wc_code_id?: string
+          wc_code_rate_id?: string | null
         }
         Relationships: [
           {
@@ -6077,6 +6092,13 @@ export type Database = {
             columns: ["wc_code_id"]
             isOneToOne: false
             referencedRelation: "workers_comp_codes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wc_payroll_calculations_wc_code_rate_id_fkey"
+            columns: ["wc_code_rate_id"]
+            isOneToOne: false
+            referencedRelation: "workers_comp_code_rates"
             referencedColumns: ["id"]
           },
         ]
@@ -6123,10 +6145,57 @@ export type Database = {
         }
         Relationships: []
       }
+      workers_comp_code_rates: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          effective_date: string
+          end_date: string | null
+          id: string
+          markup_rate: number
+          notes: string | null
+          rate_basis: string
+          rate_per_hundred: number
+          wc_code_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          effective_date: string
+          end_date?: string | null
+          id?: string
+          markup_rate?: number
+          notes?: string | null
+          rate_basis?: string
+          rate_per_hundred: number
+          wc_code_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          effective_date?: string
+          end_date?: string | null
+          id?: string
+          markup_rate?: number
+          notes?: string | null
+          rate_basis?: string
+          rate_per_hundred?: number
+          wc_code_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workers_comp_code_rates_wc_code_id_fkey"
+            columns: ["wc_code_id"]
+            isOneToOne: false
+            referencedRelation: "workers_comp_codes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       workers_comp_codes: {
         Row: {
           code: string
-          company_id: string
+          company_id: string | null
           created_at: string
           description: string
           effective_date: string
@@ -6134,6 +6203,8 @@ export type Database = {
           id: string
           internal_markup_rate: number
           is_active: boolean
+          markup_rate_override: number | null
+          notes: string | null
           policy_id: string
           rate_basis: string
           rate_per_hundred: number
@@ -6142,7 +6213,7 @@ export type Database = {
         }
         Insert: {
           code: string
-          company_id: string
+          company_id?: string | null
           created_at?: string
           description: string
           effective_date: string
@@ -6150,6 +6221,8 @@ export type Database = {
           id?: string
           internal_markup_rate?: number
           is_active?: boolean
+          markup_rate_override?: number | null
+          notes?: string | null
           policy_id: string
           rate_basis?: string
           rate_per_hundred?: number
@@ -6158,7 +6231,7 @@ export type Database = {
         }
         Update: {
           code?: string
-          company_id?: string
+          company_id?: string | null
           created_at?: string
           description?: string
           effective_date?: string
@@ -6166,6 +6239,8 @@ export type Database = {
           id?: string
           internal_markup_rate?: number
           is_active?: boolean
+          markup_rate_override?: number | null
+          notes?: string | null
           policy_id?: string
           rate_basis?: string
           rate_per_hundred?: number
@@ -6192,12 +6267,14 @@ export type Database = {
       workers_comp_policies: {
         Row: {
           carrier_name: string
-          company_id: string
+          company_id: string | null
           created_at: string
+          default_markup_rate: number
           effective_date: string
           experience_mod: number
           expiration_date: string
           id: string
+          is_master: boolean
           is_monopolistic: boolean
           last_report_submitted_at: string | null
           markup_flat_cents: number | null
@@ -6214,12 +6291,14 @@ export type Database = {
         }
         Insert: {
           carrier_name: string
-          company_id: string
+          company_id?: string | null
           created_at?: string
+          default_markup_rate?: number
           effective_date: string
           experience_mod?: number
           expiration_date: string
           id?: string
+          is_master?: boolean
           is_monopolistic?: boolean
           last_report_submitted_at?: string | null
           markup_flat_cents?: number | null
@@ -6236,12 +6315,14 @@ export type Database = {
         }
         Update: {
           carrier_name?: string
-          company_id?: string
+          company_id?: string | null
           created_at?: string
+          default_markup_rate?: number
           effective_date?: string
           experience_mod?: number
           expiration_date?: string
           id?: string
+          is_master?: boolean
           is_monopolistic?: boolean
           last_report_submitted_at?: string | null
           markup_flat_cents?: number | null
