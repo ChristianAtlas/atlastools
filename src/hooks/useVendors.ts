@@ -496,6 +496,23 @@ export function useVendorPayments(runId: string | undefined) {
   });
 }
 
+export function useVendorPaymentsByVendor(vendorId: string | undefined) {
+  return useQuery({
+    queryKey: ['vendor-payments-by-vendor', vendorId],
+    enabled: !!vendorId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('vendor_payments' as any)
+        .select('*, vendors:vendor_id(id, vid, legal_name, business_name, first_name, last_name, worker_type)')
+        .eq('vendor_id', vendorId!)
+        .order('created_at', { ascending: false })
+        .limit(50);
+      if (error) throw error;
+      return (data ?? []) as unknown as VendorPaymentRow[];
+    },
+  });
+}
+
 export interface CreateVendorPaymentRunInput {
   company_id: string;
   pay_date: string;
