@@ -31,6 +31,7 @@ import {
   usePayrollRun, usePayrollRunEmployees, useUpdatePayrollRunStatus, useCreatePayrollRun,
   centsToUSD, type PayrollRunRow, type PayrollRunEmployeeRow, type PayrollRunStatus,
 } from '@/hooks/usePayrollRuns';
+import { useRecalculateWCForRun } from '@/hooks/useWorkersComp';
 import { useTimecards, useUpdateTimecard, useApproveTimecards, type TimecardRow } from '@/hooks/useTimecards';
 import { useFundingEvents, useCreateFundingEvent, useConfirmFunding } from '@/hooks/useFundingEvents';
 import { useAuditLogs, formatAuditChanges } from '@/hooks/useAuditLogs';
