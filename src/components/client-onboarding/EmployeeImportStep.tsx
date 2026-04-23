@@ -394,6 +394,145 @@ export function EmployeeImportStep({ data, onSave, onBack, isSaving }: Props) {
         </Card>
       )}
 
+      {/* Workers' Compensation assignment — required for every covered W-2 employee */}
+      {employees.length > 0 && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <ShieldCheck className="h-4 w-4 text-primary" />Workers' Compensation Assignment
+            </CardTitle>
+            <p className="text-xs text-muted-foreground mt-1">
+              Every covered W-2 employee must be assigned a Workers' Comp code before launch.
+              Owners or officers with a state-filed exemption can be marked exempt instead.
+            </p>
+          </CardHeader>
+          <CardContent>
+            {(() => {
+              const missing = employees.filter(e => !e.wc_exempt && !e.wc_code_id).length;
+              const exempt = employees.filter(e => e.wc_exempt).length;
+              const ready = employees.length - missing - exempt;
+              return (
+                <div className="grid grid-cols-3 gap-3 mb-4">
+                  <div className="rounded-lg border p-3">
+                    <p className="text-xs text-muted-foreground">Assigned</p>
+                    <p className="text-2xl font-semibold tabular-nums text-success">{ready}</p>
+                  </div>
+                  <div className={`rounded-lg border p-3 ${missing > 0 ? 'border-destructive/50 bg-destructive/5' : ''}`}>
+                    <p className="text-xs text-muted-foreground">Missing WC code</p>
+                    <p className={`text-2xl font-semibold tabular-nums ${missing > 0 ? 'text-destructive' : ''}`}>{missing}</p>
+                  </div>
+                  <div className="rounded-lg border p-3">
+                    <p className="text-xs text-muted-foreground">Exempt (Owner/Officer)</p>
+                    <p className="text-2xl font-semibold tabular-nums">{exempt}</p>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {wcCodes.length === 0 && (
+              <div className="rounded-lg border border-warning/50 bg-warning/5 p-3 mb-3">
+                <p className="text-xs">
+                  No active Workers' Comp codes are available yet. AtlasOne super admins must publish
+                  master PEO codes before clients can assign them.
+                </p>
+              </div>
+            )}
+
+            <div className="rounded-md border overflow-auto max-h-[480px]">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="text-xs min-w-[180px]">Employee</TableHead>
+                    <TableHead className="text-xs min-w-[200px]">WC Code *</TableHead>
+                    <TableHead className="text-xs min-w-[120px] text-center">Owner / Officer</TableHead>
+                    <TableHead className="text-xs min-w-[110px] text-center">WC Exempt</TableHead>
+                    <TableHead className="text-xs min-w-[200px]">Exempt Reason</TableHead>
+                    <TableHead className="text-xs w-24 text-center">Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {employees.map((emp, i) => {
+                    const isExempt = !!emp.wc_exempt;
+                    const hasCode = !!emp.wc_code_id;
+                    const ok = isExempt ? !!emp.wc_exempt_reason?.trim() : hasCode;
+                    return (
+                      <TableRow key={i}>
+                        <TableCell className="text-xs py-2">
+                          <p className="font-medium">{emp.first_name} {emp.last_name}</p>
+                          <p className="text-muted-foreground text-[11px]">{emp.work_state || '—'} · {emp.email}</p>
+                        </TableCell>
+                        <TableCell className="py-1.5">
+                          <Select
+                            value={emp.wc_code_id || ''}
+                            onValueChange={v => updateRow(i, 'wc_code_id', v)}
+                            disabled={isExempt || wcCodes.length === 0}
+                          >
+                            <SelectTrigger className="h-8 text-xs">
+                              <SelectValue placeholder={isExempt ? '— exempt —' : 'Select code'} />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {wcCodes.map(c => (
+                                <SelectItem key={c.id} value={c.id} className="text-xs">
+                                  <span className="font-mono">{c.code}</span> · {c.description}
+                                  {c.state ? <span className="text-muted-foreground ml-1">({c.state})</span> : null}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
+                        <TableCell className="text-center py-1.5">
+                          <Switch
+                            checked={!!emp.is_owner_officer}
+                            onCheckedChange={(v) => updateRow(i, 'is_owner_officer', v ? 1 : 0)}
+                            aria-label="Mark as owner or officer"
+                          />
+                        </TableCell>
+                        <TableCell className="text-center py-1.5">
+                          <Switch
+                            checked={isExempt}
+                            onCheckedChange={(v) => {
+                              updateRow(i, 'wc_exempt', v ? 1 : 0);
+                              if (v) updateRow(i, 'wc_code_id', '');
+                            }}
+                            aria-label="WC exempt"
+                          />
+                        </TableCell>
+                        <TableCell className="py-1.5">
+                          <Input
+                            className="h-8 text-xs"
+                            placeholder={isExempt ? 'e.g. Officer exemption — CA WC-1 on file' : '—'}
+                            value={emp.wc_exempt_reason || ''}
+                            onChange={e => updateRow(i, 'wc_exempt_reason', e.target.value)}
+                            disabled={!isExempt}
+                          />
+                        </TableCell>
+                        <TableCell className="text-center py-1.5">
+                          {ok ? (
+                            isExempt ? (
+                              <Badge variant="outline" className="text-[10px] gap-1 border-muted-foreground/30">
+                                <Briefcase className="h-2.5 w-2.5" /> Exempt
+                              </Badge>
+                            ) : (
+                              <Badge variant="outline" className="text-[10px] gap-1 border-success/40 text-success">
+                                <CheckCircle2 className="h-2.5 w-2.5" /> Ready
+                              </Badge>
+                            )
+                          ) : (
+                            <Badge variant="outline" className="text-[10px] gap-1 border-destructive/40 text-destructive">
+                              <AlertCircle className="h-2.5 w-2.5" /> Action needed
+                            </Badge>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* YTD Payroll Data */}
       {employees.length > 0 && (
         <Card>
