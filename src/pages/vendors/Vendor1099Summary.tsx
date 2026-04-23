@@ -249,7 +249,7 @@ export default function Vendor1099Summary() {
                   <TableCell>
                     <div className="flex flex-wrap gap-1">
                       {r.exceptions.map((e) => (
-                        <Badge key={e} variant="outline" className="text-[10px] border-amber-500 text-amber-600">
+                        <Badge key={e} variant="outline" className="text-[10px] border-warning text-warning">
                           {e.replace(/_/g, ' ')}
                         </Badge>
                       ))}
