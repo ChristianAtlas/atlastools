@@ -98,8 +98,15 @@ export default function VendorOnboardingWizard() {
   function canAdvance(): boolean {
     if (step === 0) return !!data.worker_type && !!data.company_id;
     if (step === 1) {
+      const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email.trim());
+      const phoneOk = data.phone.replace(/\D/g, '').length >= 10;
+      if (!emailOk || !phoneOk) return false;
       if (isEntity) return !!data.business_name.trim();
-      return !!data.first_name.trim() && !!data.last_name.trim();
+      return (
+        !!data.first_name.trim() &&
+        !!data.last_name.trim() &&
+        !!data.date_of_birth.trim()
+      );
     }
     if (step === 2) {
       const digits = data.tax_id_full.replace(/\D/g, '');
@@ -241,14 +248,14 @@ export default function VendorOnboardingWizard() {
                 <Field label="Legal last name *">
                   <Input value={data.last_name} onChange={(e) => update({ last_name: e.target.value })} />
                 </Field>
-                <Field label="Date of birth">
+                <Field label="Date of birth *">
                   <Input type="date" value={data.date_of_birth} onChange={(e) => update({ date_of_birth: e.target.value })} />
                 </Field>
               </div>
             )}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <Field label="Email"><Input type="email" value={data.email} onChange={(e) => update({ email: e.target.value })} /></Field>
-              <Field label="Phone"><Input value={data.phone} onChange={(e) => update({ phone: e.target.value })} /></Field>
+              <Field label="Email *"><Input type="email" value={data.email} onChange={(e) => update({ email: e.target.value })} /></Field>
+              <Field label="Phone *"><Input value={data.phone} onChange={(e) => update({ phone: e.target.value })} /></Field>
             </div>
           </div>
         )}
