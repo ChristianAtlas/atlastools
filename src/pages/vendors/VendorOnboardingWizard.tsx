@@ -248,14 +248,14 @@ export default function VendorOnboardingWizard() {
                 <Field label="Legal last name *">
                   <Input value={data.last_name} onChange={(e) => update({ last_name: e.target.value })} />
                 </Field>
-                <Field label="Date of birth">
+                <Field label="Date of birth *">
                   <Input type="date" value={data.date_of_birth} onChange={(e) => update({ date_of_birth: e.target.value })} />
                 </Field>
               </div>
             )}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <Field label="Email"><Input type="email" value={data.email} onChange={(e) => update({ email: e.target.value })} /></Field>
-              <Field label="Phone"><Input value={data.phone} onChange={(e) => update({ phone: e.target.value })} /></Field>
+              <Field label="Email *"><Input type="email" value={data.email} onChange={(e) => update({ email: e.target.value })} /></Field>
+              <Field label="Phone *"><Input value={data.phone} onChange={(e) => update({ phone: e.target.value })} /></Field>
             </div>
           </div>
         )}
