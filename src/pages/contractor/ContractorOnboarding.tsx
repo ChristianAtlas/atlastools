@@ -7,7 +7,7 @@ import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/PageHeader';
 import { Link } from 'react-router-dom';
-import { Check, Circle, ArrowRight, FileText, AlertCircle, CheckCircle2, User, Banknote, Upload } from 'lucide-react';
+import { Check, Circle, ArrowRight, FileText, AlertCircle, CheckCircle2, User, Banknote, Upload, Clock } from 'lucide-react';
 
 export default function ContractorOnboarding() {
   const { data: vendor } = useCurrentVendor();
@@ -141,7 +141,7 @@ export default function ContractorOnboarding() {
                 <Badge className="gap-1"><Check className="h-3 w-3" /> Complete</Badge>
               ) : (
                 <Badge variant="secondary" className="gap-1">
-                  <Clock3 className="h-3 w-3" /> In progress
+                  <Clock className="h-3 w-3" /> In progress
                 </Badge>
               )}
               <span className="text-xs text-muted-foreground tabular-nums">{completedSteps} of {steps.length}</span>
