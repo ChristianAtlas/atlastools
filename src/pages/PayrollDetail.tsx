@@ -31,6 +31,7 @@ import {
   usePayrollRun, usePayrollRunEmployees, useUpdatePayrollRunStatus, useCreatePayrollRun,
   centsToUSD, type PayrollRunRow, type PayrollRunEmployeeRow, type PayrollRunStatus,
 } from '@/hooks/usePayrollRuns';
+import { useRecalculateWCForRun } from '@/hooks/useWorkersComp';
 import { useTimecards, useUpdateTimecard, useApproveTimecards, type TimecardRow } from '@/hooks/useTimecards';
 import { useFundingEvents, useCreateFundingEvent, useConfirmFunding } from '@/hooks/useFundingEvents';
 import { useAuditLogs, formatAuditChanges } from '@/hooks/useAuditLogs';
@@ -413,6 +414,7 @@ export default function PayrollDetail() {
   const { data: auditLogs = [] } = useAuditLogs({ tableName: 'payroll_runs', recordId: id, limit: 30 });
   const updateStatus = useUpdatePayrollRunStatus();
   const { data: internalNotes = [] } = useInternalNotes('payroll_run', id);
+  const recalcWC = useRecalculateWCForRun();
   const addNoteMutation = useAddInternalNote();
 
   const employeeIds = useMemo(() => lines.map(l => l.employee_id), [lines]);
@@ -486,6 +488,33 @@ export default function PayrollDetail() {
       if (['expedited_funding_required', 'expedited_processing'].includes(newStatus)) extras.is_expedited = true;
       if (newStatus === 'manual_check_required') extras.is_manual_check = true;
       if (newStatus === 'auto_approved') extras.auto_approved = true;
+
+      // Recalculate Workers' Comp charges before approval-bound transitions so
+      // employer cost totals reflect the effective WC rate snapshot at pay_date
+      // (with the hidden 1.5% markup applied behind the scenes).
+      const wcTriggerStates: PayrollRunStatus[] = [
+        'pending_client_approval',
+        'client_approved',
+        'auto_approved',
+        'admin_approved',
+        'processing',
+      ];
+      if (wcTriggerStates.includes(newStatus)) {
+        try {
+          const wcResult = await recalcWC.mutateAsync(run.id);
+          if (wcResult?.missing_assignments && wcResult.missing_assignments > 0) {
+            toast({
+              title: `${wcResult.missing_assignments} employee(s) missing WC code`,
+              description: 'Resolve WC assignment exceptions before final approval.',
+              variant: 'destructive',
+            });
+          }
+        } catch (wcErr: any) {
+          toast({ title: 'WC calculation failed', description: wcErr.message, variant: 'destructive' });
+          return;
+        }
+      }
+
       await updateStatus.mutateAsync({ id: run.id, status: newStatus, ...extras });
       toast({ title: `Status updated to ${newStatus.replace(/_/g, ' ')}` });
     } catch (err: any) {
