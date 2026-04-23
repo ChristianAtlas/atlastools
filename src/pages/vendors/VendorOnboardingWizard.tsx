@@ -98,8 +98,15 @@ export default function VendorOnboardingWizard() {
   function canAdvance(): boolean {
     if (step === 0) return !!data.worker_type && !!data.company_id;
     if (step === 1) {
+      const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email.trim());
+      const phoneOk = data.phone.replace(/\D/g, '').length >= 10;
+      if (!emailOk || !phoneOk) return false;
       if (isEntity) return !!data.business_name.trim();
-      return !!data.first_name.trim() && !!data.last_name.trim();
+      return (
+        !!data.first_name.trim() &&
+        !!data.last_name.trim() &&
+        !!data.date_of_birth.trim()
+      );
     }
     if (step === 2) {
       const digits = data.tax_id_full.replace(/\D/g, '');
