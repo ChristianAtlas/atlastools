@@ -725,6 +725,15 @@ export default function PayrollDetail() {
 
             <TabsContent value="funding" className="mt-4"><FundingSection run={run} userId={user?.id} /></TabsContent>
 
+            <TabsContent value="vendors" className="mt-4">
+              <RideAlongVendorsTab
+                payrollRunId={run.id}
+                companyId={run.company_id}
+                payDate={run.pay_date}
+                editable={['draft', 'open', 'open_for_timecards', 'editing', 'preview', 'time_review'].includes(run.status)}
+              />
+            </TabsContent>
+
             <TabsContent value="audit" className="mt-4">
               {auditEntries.length > 0 ? <AuditTimeline entries={auditEntries} maxItems={50} /> : <p className="text-sm text-muted-foreground text-center py-8">No audit entries yet.</p>}
             </TabsContent>
