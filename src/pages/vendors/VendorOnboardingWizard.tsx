@@ -112,6 +112,12 @@ export default function VendorOnboardingWizard() {
 
   async function handleSubmit() {
     if (!data.worker_type || !data.company_id) return;
+    const tin = validateTaxId(data.tax_id_type, data.tax_id_full);
+    if (!tin.ok) {
+      toast.error(tin.error ?? 'Invalid tax ID');
+      setStep(2);
+      return;
+    }
     const legal_name = isEntity
       ? data.business_name.trim()
       : `${data.first_name.trim()} ${data.last_name.trim()}`.trim();
@@ -135,7 +141,7 @@ export default function VendorOnboardingWizard() {
         state: data.state || null,
         zip: data.zip || null,
         tax_id_type: data.tax_id_type,
-        tax_id_last4: data.tax_id_full.replace(/\D/g, '').slice(-4),
+        tax_id_last4: tin.digits.slice(-4),
         default_1099_category: data.default_1099_category,
         backup_withholding_enabled: data.backup_withholding_enabled,
         notes: data.notes || null,
