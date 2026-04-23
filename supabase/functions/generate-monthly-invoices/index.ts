@@ -216,8 +216,8 @@ serve(async (req) => {
       }
 
       // D. Catch-up charges - find employees not billed last month
-      // C3. Vendor / 1099 flat monthly fee — only when at least one non-voided
-      // vendor payment landed in this billing month for this company.
+      // C3. Vendor / 1099 monthly fee — $39 per UNIQUE paid contractor with at least
+      // one non-voided vendor payment landed in this billing month for this company.
       const vmStart = billingDate;
       const vmEnd = new Date(new Date(billingDate).getFullYear(), new Date(billingDate).getMonth() + 1, 0)
         .toISOString().slice(0, 10);
@@ -230,30 +230,39 @@ serve(async (req) => {
         .neq("status", "voided");
       const vendorRunIds = (vendorRunsThisMonth ?? []).map((r: any) => r.id);
       let activeVendorPaymentCount = 0;
+      let uniquePaidContractorCount = 0;
       if (vendorRunIds.length > 0) {
-        const { count } = await supabase
+        const { data: vendorPayRows } = await supabase
           .from("vendor_payments")
-          .select("id", { count: "exact", head: true })
+          .select("vendor_id")
           .in("vendor_payment_run_id", vendorRunIds)
           .neq("status", "voided");
-        activeVendorPaymentCount = count ?? 0;
+        activeVendorPaymentCount = vendorPayRows?.length ?? 0;
+        const uniqueVendorIds = new Set<string>();
+        (vendorPayRows ?? []).forEach((r: any) => r.vendor_id && uniqueVendorIds.add(r.vendor_id));
+        uniquePaidContractorCount = uniqueVendorIds.size;
       }
-      if (activeVendorPaymentCount > 0) {
+      if (uniquePaidContractorCount > 0) {
         const { data: vendorTier } = await supabase
           .from("pricing_tiers")
           .select("*")
           .eq("slug", "vendor_monthly_fee")
           .maybeSingle();
-        const vendorFeeCents = vendorTier?.unit_price_cents ?? 5000; // default $50/mo flat
+        const perContractorCents = vendorTier?.unit_price_cents ?? 3900; // $39 per paid contractor
         lineItems.push({
-          description: `Vendor / 1099 monthly fee (${activeVendorPaymentCount} payment${activeVendorPaymentCount === 1 ? '' : 's'} this month)`,
+          description: `Contractor / 1099 fee × ${uniquePaidContractorCount} paid contractor${uniquePaidContractorCount === 1 ? '' : 's'}`,
           tier_slug: "vendor_monthly_fee",
-          quantity: 1,
-          unit_price_cents: vendorFeeCents,
-          total_cents: vendorFeeCents,
+          quantity: uniquePaidContractorCount,
+          unit_price_cents: perContractorCents,
+          total_cents: perContractorCents * uniquePaidContractorCount,
           is_markup: false,
         });
-        log("Added vendor monthly fee", { company_id: company.id, payments: activeVendorPaymentCount });
+        log("Added contractor monthly fee", {
+          company_id: company.id,
+          unique_contractors: uniquePaidContractorCount,
+          payments: activeVendorPaymentCount,
+          per_contractor_cents: perContractorCents,
+        });
       }
 
       const prevMonth = new Date(billingDate);
