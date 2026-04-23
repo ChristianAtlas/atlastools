@@ -12,6 +12,12 @@ import {
 import { useToast } from '@/hooks/use-toast';
 
 const fmt = (c: number) => (c / 100).toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+const workerLabel = (wt?: string | null) =>
+  wt === 'c2c_vendor'
+    ? { label: 'C2C', tone: 'border-primary text-primary' }
+    : wt === '1099_ic'
+      ? { label: 'IC', tone: 'border-success text-success' }
+      : { label: '—', tone: 'border-muted text-muted-foreground' };
 
 export function VendorPaymentsList({ runId, allowDelete = true }: { runId: string; allowDelete?: boolean }) {
   const { data, isLoading } = useVendorPayments(runId);
@@ -34,6 +40,7 @@ export function VendorPaymentsList({ runId, allowDelete = true }: { runId: strin
           <TableRow>
             <TableHead>VPID</TableHead>
             <TableHead>Vendor</TableHead>
+            <TableHead>Type</TableHead>
             <TableHead>Form</TableHead>
             <TableHead>Method</TableHead>
             <TableHead className="text-right">Gross</TableHead>
@@ -47,12 +54,16 @@ export function VendorPaymentsList({ runId, allowDelete = true }: { runId: strin
             const cat = VENDOR_1099_CATEGORIES.find((c) => c.value === p.category);
             const v = p.vendors;
             const display = v?.business_name || v?.legal_name || `${v?.first_name ?? ''} ${v?.last_name ?? ''}`.trim();
+            const wt = workerLabel(v?.worker_type);
             return (
               <TableRow key={p.id}>
                 <TableCell className="font-mono text-xs">{p.vpid}</TableCell>
                 <TableCell>
                   <div className="font-medium">{display}</div>
                   <div className="text-xs text-muted-foreground font-mono">{v?.vid}</div>
+                </TableCell>
+                <TableCell>
+                  <Badge variant="outline" className={`text-[10px] ${wt.tone}`}>{wt.label}</Badge>
                 </TableCell>
                 <TableCell>
                   <Badge variant="outline" className="text-[10px]">{cat?.form ?? '—'}</Badge>

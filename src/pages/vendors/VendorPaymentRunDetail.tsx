@@ -88,6 +88,18 @@ export default function VendorPaymentRunDetail() {
         <StatTile label="Net total" value={fmt(run.total_amount_cents - run.total_backup_withholding_cents)} />
       </div>
 
+      {payments && payments.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+          <span>Mix:</span>
+          <span className="px-2 py-0.5 rounded border border-success text-success">
+            IC · {payments.filter((p) => p.vendors?.worker_type === '1099_ic').length}
+          </span>
+          <span className="px-2 py-0.5 rounded border border-primary text-primary">
+            C2C · {payments.filter((p) => p.vendors?.worker_type === 'c2c_vendor').length}
+          </span>
+        </div>
+      )}
+
       <div className="flex items-center justify-between">
         <h2 className="text-base font-semibold">Payments</h2>
         {editable && (
