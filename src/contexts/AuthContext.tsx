@@ -3,7 +3,7 @@ import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
 
-export type AppRole = 'super_admin' | 'client_admin' | 'employee';
+export type AppRole = 'super_admin' | 'client_admin' | 'employee' | 'contractor';
 
 interface Profile {
   id: string;
@@ -24,6 +24,7 @@ interface AuthContextType {
   isSuperAdmin: boolean;
   isClientAdmin: boolean;
   isEmployee: boolean;
+  isContractor: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -101,6 +102,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isSuperAdmin: role === 'super_admin',
         isClientAdmin: role === 'client_admin',
         isEmployee: role === 'employee',
+        isContractor: role === 'contractor',
       }}
     >
       {children}
