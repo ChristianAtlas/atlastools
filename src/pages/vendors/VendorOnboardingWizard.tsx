@@ -254,13 +254,22 @@ export default function VendorOnboardingWizard() {
                   </SelectContent>
                 </Select>
               </Field>
-              <Field label="Last 4 of Tax ID *">
+              <Field
+                label={`Full ${data.tax_id_type.toUpperCase()} *`}
+              >
                 <Input
                   inputMode="numeric"
-                  maxLength={4}
-                  value={data.tax_id_last4}
-                  onChange={(e) => update({ tax_id_last4: e.target.value.replace(/\D/g, '').slice(0, 4) })}
+                  autoComplete="off"
+                  placeholder={data.tax_id_type === 'ein' ? '12-3456789' : '123-45-6789'}
+                  maxLength={data.tax_id_type === 'ein' ? 10 : 11}
+                  value={formatTaxId(data.tax_id_full, data.tax_id_type)}
+                  onChange={(e) =>
+                    update({ tax_id_full: e.target.value.replace(/\D/g, '').slice(0, 9) })
+                  }
                 />
+                <p className="mt-1 text-[10px] text-muted-foreground">
+                  Required for 1099 reporting. Only the last 4 digits are stored in plain text.
+                </p>
               </Field>
               <Field label="Default 1099 category">
                 <Select value={data.default_1099_category} onValueChange={(v) => update({ default_1099_category: v as Vendor1099Category })}>
@@ -326,7 +335,10 @@ export default function VendorOnboardingWizard() {
             <h3 className="font-semibold">Review &amp; create</h3>
             <ReviewRow label="Worker type" value={isEntity ? 'C2C Vendor' : '1099 Independent Contractor'} />
             <ReviewRow label="Legal name" value={isEntity ? data.business_name : `${data.first_name} ${data.last_name}`.trim()} />
-            <ReviewRow label="Tax ID" value={`${data.tax_id_type.toUpperCase()} ••• ••• ${data.tax_id_last4 || '----'}`} />
+            <ReviewRow
+              label="Tax ID"
+              value={`${data.tax_id_type.toUpperCase()} ••• ••• ${data.tax_id_full.replace(/\D/g, '').slice(-4) || '----'}`}
+            />
             <ReviewRow label="Default 1099 category" value={VENDOR_1099_CATEGORIES.find((c) => c.value === data.default_1099_category)?.label ?? '—'} />
             <ReviewRow label="Backup withholding" value={data.backup_withholding_enabled ? 'Enabled (24%)' : 'Disabled'} />
             <ReviewRow
