@@ -40,10 +40,6 @@ export default function ClientWorkersComp() {
   const { profile, isClientAdmin, isSuperAdmin } = useAuth();
   const companyId = profile?.company_id ?? undefined;
 
-  // Only client admins (or super-admins reviewing) hit this view.
-  if (!isClientAdmin && !isSuperAdmin) return <Navigate to="/" replace />;
-  if (!companyId) return <Navigate to="/" replace />;
-
   const [search, setSearch] = useState('');
   const [periodFilter, setPeriodFilter] = useState<string>('all');
 
@@ -53,6 +49,10 @@ export default function ClientWorkersComp() {
   const { data: invoiceItems = [] } = useWCInvoiceItems(companyId);
   const { data: calcs = [] } = useWCPayrollCalcs(undefined, companyId);
   const { data: runs = [] } = usePayrollRuns(companyId);
+
+  // Only client admins (or super-admins reviewing) hit this view.
+  // Guards live AFTER hooks so hook order stays stable across renders.
+  const accessDenied = !isClientAdmin && !isSuperAdmin;
 
   const empMap = useMemo(() => new Map(employees.map((e) => [e.id, e])), [employees]);
   const codeMap = useMemo(() => new Map(codes.map((c) => [c.id, c])), [codes]);
