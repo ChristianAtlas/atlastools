@@ -306,8 +306,6 @@ export function useUploadVendorDocument() {
         await supabase
           .from('vendors' as any)
           .update({
-            w9_status: 'on_file',
-            w9_collected_at: new Date().toISOString(),
             w9_expires_at: input.w9_expires_at ?? null,
           } as any)
           .eq('id', input.vendor_id);
