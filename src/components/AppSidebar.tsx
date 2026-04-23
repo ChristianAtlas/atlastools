@@ -4,7 +4,7 @@ import {
   LayoutDashboard, Users, Building2, CreditCard, FileText, Workflow,
   ClipboardCheck, ScrollText, BarChart3, Settings, DollarSign,
   CalendarDays, UserPlus, ShieldCheck, Clock, Heart, User, Landmark, Banknote, Mail, Globe, Briefcase,
-  CheckSquare
+  CheckSquare, Shield
 } from 'lucide-react';
 import type { AppRole } from '@/contexts/AuthContext';
 import logoImg from '@/assets/logo.png';
