@@ -77,6 +77,11 @@ export interface WizardData {
       hourly_rate?: number;
       pay_frequency?: string;
       work_state?: string;
+      // Workers' Comp onboarding
+      wc_code_id?: string;
+      is_owner_officer?: boolean;
+      wc_exempt?: boolean;
+      wc_exempt_reason?: string;
     }>;
     ytd_data?: Array<{
       employee_email: string;
@@ -338,6 +343,9 @@ export function useLaunchClient() {
           pay_frequency: (emp.pay_frequency || payrollInfo?.pay_frequency || 'biweekly') as 'weekly' | 'biweekly' | 'semimonthly' | 'monthly',
           state: emp.work_state || companyInfo.state_of_incorporation,
           status: 'active' as const,
+          is_owner_officer: !!emp.is_owner_officer,
+          wc_exempt: !!emp.wc_exempt,
+          wc_exempt_reason: emp.wc_exempt_reason || null,
         }));
 
         const { data: createdEmployees, error: empError } = await supabase
@@ -345,6 +353,24 @@ export function useLaunchClient() {
           .insert(employeeRows)
           .select('id, email, first_name, last_name');
         if (empError) throw empError;
+
+        // Create WC assignments for any non-exempt employee with a code selected during onboarding.
+        if (createdEmployees && createdEmployees.length > 0) {
+          const emailToId = new Map(createdEmployees.map(e => [e.email, e.id]));
+          const wcRows = employeeData
+            .filter(e => e.wc_code_id && !e.wc_exempt)
+            .map(e => ({
+              employee_id: emailToId.get(e.email)!,
+              company_id: company.id,
+              wc_code_id: e.wc_code_id!,
+              effective_date: e.hire_date,
+              is_active: true,
+            }))
+            .filter(r => !!r.employee_id);
+          if (wcRows.length > 0) {
+            await (supabase.from('employee_wc_assignments') as any).insert(wcRows);
+          }
+        }
 
         // Create invitation records for each employee
         if (createdEmployees && createdEmployees.length > 0) {
@@ -493,6 +519,7 @@ export const CSV_TEMPLATE_HEADERS = [
   'first_name', 'last_name', 'email', 'phone', 'hire_date',
   'title', 'department', 'pay_type', 'salary', 'hourly_rate',
   'pay_frequency', 'work_state',
+  'wc_code', 'is_owner_officer', 'wc_exempt', 'wc_exempt_reason',
 ];
 
 export function parseEmployeeCSV(csvText: string) {
@@ -526,6 +553,11 @@ export function parseEmployeeCSV(csvText: string) {
       hourly_rate: row.hourly_rate ? parseFloat(row.hourly_rate) : undefined,
       pay_frequency: row.pay_frequency || undefined,
       work_state: row.work_state || undefined,
+      // wc_code is the human code (e.g. "8810"); resolved to wc_code_id in the UI
+      wc_code_id: undefined,
+      is_owner_officer: ['true','yes','y','1'].includes((row.is_owner_officer || '').toLowerCase()),
+      wc_exempt: ['true','yes','y','1'].includes((row.wc_exempt || '').toLowerCase()),
+      wc_exempt_reason: row.wc_exempt_reason || undefined,
     });
   }
 
