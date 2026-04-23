@@ -194,6 +194,8 @@ export default function ClientWorkersComp() {
     );
   });
 
+  if (accessDenied || !companyId) return <Navigate to="/" replace />;
+
   return (
     <div className="space-y-6">
       <PageHeader
