@@ -36,7 +36,7 @@ export function EditEmployeeDialog({ employee, open, onOpenChange, defaultTab = 
   const handlePayTypeChange = (payType: string) => {
     setForm(f => ({
       ...f,
-      pay_type: payType,
+      pay_type: payType as typeof f.pay_type,
       pay_frequency: payType === 'salary' ? 'semimonthly' : 'biweekly',
     }));
   };
