@@ -207,7 +207,7 @@ export default function VendorOnboardingWizard() {
               />
               <TypeCard
                 selected={data.worker_type === 'c2c_vendor'}
-                onClick={() => update({ worker_type: 'c2c_vendor', tax_id_type: 'ein' })}
+                onClick={() => update({ worker_type: 'c2c_vendor', tax_id_type: 'ein', date_of_birth: '' })}
                 icon={<Building2 className="h-5 w-5" />}
                 title="C2C Vendor"
                 desc="A business entity paid by EIN. Admin-managed only."
