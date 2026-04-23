@@ -5,11 +5,45 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/PageHeader';
-import { AlertCircle, FileText, CreditCard, User, Banknote } from 'lucide-react';
+import { AlertCircle, FileText, CreditCard, User, Banknote, CheckCircle2, Clock, XCircle } from 'lucide-react';
 import { useMemo } from 'react';
 
 function formatCents(c: number) {
   return (c / 100).toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+}
+
+const DOC_TYPE_LABELS: Record<string, string> = {
+  w9: 'W-9',
+  w8ben: 'W-8BEN',
+  w8bene: 'W-8BEN-E',
+  coi: 'Certificate of Insurance',
+  contract: 'Contract / MSA',
+  msa: 'Master Service Agreement',
+  nda: 'NDA',
+  other: 'Other',
+};
+
+function paymentStatusVariant(status: string): 'default' | 'secondary' | 'destructive' | 'outline' {
+  switch (status) {
+    case 'paid':
+    case 'completed':
+      return 'default';
+    case 'voided':
+    case 'failed':
+      return 'destructive';
+    case 'scheduled':
+    case 'pending':
+    case 'processing':
+      return 'secondary';
+    default:
+      return 'outline';
+  }
+}
+
+function PaymentStatusIcon({ status }: { status: string }) {
+  if (status === 'paid' || status === 'completed') return <CheckCircle2 className="h-4 w-4 text-primary" />;
+  if (status === 'voided' || status === 'failed') return <XCircle className="h-4 w-4 text-destructive" />;
+  return <Clock className="h-4 w-4 text-muted-foreground" />;
 }
 
 export default function ContractorDashboard() {
@@ -19,17 +53,30 @@ export default function ContractorDashboard() {
 
   const eligibility = vendor ? evaluateVendorEligibility(vendor) : null;
   const ytd = useMemo(() => {
-    if (!payments) return { gross: 0, withholding: 0, count: 0 };
+    if (!payments) return { gross: 0, withholding: 0, count: 0, nec: 0, misc: 0 };
     const year = new Date().getFullYear();
     const rows = payments.filter((p: any) => p.reporting_year === year && p.status !== 'voided');
+    const nec = rows
+      .filter((p: any) => (p.reporting_category ?? p.category) === 'nec')
+      .reduce((s: number, p: any) => s + (p.gross_amount_cents ?? 0), 0);
+    const misc = rows
+      .filter((p: any) => {
+        const c = p.reporting_category ?? p.category;
+        return c && c !== 'nec';
+      })
+      .reduce((s: number, p: any) => s + (p.gross_amount_cents ?? 0), 0);
     return {
       gross: rows.reduce((s: number, p: any) => s + (p.gross_amount_cents ?? 0), 0),
       withholding: rows.reduce((s: number, p: any) => s + (p.backup_withholding_cents ?? 0), 0),
       count: rows.length,
+      nec,
+      misc,
     };
   }, [payments]);
 
   const w9 = (docs ?? []).find((d) => d.document_type === 'w9' && d.is_active_w9);
+  const onFileDocs = (docs ?? []).filter((d: any) => !d.deleted_at).slice(0, 6);
+  const recentPayments = (payments ?? []).slice(0, 5);
 
   if (isLoading) {
     return <div className="p-6 text-sm text-muted-foreground">Loading…</div>;
