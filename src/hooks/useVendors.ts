@@ -797,6 +797,9 @@ export function use1099Summary({ reportingYear, companyId }: Use1099SummaryFilte
         const agg = byVendor.get(v.id);
         const nec_cents = agg?.nec ?? 0;
         const misc_cents = agg?.misc ?? 0;
+        // Reconciliation invariant:
+        //   nec_cents + misc_cents === prior_ytd_cents + atlas_paid_cents
+        // (backup withholding is informational only; not added to gross totals)
         const total = nec_cents + misc_cents;
         const exceptions: string[] = [];
         if (v.w9_status !== 'on_file') exceptions.push('missing_w9');
@@ -804,6 +807,9 @@ export function use1099Summary({ reportingYear, companyId }: Use1099SummaryFilte
         // IRS reporting threshold: $600 for NEC, $600 for most MISC boxes,
         // $10 for royalties. Flag low-but-nonzero totals so reviewers see them.
         if (total > 0 && total < 60000) exceptions.push('under_threshold');
+        // Backup withholding without any reportable gross is a data integrity
+        // problem — surface it so the operator can investigate before filing.
+        if ((agg?.bw ?? 0) > 0 && total === 0) exceptions.push('bw_without_gross');
 
         let form: 'NEC' | 'MISC' | 'BOTH' | 'NONE' = 'NONE';
         if (nec_cents > 0 && misc_cents > 0) form = 'BOTH';
@@ -847,7 +853,7 @@ export function use1099Summary({ reportingYear, companyId }: Use1099SummaryFilte
           } as Record<Vendor1099Category, number>,
           backup_withholding_cents: agg?.bw ?? 0,
           prior_ytd_cents: agg?.prior ?? 0,
-          atlas_paid_cents: 0,
+          atlas_paid_cents: agg?.atlas ?? 0,
           total_reportable_cents: total,
           reportable_form: form,
         exceptions,
