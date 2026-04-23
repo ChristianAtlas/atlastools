@@ -105,8 +105,7 @@ export default function VendorOnboardingWizard() {
       );
     }
     if (step === 2) {
-      const digits = data.tax_id_full.replace(/\D/g, '');
-      return digits.length === 9;
+      return validateTaxId(data.tax_id_type, data.tax_id_full).ok;
     }
     return true;
   }
