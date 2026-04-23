@@ -143,9 +143,9 @@ export function VendorDocumentsTab({ vendor }: { vendor: VendorRow }) {
         </div>
       )}
       {canManage && vendor.w9_status !== 'on_file' && (
-        <div className="rounded-md border border-amber-500/40 bg-amber-500/5 px-3 py-2 text-xs flex items-center justify-between gap-3">
+        <div className="rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-xs flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <ShieldCheck className="h-4 w-4 text-amber-600" />
+            <ShieldCheck className="h-4 w-4 text-destructive" />
             <span>
               <strong>W-9 not on file.</strong> Upload the signed W-9 to unlock vendor payments.
             </span>
@@ -256,12 +256,16 @@ export function VendorDocumentsTab({ vendor }: { vendor: VendorRow }) {
                   </div>
                   {d.notes && <div className="text-xs text-muted-foreground italic mt-0.5">{d.notes}</div>}
                 </div>
-                <Button size="sm" variant="ghost" onClick={() => handleDownload(d)} disabled={!d.file_path}>
-                  <Download className="h-4 w-4" />
-                </Button>
-                <Button size="sm" variant="ghost" onClick={() => handleDelete(d)} disabled={remove.isPending}>
-                  <Trash2 className="h-4 w-4 text-destructive" />
-                </Button>
+                {canDownload && (
+                  <Button size="sm" variant="ghost" onClick={() => handleDownload(d)} disabled={!d.file_path}>
+                    <Download className="h-4 w-4" />
+                  </Button>
+                )}
+                {canManage && (
+                  <Button size="sm" variant="ghost" onClick={() => handleDelete(d)} disabled={remove.isPending}>
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                )}
               </div>
             );
           })}
