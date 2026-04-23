@@ -265,7 +265,10 @@ export default function VendorOnboardingWizard() {
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
               <Field label="Tax ID type">
-                <Select value={data.tax_id_type} onValueChange={(v) => update({ tax_id_type: v as any })}>
+                <Select
+                  value={data.tax_id_type}
+                  onValueChange={(v) => update({ tax_id_type: v as TaxIdType })}
+                >
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {!isEntity && <SelectItem value="ssn">SSN</SelectItem>}
@@ -275,21 +278,39 @@ export default function VendorOnboardingWizard() {
                 </Select>
               </Field>
               <Field
-                label={`Full ${data.tax_id_type.toUpperCase()} *`}
+                label={`Full ${taxIdLabel(data.tax_id_type)} *`}
               >
-                <Input
-                  inputMode="numeric"
-                  autoComplete="off"
-                  placeholder={data.tax_id_type === 'ein' ? '12-3456789' : '123-45-6789'}
-                  maxLength={data.tax_id_type === 'ein' ? 10 : 11}
-                  value={formatTaxId(data.tax_id_full, data.tax_id_type)}
-                  onChange={(e) =>
-                    update({ tax_id_full: e.target.value.replace(/\D/g, '').slice(0, 9) })
-                  }
-                />
-                <p className="mt-1 text-[10px] text-muted-foreground">
-                  Required for 1099 reporting. Only the last 4 digits are stored in plain text.
-                </p>
+                {(() => {
+                  const result = validateTaxId(data.tax_id_type, data.tax_id_full);
+                  const showError = data.tax_id_full.length > 0 && !result.ok;
+                  return (
+                    <>
+                      <Input
+                        inputMode="numeric"
+                        autoComplete="off"
+                        placeholder={taxIdPlaceholder(data.tax_id_type)}
+                        maxLength={data.tax_id_type === 'ein' ? 10 : 11}
+                        value={formatTaxId(data.tax_id_full, data.tax_id_type)}
+                        aria-invalid={showError}
+                        className={showError ? 'border-destructive focus-visible:ring-destructive' : ''}
+                        onChange={(e) =>
+                          update({ tax_id_full: e.target.value.replace(/\D/g, '').slice(0, 9) })
+                        }
+                      />
+                      {showError ? (
+                        <p className="mt-1 text-[11px] text-destructive">{result.error}</p>
+                      ) : (
+                        <p className="mt-1 text-[10px] text-muted-foreground">
+                          {data.tax_id_type === 'ein'
+                            ? 'Enter the 9-digit EIN. Only the last 4 digits are stored in plain text.'
+                            : data.tax_id_type === 'itin'
+                              ? 'ITIN must begin with 9 and use a valid IRS group range. Only the last 4 digits are stored.'
+                              : 'SSN cannot start with 000, 666, or 9, and middle/last segments cannot be all zeros. Only the last 4 digits are stored.'}
+                        </p>
+                      )}
+                    </>
+                  );
+                })()}
               </Field>
               <Field label="Default 1099 category">
                 <Select value={data.default_1099_category} onValueChange={(v) => update({ default_1099_category: v as Vendor1099Category })}>
