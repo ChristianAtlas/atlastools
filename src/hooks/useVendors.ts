@@ -354,3 +354,177 @@ export const VENDOR_DOCUMENT_TYPES: { value: VendorDocumentType; label: string }
   { value: 'coi', label: 'Certificate of Insurance' },
   { value: 'other', label: 'Other' },
 ];
+
+// =========================================================================
+// Year-end 1099 summary aggregation
+// Combines AtlasOne-paid earnings (placeholder until Phase 2 vendor_payments
+// ships) with manually entered prior YTD earnings, split into NEC vs MISC
+// totals plus backup withholding totals per vendor / per category.
+// =========================================================================
+export interface Vendor1099SummaryRow {
+  vendor_id: string;
+  vid: string;
+  legal_name: string;
+  business_name: string | null;
+  worker_type: VendorWorkerType;
+  is_c2c: boolean;
+  tax_id_type: 'ssn' | 'ein' | 'itin' | null;
+  tax_id_last4: string | null;
+  email: string | null;
+  address_line1: string | null;
+  address_line2: string | null;
+  city: string | null;
+  state: string | null;
+  zip: string | null;
+  w9_status: VendorW9Status;
+  company_id: string;
+  company_name: string | null;
+  company_cid: string | null;
+  // Aggregated cents totals
+  nec_cents: number;
+  misc_cents: number;
+  misc_breakdown: Record<Vendor1099Category, number>;
+  backup_withholding_cents: number;
+  prior_ytd_cents: number; // entered for current AtlasOne, separate visibility
+  atlas_paid_cents: number; // placeholder = 0 until Phase 2
+  total_reportable_cents: number;
+  reportable_form: 'NEC' | 'MISC' | 'BOTH' | 'NONE';
+  exceptions: string[]; // missing_w9, missing_tin, under_threshold, etc.
+}
+
+export interface Use1099SummaryFilters {
+  reportingYear: number;
+  companyId?: string;
+}
+
+const NEC_CATEGORIES: Vendor1099Category[] = ['nec'];
+
+export function use1099Summary({ reportingYear, companyId }: Use1099SummaryFilters) {
+  return useQuery({
+    queryKey: ['vendor-1099-summary', reportingYear, companyId ?? 'all'],
+    queryFn: async () => {
+      // Fetch vendors in scope
+      let vq = supabase
+        .from('vendors' as any)
+        .select('*, companies:company_id(name, cid)')
+        .is('deleted_at', null);
+      if (companyId) vq = vq.eq('company_id', companyId);
+      const { data: vData, error: vErr } = await vq;
+      if (vErr) throw vErr;
+      const vendors = (vData ?? []) as unknown as VendorRow[];
+      if (vendors.length === 0) return [] as Vendor1099SummaryRow[];
+
+      const ids = vendors.map((v) => v.id);
+
+      // Fetch prior YTD entries for the year
+      const { data: pData, error: pErr } = await supabase
+        .from('vendor_ytd_prior_earnings' as any)
+        .select('vendor_id, category, amount_cents, backup_withholding_cents, reporting_year')
+        .eq('reporting_year', reportingYear)
+        .in('vendor_id', ids);
+      if (pErr) throw pErr;
+      const prior = (pData ?? []) as unknown as Array<{
+        vendor_id: string;
+        category: Vendor1099Category;
+        amount_cents: number;
+        backup_withholding_cents: number;
+      }>;
+
+      // Phase 2 hook: aggregate vendor_payments here when the table exists.
+      // For now, atlas_paid totals are zero so the summary still surfaces prior
+      // YTD imports correctly.
+
+      const byVendor = new Map<string, { nec: number; misc: number; bw: number; misc_breakdown: Record<Vendor1099Category, number>; prior: number }>();
+      for (const row of prior) {
+        const cur = byVendor.get(row.vendor_id) ?? {
+          nec: 0,
+          misc: 0,
+          bw: 0,
+          misc_breakdown: {
+            nec: 0,
+            misc_rent: 0,
+            misc_royalties: 0,
+            misc_other_income: 0,
+            misc_legal: 0,
+            misc_prizes: 0,
+            misc_medical: 0,
+            misc_other: 0,
+          } as Record<Vendor1099Category, number>,
+          prior: 0,
+        };
+        cur.prior += row.amount_cents;
+        cur.bw += row.backup_withholding_cents;
+        if (NEC_CATEGORIES.includes(row.category)) {
+          cur.nec += row.amount_cents;
+        } else {
+          cur.misc += row.amount_cents;
+          cur.misc_breakdown[row.category] = (cur.misc_breakdown[row.category] ?? 0) + row.amount_cents;
+        }
+        byVendor.set(row.vendor_id, cur);
+      }
+
+      const summary: Vendor1099SummaryRow[] = vendors.map((v) => {
+        const agg = byVendor.get(v.id);
+        const nec_cents = agg?.nec ?? 0;
+        const misc_cents = agg?.misc ?? 0;
+        const total = nec_cents + misc_cents;
+        const exceptions: string[] = [];
+        if (v.w9_status !== 'on_file') exceptions.push('missing_w9');
+        if (!v.tax_id_last4 || !v.tax_id_type) exceptions.push('missing_tin');
+        // IRS reporting threshold: $600 for NEC, $600 for most MISC boxes,
+        // $10 for royalties. Flag low-but-nonzero totals so reviewers see them.
+        if (total > 0 && total < 60000) exceptions.push('under_threshold');
+
+        let form: 'NEC' | 'MISC' | 'BOTH' | 'NONE' = 'NONE';
+        if (nec_cents > 0 && misc_cents > 0) form = 'BOTH';
+        else if (nec_cents > 0) form = 'NEC';
+        else if (misc_cents > 0) form = 'MISC';
+
+        const display = v.is_c2c || v.worker_type === 'c2c_vendor'
+          ? v.business_name || v.legal_name
+          : `${v.first_name ?? ''} ${v.last_name ?? ''}`.trim() || v.legal_name;
+
+        return {
+          vendor_id: v.id,
+          vid: v.vid,
+          legal_name: display,
+          business_name: v.business_name,
+          worker_type: v.worker_type,
+          is_c2c: v.is_c2c,
+          tax_id_type: v.tax_id_type,
+          tax_id_last4: v.tax_id_last4,
+          email: v.email,
+          address_line1: v.address_line1,
+          address_line2: v.address_line2,
+          city: v.city,
+          state: v.state,
+          zip: v.zip,
+          w9_status: v.w9_status,
+          company_id: v.company_id,
+          company_name: v.companies?.name ?? null,
+          company_cid: v.companies?.cid ?? null,
+          nec_cents,
+          misc_cents,
+          misc_breakdown: agg?.misc_breakdown ?? {
+            nec: 0,
+            misc_rent: 0,
+            misc_royalties: 0,
+            misc_other_income: 0,
+            misc_legal: 0,
+            misc_prizes: 0,
+            misc_medical: 0,
+            misc_other: 0,
+          } as Record<Vendor1099Category, number>,
+          backup_withholding_cents: agg?.bw ?? 0,
+          prior_ytd_cents: agg?.prior ?? 0,
+          atlas_paid_cents: 0,
+          total_reportable_cents: total,
+          reportable_form: form,
+        exceptions,
+        };
+      });
+
+      return summary;
+    },
+  });
+}
