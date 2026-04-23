@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Upload, FileText, Download, Trash2, ShieldCheck, Lock } from 'lucide-react';
+import { Upload, FileText, Download, Trash2, ShieldCheck, Lock, History, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -43,6 +43,13 @@ export function VendorDocumentsTab({ vendor }: { vendor: VendorRow }) {
   const { data: docs, isLoading } = useVendorDocuments(vendor.id);
   const upload = useUploadVendorDocument();
   const remove = useDeleteVendorDocument();
+
+  // Split W-9s out for the history view; keep everything else in the generic list.
+  const w9History = (docs ?? [])
+    .filter((d) => d.document_type === 'w9')
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  const otherDocs = (docs ?? []).filter((d) => d.document_type !== 'w9');
+  const activeW9 = w9History.find((d) => d.is_active_w9);
 
   const [open, setOpen] = useState(false);
   const [docType, setDocType] = useState<VendorDocumentType>('w9');
