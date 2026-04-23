@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Upload, FileText, Download, Trash2, ShieldCheck, Lock } from 'lucide-react';
+import { Upload, FileText, Download, Trash2, ShieldCheck, Lock, History, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -43,6 +43,13 @@ export function VendorDocumentsTab({ vendor }: { vendor: VendorRow }) {
   const { data: docs, isLoading } = useVendorDocuments(vendor.id);
   const upload = useUploadVendorDocument();
   const remove = useDeleteVendorDocument();
+
+  // Split W-9s out for the history view; keep everything else in the generic list.
+  const w9History = (docs ?? [])
+    .filter((d) => d.document_type === 'w9')
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  const otherDocs = (docs ?? []).filter((d) => d.document_type !== 'w9');
+  const activeW9 = w9History.find((d) => d.is_active_w9);
 
   const [open, setOpen] = useState(false);
   const [docType, setDocType] = useState<VendorDocumentType>('w9');
@@ -234,8 +241,65 @@ export function VendorDocumentsTab({ vendor }: { vendor: VendorRow }) {
           No documents uploaded yet.
         </div>
       ) : (
+        <>
+          {w9History.length > 0 && (
+            <div className="rounded-md border">
+              <div className="flex items-center justify-between px-3 py-2 border-b bg-muted/30">
+                <div className="flex items-center gap-2 text-sm font-semibold">
+                  <History className="h-4 w-4" />
+                  W-9 history
+                  <Badge variant="outline" className="text-[10px]">{w9History.length}</Badge>
+                </div>
+                <span className="text-[11px] text-muted-foreground">
+                  Only the most recent W-9 is active. Older versions are kept for audit.
+                </span>
+              </div>
+              <div className="divide-y">
+                {w9History.map((d) => (
+                  <div key={d.id} className="flex items-center gap-3 p-3">
+                    <FileText className="h-5 w-5 text-muted-foreground shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-sm truncate">{d.title}</span>
+                        {d.is_active_w9 ? (
+                          <Badge className="text-[10px] bg-success/15 text-success border-success/30 hover:bg-success/15">
+                            <CheckCircle2 className="mr-1 h-3 w-3" /> Active · on file
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-[10px] text-muted-foreground">Superseded</Badge>
+                        )}
+                      </div>
+                      <div className="text-xs text-muted-foreground truncate">
+                        {d.file_name ?? '—'} · {fmtBytes(d.file_size)} · uploaded{' '}
+                        {new Date(d.created_at).toLocaleString()}
+                        {d.uploaded_by_name ? ` · marked on file by ${d.uploaded_by_name}` : ''}
+                      </div>
+                      {d === activeW9 && vendor.w9_expires_at && (
+                        <div className="text-[11px] text-muted-foreground">
+                          Expires {new Date(vendor.w9_expires_at).toLocaleDateString()}
+                        </div>
+                      )}
+                      {d.notes && <div className="text-xs text-muted-foreground italic mt-0.5">{d.notes}</div>}
+                    </div>
+                    {canDownload && (
+                      <Button size="sm" variant="ghost" onClick={() => handleDownload(d)} disabled={!d.file_path}>
+                        <Download className="h-4 w-4" />
+                      </Button>
+                    )}
+                    {canManage && (
+                      <Button size="sm" variant="ghost" onClick={() => handleDelete(d)} disabled={remove.isPending}>
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {otherDocs.length > 0 && (
         <div className="rounded-md border divide-y">
-          {docs.map((d) => {
+          {otherDocs.map((d) => {
             const typeLabel = VENDOR_DOCUMENT_TYPES.find((t) => t.value === d.document_type)?.label ?? d.document_type;
             return (
               <div key={d.id} className="flex items-center gap-3 p-3">
@@ -244,11 +308,6 @@ export function VendorDocumentsTab({ vendor }: { vendor: VendorRow }) {
                   <div className="flex items-center gap-2">
                     <span className="font-medium text-sm truncate">{d.title}</span>
                     <Badge variant="outline" className="text-[10px]">{typeLabel}</Badge>
-                    {d.document_type === 'w9' && (
-                      <Badge variant="secondary" className="text-[10px]">
-                        <ShieldCheck className="mr-1 h-3 w-3" />W-9
-                      </Badge>
-                    )}
                   </div>
                   <div className="text-xs text-muted-foreground truncate">
                     {d.file_name} · {fmtBytes(d.file_size)} · uploaded {new Date(d.created_at).toLocaleDateString()}
@@ -270,6 +329,8 @@ export function VendorDocumentsTab({ vendor }: { vendor: VendorRow }) {
             );
           })}
         </div>
+          )}
+        </>
       )}
     </div>
   );

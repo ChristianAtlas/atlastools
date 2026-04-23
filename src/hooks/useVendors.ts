@@ -233,6 +233,7 @@ export interface VendorDocumentRow {
   uploaded_by: string | null;
   uploaded_by_name: string | null;
   notes: string | null;
+  is_active_w9?: boolean;
   created_at: string;
   updated_at: string;
 }
