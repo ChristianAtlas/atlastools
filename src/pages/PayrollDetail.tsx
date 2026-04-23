@@ -16,6 +16,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { RideAlongVendorsTab } from '@/components/vendors/RideAlongVendorsTab';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog';
@@ -650,6 +651,7 @@ export default function PayrollDetail() {
                 Employees ({lines.length})
                 {blockedCount > 0 && <Badge className="ml-1 h-4 min-w-4 px-1 text-[10px] bg-destructive/10 text-destructive border-0">{blockedCount}</Badge>}
               </TabsTrigger>
+              <TabsTrigger value="vendors">Vendors</TabsTrigger>
               <TabsTrigger value="funding">Funding</TabsTrigger>
               <TabsTrigger value="audit">Audit Trail</TabsTrigger>
             </TabsList>
