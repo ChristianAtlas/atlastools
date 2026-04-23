@@ -216,6 +216,46 @@ serve(async (req) => {
       }
 
       // D. Catch-up charges - find employees not billed last month
+      // C3. Vendor / 1099 flat monthly fee — only when at least one non-voided
+      // vendor payment landed in this billing month for this company.
+      const vmStart = billingDate;
+      const vmEnd = new Date(new Date(billingDate).getFullYear(), new Date(billingDate).getMonth() + 1, 0)
+        .toISOString().slice(0, 10);
+      const { data: vendorRunsThisMonth } = await supabase
+        .from("vendor_payment_runs")
+        .select("id")
+        .eq("company_id", company.id)
+        .gte("pay_date", vmStart)
+        .lte("pay_date", vmEnd)
+        .neq("status", "voided");
+      const vendorRunIds = (vendorRunsThisMonth ?? []).map((r: any) => r.id);
+      let activeVendorPaymentCount = 0;
+      if (vendorRunIds.length > 0) {
+        const { count } = await supabase
+          .from("vendor_payments")
+          .select("id", { count: "exact", head: true })
+          .in("vendor_payment_run_id", vendorRunIds)
+          .neq("status", "voided");
+        activeVendorPaymentCount = count ?? 0;
+      }
+      if (activeVendorPaymentCount > 0) {
+        const { data: vendorTier } = await supabase
+          .from("pricing_tiers")
+          .select("*")
+          .eq("slug", "vendor_monthly_fee")
+          .maybeSingle();
+        const vendorFeeCents = vendorTier?.unit_price_cents ?? 5000; // default $50/mo flat
+        lineItems.push({
+          description: `Vendor / 1099 monthly fee (${activeVendorPaymentCount} payment${activeVendorPaymentCount === 1 ? '' : 's'} this month)`,
+          tier_slug: "vendor_monthly_fee",
+          quantity: 1,
+          unit_price_cents: vendorFeeCents,
+          total_cents: vendorFeeCents,
+          is_markup: false,
+        });
+        log("Added vendor monthly fee", { company_id: company.id, payments: activeVendorPaymentCount });
+      }
+
       const prevMonth = new Date(billingDate);
       prevMonth.setMonth(prevMonth.getMonth() - 1);
       const prevMonthStr = prevMonth.toISOString().slice(0, 10);
