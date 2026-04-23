@@ -66,6 +66,7 @@ import ContractorPayments from "@/pages/contractor/ContractorPayments";
 import ContractorDocuments from "@/pages/contractor/ContractorDocuments";
 import ContractorBanking from "@/pages/contractor/ContractorBanking";
 import ContractorProfile from "@/pages/contractor/ContractorProfile";
+import Contractor1099s from "@/pages/contractor/Contractor1099s";
 
 const queryClient = new QueryClient();
 
@@ -149,6 +150,7 @@ const App = () => (
               <Route path="/contractor/payments" element={<ContractorPayments />} />
               <Route path="/contractor/documents" element={<ContractorDocuments />} />
               <Route path="/contractor/banking" element={<ContractorBanking />} />
+              <Route path="/contractor/1099s" element={<Contractor1099s />} />
               <Route path="/contractor/profile" element={<ContractorProfile />} />
             </Route>
 

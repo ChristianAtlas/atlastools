@@ -130,6 +130,7 @@ const contractorNavItems: NavItem[] = [
   { label: 'Dashboard', to: '/', icon: LayoutDashboard, roles: ['contractor'] },
   { label: 'Get Started', to: '/contractor/onboarding', icon: CheckSquare, roles: ['contractor'] },
   { label: 'Payments', to: '/contractor/payments', icon: DollarSign, roles: ['contractor'] },
+  { label: '1099 Download Center', to: '/contractor/1099s', icon: ScrollText, roles: ['contractor'] },
   { label: 'Documents', to: '/contractor/documents', icon: FileText, roles: ['contractor'] },
   { label: 'Banking', to: '/contractor/banking', icon: Banknote, roles: ['contractor'] },
   { label: 'Profile', to: '/contractor/profile', icon: User, roles: ['contractor'] },
