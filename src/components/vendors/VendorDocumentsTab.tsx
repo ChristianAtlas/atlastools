@@ -136,6 +136,26 @@ export function VendorDocumentsTab({ vendor }: { vendor: VendorRow }) {
 
   return (
     <div className="space-y-4">
+      {!canManage && (
+        <div className="rounded-md border bg-muted/30 px-3 py-2 text-xs text-muted-foreground flex items-center gap-2">
+          <Lock className="h-3.5 w-3.5" />
+          Read-only view. Only client admins or AtlasOne staff can upload or remove vendor documents.
+        </div>
+      )}
+      {canManage && vendor.w9_status !== 'on_file' && (
+        <div className="rounded-md border border-amber-500/40 bg-amber-500/5 px-3 py-2 text-xs flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <ShieldCheck className="h-4 w-4 text-amber-600" />
+            <span>
+              <strong>W-9 not on file.</strong> Upload the signed W-9 to unlock vendor payments.
+            </span>
+          </div>
+          <Button size="sm" variant="outline" onClick={() => { setDocType('w9'); setMarkW9(true); setOpen(true); }}>
+            Upload W-9
+          </Button>
+        </div>
+      )}
+
       <div className="flex items-center justify-between">
         <div>
           <h3 className="font-semibold text-sm">Vendor documents</h3>
@@ -143,6 +163,7 @@ export function VendorDocumentsTab({ vendor }: { vendor: VendorRow }) {
             W-9, MSA, COI, and other supporting files. Files are private and only visible to your company.
           </p>
         </div>
+        {canManage && (
         <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) reset(); }}>
           <DialogTrigger asChild>
             <Button size="sm"><Upload className="mr-2 h-4 w-4" />Upload document</Button>
@@ -203,6 +224,7 @@ export function VendorDocumentsTab({ vendor }: { vendor: VendorRow }) {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+        )}
       </div>
 
       {isLoading ? (
