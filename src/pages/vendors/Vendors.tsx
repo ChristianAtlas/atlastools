@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Building2, User } from 'lucide-react';
+import { Plus, Search, Building2, User, FileSpreadsheet } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -53,10 +53,16 @@ export default function Vendors() {
         title="Contractors & Vendors"
         description="Manage 1099 independent contractors and C2C vendors (VID workers)"
         actions={
-          <Button onClick={() => navigate('/vendors/new')}>
-            <Plus className="mr-2 h-4 w-4" />
-            Add vendor
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={() => navigate('/vendors/1099-summary')}>
+              <FileSpreadsheet className="mr-2 h-4 w-4" />
+              1099 summary
+            </Button>
+            <Button onClick={() => navigate('/vendors/new')}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add vendor
+            </Button>
+          </div>
         }
       />
 
