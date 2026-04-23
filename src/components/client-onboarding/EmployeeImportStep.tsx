@@ -483,7 +483,7 @@ export function EmployeeImportStep({ data, onSave, onBack, isSaving }: Props) {
                         <TableCell className="text-center py-1.5">
                           <Switch
                             checked={!!emp.is_owner_officer}
-                            onCheckedChange={(v) => updateRow(i, 'is_owner_officer', v ? 1 : 0)}
+                            onCheckedChange={(v) => updateRow(i, 'is_owner_officer', !!v)}
                             aria-label="Mark as owner or officer"
                           />
                         </TableCell>
@@ -491,7 +491,7 @@ export function EmployeeImportStep({ data, onSave, onBack, isSaving }: Props) {
                           <Switch
                             checked={isExempt}
                             onCheckedChange={(v) => {
-                              updateRow(i, 'wc_exempt', v ? 1 : 0);
+                              updateRow(i, 'wc_exempt', !!v);
                               if (v) updateRow(i, 'wc_code_id', '');
                             }}
                             aria-label="WC exempt"
