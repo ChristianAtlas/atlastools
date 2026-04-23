@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useVendor, useVendorPriorYtd, VENDOR_1099_CATEGORIES } from '@/hooks/useVendors';
 import { VidBadge, WorkerTypeBadge, W9StatusBadge, VendorStatusBadge } from '@/components/vendors/VendorBadges';
+import { VendorDocumentsTab } from '@/components/vendors/VendorDocumentsTab';
 
 function fmtCents(c: number) {
   return (c / 100).toLocaleString('en-US', { style: 'currency', currency: 'USD' });
@@ -57,6 +58,7 @@ export default function VendorDetail() {
         <TabsList>
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="tax">Tax & W-9</TabsTrigger>
+          <TabsTrigger value="documents">Documents</TabsTrigger>
           <TabsTrigger value="prior">Prior YTD</TabsTrigger>
           <TabsTrigger value="payments" disabled>Payments (Phase 2)</TabsTrigger>
         </TabsList>
@@ -82,8 +84,14 @@ export default function VendorDetail() {
             <Info label="W-9 collected" value={vendor.w9_collected_at ? new Date(vendor.w9_collected_at).toLocaleDateString() : '—'} />
             <Info label="W-9 expires" value={vendor.w9_expires_at ?? '—'} />
             <p className="md:col-span-2 text-xs text-muted-foreground pt-2 border-t">
-              W-9 upload UI ships with Phase 2. Mark as collected manually for now via the upcoming actions menu.
+              Upload the signed W-9 from the Documents tab. Marking it as "on file" during upload updates the W-9 status here automatically.
             </p>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="documents">
+          <Card className="p-5">
+            <VendorDocumentsTab vendor={vendor} />
           </Card>
         </TabsContent>
 
