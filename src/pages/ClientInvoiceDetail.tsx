@@ -13,7 +13,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import {
-  ArrowLeft, CheckCircle2, AlertCircle, Clock, Receipt, Info,
+  ArrowLeft, CheckCircle2, AlertCircle, Clock, Receipt, Info, AlertTriangle, History,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
@@ -21,6 +21,8 @@ import {
   useInvoice,
   useInvoiceLineItems,
   usePayInvoiceCheckout,
+  usePaymentAttempts,
+  useNsfEvents,
   centsToUSD,
 } from '@/hooks/useInvoices';
 
