@@ -109,18 +109,16 @@ export default function ClientInvoices() {
       {/* Summary stats */}
       <div className="grid gap-4 md:grid-cols-3">
         <StatCard
-          label="Total Outstanding"
+          title="Total Outstanding"
           value={centsToUSD(totalDue)}
           icon={Receipt}
-          tone={totalDue > 0 ? 'warning' : 'default'}
         />
         <StatCard
-          label="Past Due"
+          title="Past Due"
           value={centsToUSD(pastDue)}
           icon={AlertCircle}
-          tone={pastDue > 0 ? 'destructive' : 'default'}
         />
-        <StatCard label="Paid YTD" value={centsToUSD(paidYTD)} icon={CheckCircle2} />
+        <StatCard title="Paid YTD" value={centsToUSD(paidYTD)} icon={CheckCircle2} />
       </div>
 
       {/* Autopay card */}
