@@ -32,6 +32,7 @@ import {
   centsToUSD, type PayrollRunRow, type PayrollRunEmployeeRow, type PayrollRunStatus,
 } from '@/hooks/usePayrollRuns';
 import { useRecalculateWCForRun } from '@/hooks/useWorkersComp';
+import { useGeneratePayrollInvoice } from '@/hooks/useInvoices';
 import { useTimecards, useUpdateTimecard, useApproveTimecards, type TimecardRow } from '@/hooks/useTimecards';
 import { useFundingEvents, useCreateFundingEvent, useConfirmFunding } from '@/hooks/useFundingEvents';
 import { useAuditLogs, formatAuditChanges } from '@/hooks/useAuditLogs';
@@ -415,6 +416,7 @@ export default function PayrollDetail() {
   const updateStatus = useUpdatePayrollRunStatus();
   const { data: internalNotes = [] } = useInternalNotes('payroll_run', id);
   const recalcWC = useRecalculateWCForRun();
+  const generateInvoice = useGeneratePayrollInvoice();
   const addNoteMutation = useAddInternalNote();
 
   const employeeIds = useMemo(() => lines.map(l => l.employee_id), [lines]);
