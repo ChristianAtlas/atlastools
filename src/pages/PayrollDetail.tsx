@@ -32,6 +32,7 @@ import {
   centsToUSD, type PayrollRunRow, type PayrollRunEmployeeRow, type PayrollRunStatus,
 } from '@/hooks/usePayrollRuns';
 import { useRecalculateWCForRun } from '@/hooks/useWorkersComp';
+import { useGeneratePayrollInvoice } from '@/hooks/useInvoices';
 import { useTimecards, useUpdateTimecard, useApproveTimecards, type TimecardRow } from '@/hooks/useTimecards';
 import { useFundingEvents, useCreateFundingEvent, useConfirmFunding } from '@/hooks/useFundingEvents';
 import { useAuditLogs, formatAuditChanges } from '@/hooks/useAuditLogs';
@@ -415,6 +416,7 @@ export default function PayrollDetail() {
   const updateStatus = useUpdatePayrollRunStatus();
   const { data: internalNotes = [] } = useInternalNotes('payroll_run', id);
   const recalcWC = useRecalculateWCForRun();
+  const generateInvoice = useGeneratePayrollInvoice();
   const addNoteMutation = useAddInternalNote();
 
   const employeeIds = useMemo(() => lines.map(l => l.employee_id), [lines]);
@@ -517,6 +519,37 @@ export default function PayrollDetail() {
 
       await updateStatus.mutateAsync({ id: run.id, status: newStatus, ...extras });
       toast({ title: `Status updated to ${newStatus.replace(/_/g, ' ')}` });
+
+      // ── Auto-generate payroll invoice on final approval ──
+      // Fires on each approval terminus; the edge function is idempotent
+      // (returns existing invoice if already generated) so duplicate calls
+      // across the client/admin/auto paths are safe.
+      const invoiceTriggerStates: PayrollRunStatus[] = [
+        'client_approved',
+        'auto_approved',
+        'admin_approved',
+      ];
+      if (invoiceTriggerStates.includes(newStatus)) {
+        generateInvoice.mutate(
+          { payroll_run_id: run.id },
+          {
+            onSuccess: (res: any) => {
+              toast({
+                title: res?.message === 'Invoice already exists'
+                  ? 'Invoice already queued for billing'
+                  : 'Payroll invoice generated and queued for billing',
+              });
+            },
+            onError: (err: any) => {
+              toast({
+                title: 'Invoice generation failed',
+                description: err.message ?? 'The run was approved, but billing must be retried.',
+                variant: 'destructive',
+              });
+            },
+          },
+        );
+      }
     } catch (err: any) {
       toast({ title: 'Transition failed', description: err.message, variant: 'destructive' });
     }
