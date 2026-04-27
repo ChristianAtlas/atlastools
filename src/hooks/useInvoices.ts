@@ -222,6 +222,85 @@ export function useGeneratePayrollInvoice() {
   });
 }
 
+// ─── Payments / Autopay ───
+
+export interface PaymentMethodRow {
+  id: string;
+  company_id: string;
+  stripe_payment_method_id: string;
+  method_type: 'card' | 'us_bank_account' | 'ach';
+  brand: string | null;
+  last4: string | null;
+  exp_month: number | null;
+  exp_year: number | null;
+  bank_name: string | null;
+  is_default: boolean;
+  status: string;
+  created_at: string;
+}
+
+export function usePaymentMethods(companyId?: string) {
+  return useQuery({
+    queryKey: ['payment_methods', companyId],
+    queryFn: async () => {
+      let q = supabase.from('payment_methods' as any).select('*').order('created_at', { ascending: false });
+      if (companyId) q = q.eq('company_id', companyId);
+      const { data, error } = await q;
+      if (error) throw error;
+      return (data ?? []) as unknown as PaymentMethodRow[];
+    },
+  });
+}
+
+export function usePayInvoiceCheckout() {
+  return useMutation({
+    mutationFn: async (invoice_id: string) => {
+      const { data, error } = await supabase.functions.invoke('create-invoice-checkout', { body: { invoice_id } });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      return data as { url: string; session_id: string };
+    },
+  });
+}
+
+export function useChargeAutopay() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (invoice_id: string) => {
+      const { data, error } = await supabase.functions.invoke('charge-invoice-autopay', { body: { invoice_id } });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      return data;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['invoices'] }),
+  });
+}
+
+export function useSetupPaymentMethod() {
+  return useMutation({
+    mutationFn: async (company_id: string) => {
+      const { data, error } = await supabase.functions.invoke('setup-payment-method', { body: { company_id } });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      return data as { client_secret: string; customer_id: string };
+    },
+  });
+}
+
+export function useToggleAutopay() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ company_id, enabled }: { company_id: string; enabled: boolean }) => {
+      const { data, error } = await supabase.from('billing_profiles')
+        .update({ autopay_enabled: enabled } as any)
+        .eq('company_id', company_id).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['billing_profiles'] }),
+  });
+}
+
 export function useCreateNsfCase() {
   const qc = useQueryClient();
   return useMutation({
