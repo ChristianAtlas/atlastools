@@ -317,6 +317,65 @@ export default function ClientInvoiceDetail() {
           )}
         </CardContent>
       </Card>
+
+      {/* Payment history */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <History className="h-4 w-4" />
+            Payment History
+          </CardTitle>
+          <CardDescription>
+            All payment attempts and returns for this invoice.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {paymentAttempts.length === 0 && invoiceNsfEvents.length === 0 ? (
+            <p className="text-sm text-muted-foreground italic py-2">No payment activity yet.</p>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Method</TableHead>
+                  <TableHead className="text-right">Amount</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Notes</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {paymentAttempts.map((p) => (
+                  <TableRow key={p.id}>
+                    <TableCell className="text-sm whitespace-nowrap">{format(new Date(p.attempt_date), 'MMM d, yyyy')}</TableCell>
+                    <TableCell className="text-sm capitalize">{p.method.replace(/_/g, ' ')}</TableCell>
+                    <TableCell className="text-right tabular-nums whitespace-nowrap text-sm">{centsToUSD(p.amount_cents)}</TableCell>
+                    <TableCell><PaymentStatusPill status={p.status} /></TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {p.processor_response_message ?? p.notes ?? '—'}
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {invoiceNsfEvents.map((n) => (
+                  <TableRow key={n.id}>
+                    <TableCell className="text-sm whitespace-nowrap">{format(new Date(n.created_at), 'MMM d, yyyy')}</TableCell>
+                    <TableCell className="text-sm">Return</TableCell>
+                    <TableCell className="text-right tabular-nums whitespace-nowrap text-sm">{centsToUSD(n.amount_cents)}</TableCell>
+                    <TableCell>
+                      <Badge variant={n.status === 'open' ? 'destructive' : 'secondary'}>
+                        {n.status === 'open' ? 'Returned' : 'Resolved'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {n.failure_type ? n.failure_type.toUpperCase() : 'Returned'}
+                      {n.failure_code ? ` • ${n.failure_code}` : ''}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
@@ -346,4 +405,18 @@ function StatusPill({ status, pastDue }: { status: string; pastDue: boolean }) {
   if (status === 'failed') return <Badge variant="destructive">Failed</Badge>;
   if (pastDue || status === 'past_due') return <Badge variant="destructive"><AlertCircle className="h-3 w-3 mr-1" />Past Due</Badge>;
   return <Badge variant="outline">Open</Badge>;
+}
+
+function PaymentStatusPill({ status }: { status: string }) {
+  const s = status.toLowerCase();
+  if (s === 'succeeded' || s === 'success' || s === 'paid') {
+    return <Badge className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30"><CheckCircle2 className="h-3 w-3 mr-1" />Succeeded</Badge>;
+  }
+  if (s === 'failed' || s === 'returned' || s === 'nsf') {
+    return <Badge variant="destructive">Failed</Badge>;
+  }
+  if (s === 'processing' || s === 'pending') {
+    return <Badge variant="secondary"><Clock className="h-3 w-3 mr-1" />{status}</Badge>;
+  }
+  return <Badge variant="outline">{status}</Badge>;
 }
