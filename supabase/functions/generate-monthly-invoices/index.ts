@@ -3,412 +3,268 @@ import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
+const log = (s: string, d?: unknown) =>
+  console.log(`[MONTHLY-INVOICE] ${s}${d ? ` - ${JSON.stringify(d)}` : ""}`);
 
-const log = (step: string, d?: unknown) =>
-  console.log(`[MONTHLY-INVOICE] ${step}${d ? ` - ${JSON.stringify(d)}` : ""}`);
+interface Line {
+  description: string; category: string; section_label: string;
+  tier_slug: string | null; quantity: number; unit_price_cents: number;
+  total_cents: number; is_internal: boolean; included_in_total: boolean; is_markup: boolean;
+}
+
+const FLAT_FEE_CENTS = 6500;          // $65
+const PEO_BASIC_CENTS = 8000;         // $80
+const PEO_EXTRA_CENTS = 11000;        // $110
+const TIME_TRACKING_CENTS = 800;      // $8
+const CONTRACTOR_CENTS = 3900;        // $39
+const HR_CONSULTING_CENTS = 3000;     // $30
 
 serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL") ?? "",
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-    { auth: { persistSession: false } }
-  );
+    { auth: { persistSession: false } });
 
   try {
     const body = await req.json().catch(() => ({}));
-    const billingMonth = body.billing_month || new Date().toISOString().slice(0, 7); // YYYY-MM
-    const billingDate = `${billingMonth}-01`;
-    const targetCompanyId = body.company_id; // optional: generate for specific company only
+    // billing month = invoice generation month (e.g. 2026-04 means we bill for activity in 2026-03)
+    const today = new Date();
+    const genMonth = body.billing_month || `${today.getUTCFullYear()}-${String(today.getUTCMonth() + 1).padStart(2, "0")}`;
+    const genDate = `${genMonth}-01`;
+    const targetCompanyId = body.company_id;
 
-    log("Starting monthly invoice generation", { billingMonth, targetCompanyId });
+    // Activity period = previous calendar month
+    const [gy, gm] = genMonth.split("-").map(Number);
+    const prevDate = new Date(Date.UTC(gy, gm - 2, 1));
+    const activityStart = prevDate.toISOString().slice(0, 10);
+    const activityEnd = new Date(Date.UTC(gy, gm - 1, 0)).toISOString().slice(0, 10);
 
-    // Get all active companies
-    let companiesQuery = supabase
-      .from("companies")
-      .select("id, name, employee_count")
-      .eq("status", "active")
-      .is("deleted_at", null);
+    log("start", { genMonth, activityStart, activityEnd, targetCompanyId });
 
-    if (targetCompanyId) {
-      companiesQuery = companiesQuery.eq("id", targetCompanyId);
-    }
+    let q = supabase.from("companies").select("id, name").eq("status", "active").is("deleted_at", null);
+    if (targetCompanyId) q = q.eq("id", targetCompanyId);
+    const { data: companies, error: cErr } = await q;
+    if (cErr) throw cErr;
 
-    const { data: companies, error: compErr } = await companiesQuery;
-    if (compErr) throw compErr;
-    if (!companies?.length) {
-      return new Response(JSON.stringify({ message: "No active companies found" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200
+    const results: any[] = [];
+
+    for (const company of companies ?? []) {
+      // skip duplicates
+      const { data: existing } = await supabase.from("invoices").select("id")
+        .eq("company_id", company.id).eq("invoice_type", "monthly")
+        .eq("period_start", genDate).maybeSingle();
+      if (existing) { log("skip-existing", { company: company.name }); continue; }
+
+      // Plan
+      const { data: plan } = await supabase.from("company_plans")
+        .select("*, pricing_tiers(*)").eq("company_id", company.id)
+        .eq("status", "active").maybeSingle();
+
+      // Billing profile (for AR + autopay)
+      const { data: bp } = await supabase.from("billing_profiles").select("*")
+        .eq("company_id", company.id).maybeSingle();
+
+      const lines: Line[] = [];
+      const SEC = { fee: "Service Fees", addons: "Add-Ons", catchup: "Catch-Up Charges" };
+
+      // 1. FLAT MONTHLY FEE — always $65
+      lines.push({
+        description: "Monthly Service Fee", category: "service_fee", section_label: SEC.fee,
+        tier_slug: "monthly_service", quantity: 1,
+        unit_price_cents: FLAT_FEE_CENTS, total_cents: FLAT_FEE_CENTS,
+        is_internal: false, included_in_total: true, is_markup: false,
       });
-    }
 
-    const results: Array<{ company_id: string; invoice_id: string; total_cents: number }> = [];
+      // 2. PEO PLAN — bill per W-2 employee actually paid in activity month
+      const { data: paidRuns } = await supabase.from("payroll_runs")
+        .select("id").eq("company_id", company.id)
+        .gte("pay_date", activityStart).lte("pay_date", activityEnd)
+        .in("status", ["completed", "paid", "funded", "auto_approved", "client_approved", "admin_approved"] as any);
+      const runIds = (paidRuns ?? []).map((r: any) => r.id);
+      const paidEmployeeIds = new Set<string>();
+      if (runIds.length) {
+        const { data: pre } = await supabase.from("payroll_run_employees")
+          .select("employee_id").in("payroll_run_id", runIds)
+          .in("status", ["processed", "calculated"] as any);
+        for (const r of (pre ?? [])) if (r.employee_id) paidEmployeeIds.add(r.employee_id);
+      }
+      const paidEeCount = paidEmployeeIds.size;
 
-    for (const company of companies) {
-      // Check if monthly invoice already exists for this company/month
-      const { data: existing } = await supabase
-        .from("invoices")
-        .select("id")
-        .eq("company_id", company.id)
-        .eq("invoice_type", "monthly")
-        .eq("period_start", billingDate)
-        .maybeSingle();
-
-      if (existing) {
-        log("Invoice already exists, skipping", { company_id: company.id });
-        continue;
+      // Determine plan rate
+      let planRateCents = 0; let planLabel = "PEO Plan";
+      const planSlug = plan?.pricing_tiers?.slug || "";
+      if (planSlug === "peo_extra") { planRateCents = PEO_EXTRA_CENTS; planLabel = "PEO Extra"; }
+      else if (planSlug === "peo_basic") { planRateCents = PEO_BASIC_CENTS; planLabel = "PEO Basic"; }
+      else if (plan?.pricing_tiers?.unit_price_cents) {
+        planRateCents = plan.pricing_tiers.unit_price_cents;
+        planLabel = plan.pricing_tiers.name || "PEO Plan";
       }
 
-      // Get active employees for this company
-      const { data: employees } = await supabase
-        .from("employees")
-        .select("id, first_name, last_name, pay_type, start_date")
-        .eq("company_id", company.id)
-        .eq("status", "active")
-        .is("deleted_at", null);
-
-      const empCount = employees?.length || 0;
-      if (empCount === 0) {
-        log("No active employees, skipping", { company_id: company.id });
-        continue;
-      }
-
-      // Get company plan
-      const { data: plan } = await supabase
-        .from("company_plans")
-        .select("*, pricing_tiers(*)")
-        .eq("company_id", company.id)
-        .eq("status", "active")
-        .maybeSingle();
-
-      // Get billing profile
-      const { data: billingProfile } = await supabase
-        .from("billing_profiles")
-        .select("*")
-        .eq("company_id", company.id)
-        .maybeSingle();
-
-      const lineItems: Array<{
-        description: string;
-        tier_slug: string | null;
-        quantity: number;
-        unit_price_cents: number;
-        total_cents: number;
-        is_markup: boolean;
-      }> = [];
-
-      // A. Tier / Employee Charge
-      if (plan?.pricing_tiers) {
-        const tier = plan.pricing_tiers;
-        const qty = tier.per_employee ? empCount : 1;
-        lineItems.push({
-          description: `${tier.name} × ${qty} ${tier.per_employee ? "employees" : ""}`,
-          tier_slug: tier.slug,
-          quantity: qty,
-          unit_price_cents: tier.unit_price_cents,
-          total_cents: tier.unit_price_cents * qty,
-          is_markup: false,
+      if (planRateCents > 0 && paidEeCount > 0) {
+        lines.push({
+          description: `${planLabel} × ${paidEeCount} employee${paidEeCount === 1 ? "" : "s"} paid`,
+          category: "service_fee", section_label: SEC.fee, tier_slug: planSlug || "peo_plan",
+          quantity: paidEeCount, unit_price_cents: planRateCents,
+          total_cents: planRateCents * paidEeCount,
+          is_internal: false, included_in_total: true, is_markup: false,
         });
       }
 
-      // B. Monthly Service Charge
-      const serviceChargeCents = billingProfile?.monthly_service_charge_cents || 6500;
-      const { data: serviceTier } = await supabase
-        .from("pricing_tiers")
-        .select("*")
-        .eq("slug", "monthly_service")
-        .maybeSingle();
-
-      const svcCents = serviceTier?.unit_price_cents || serviceChargeCents;
-      lineItems.push({
-        description: "Monthly Service Charge",
-        tier_slug: "monthly_service",
-        quantity: 1,
-        unit_price_cents: svcCents,
-        total_cents: svcCents,
-        is_markup: false,
-      });
-
-      // C. Add-ons
-      if (plan) {
-        const { data: addons } = await supabase
-          .from("company_addons")
-          .select("*, pricing_tiers(*)")
-          .eq("company_plan_id", plan.id);
-
-        if (addons) {
-          for (const addon of addons) {
-            const t = addon.pricing_tiers;
-            const qty = t.slug === "contractors"
-              ? (plan.contractor_count || 0)
-              : (addon.quantity || empCount);
-            if (qty > 0) {
-              lineItems.push({
-                description: `${t.name} × ${qty}`,
-                tier_slug: t.slug,
-                quantity: qty,
-                unit_price_cents: t.unit_price_cents,
-                total_cents: t.unit_price_cents * qty,
-                is_markup: false,
-              });
-            }
-          }
-        }
-      }
-
-      // C2. Timekeeping add-on (per-active-employee with time OR PTO entered this billing month)
-      const { data: tkSettings } = await supabase
-        .from("timekeeping_settings")
-        .select("is_enabled")
-        .eq("company_id", company.id)
-        .maybeSingle();
-
-      if (tkSettings?.is_enabled) {
-        const monthStart = billingDate;
-        const monthEnd = new Date(new Date(billingDate).getFullYear(), new Date(billingDate).getMonth() + 1, 0)
-          .toISOString().slice(0, 10);
-
-        // Active employees who entered time (any punch) this month
-        const { data: punchEmps } = await supabase
-          .from("tk_punches")
-          .select("employee_id")
-          .eq("company_id", company.id)
-          .eq("voided", false)
-          .gte("punched_at", `${monthStart}T00:00:00Z`)
-          .lte("punched_at", `${monthEnd}T23:59:59Z`);
-
-        // Active employees who entered PTO this month
-        const { data: ptoEmps } = await supabase
-          .from("pto_requests")
-          .select("employee_id")
-          .eq("company_id", company.id)
-          .gte("start_date", monthStart)
-          .lte("start_date", monthEnd);
-
-        const activeEmpIds = new Set<string>();
-        (punchEmps ?? []).forEach((p: any) => p.employee_id && activeEmpIds.add(p.employee_id));
-        (ptoEmps ?? []).forEach((p: any) => p.employee_id && activeEmpIds.add(p.employee_id));
-
-        const tkActiveCount = activeEmpIds.size;
-        if (tkActiveCount > 0) {
-          const { data: tkPricing } = await supabase
-            .from("timekeeping_pricing")
-            .select("per_employee_cents")
-            .order("effective_date", { ascending: false })
-            .limit(1)
-            .maybeSingle();
-          const perEmpCents = tkPricing?.per_employee_cents ?? 800;
-          lineItems.push({
-            description: `Timekeeping add-on × ${tkActiveCount} active employees`,
-            tier_slug: "timekeeping_addon",
-            quantity: tkActiveCount,
-            unit_price_cents: perEmpCents,
-            total_cents: perEmpCents * tkActiveCount,
-            is_markup: false,
+      // 3. TIME TRACKING ADD-ON — $8 × employees with punches OR PTO entries
+      const { data: tk } = await supabase.from("timekeeping_settings")
+        .select("is_enabled").eq("company_id", company.id).maybeSingle();
+      if (tk?.is_enabled) {
+        const { data: punches } = await supabase.from("tk_punches")
+          .select("employee_id").eq("company_id", company.id).eq("voided", false)
+          .gte("punched_at", `${activityStart}T00:00:00Z`)
+          .lte("punched_at", `${activityEnd}T23:59:59Z`);
+        const { data: pto } = await supabase.from("pto_requests")
+          .select("employee_id").eq("company_id", company.id)
+          .gte("start_date", activityStart).lte("start_date", activityEnd);
+        const set = new Set<string>();
+        (punches ?? []).forEach((p: any) => p.employee_id && set.add(p.employee_id));
+        (pto ?? []).forEach((p: any) => p.employee_id && set.add(p.employee_id));
+        if (set.size > 0) {
+          lines.push({
+            description: `Time Tracking × ${set.size} active employee${set.size === 1 ? "" : "s"}`,
+            category: "addon", section_label: SEC.addons, tier_slug: "time_tracking",
+            quantity: set.size, unit_price_cents: TIME_TRACKING_CENTS,
+            total_cents: TIME_TRACKING_CENTS * set.size,
+            is_internal: false, included_in_total: true, is_markup: false,
           });
-          log("Added timekeeping line item", { company_id: company.id, count: tkActiveCount, per_emp_cents: perEmpCents });
         }
       }
 
-      // D. Catch-up charges - find employees not billed last month
-      // C3. Vendor / 1099 monthly fee — $39 per UNIQUE paid contractor with at least
-      // one non-voided vendor payment landed in this billing month for this company.
-      const vmStart = billingDate;
-      const vmEnd = new Date(new Date(billingDate).getFullYear(), new Date(billingDate).getMonth() + 1, 0)
-        .toISOString().slice(0, 10);
-      const { data: vendorRunsThisMonth } = await supabase
-        .from("vendor_payment_runs")
-        .select("id")
-        .eq("company_id", company.id)
-        .gte("pay_date", vmStart)
-        .lte("pay_date", vmEnd)
+      // 4. CONTRACTOR ADD-ON — $39 × distinct vendors paid this month
+      const { data: vRuns } = await supabase.from("vendor_payment_runs")
+        .select("id").eq("company_id", company.id)
+        .gte("pay_date", activityStart).lte("pay_date", activityEnd)
         .neq("status", "voided");
-      const vendorRunIds = (vendorRunsThisMonth ?? []).map((r: any) => r.id);
-      let activeVendorPaymentCount = 0;
-      let uniquePaidContractorCount = 0;
-      if (vendorRunIds.length > 0) {
-        const { data: vendorPayRows } = await supabase
-          .from("vendor_payments")
-          .select("vendor_id")
-          .in("vendor_payment_run_id", vendorRunIds)
-          .neq("status", "voided");
-        activeVendorPaymentCount = vendorPayRows?.length ?? 0;
-        const uniqueVendorIds = new Set<string>();
-        (vendorPayRows ?? []).forEach((r: any) => r.vendor_id && uniqueVendorIds.add(r.vendor_id));
-        uniquePaidContractorCount = uniqueVendorIds.size;
+      const vRunIds = (vRuns ?? []).map((r: any) => r.id);
+      let uniqueVendors = 0;
+      if (vRunIds.length) {
+        const { data: vp } = await supabase.from("vendor_payments")
+          .select("vendor_id").in("vendor_payment_run_id", vRunIds).neq("status", "voided");
+        const set = new Set<string>();
+        (vp ?? []).forEach((p: any) => p.vendor_id && set.add(p.vendor_id));
+        uniqueVendors = set.size;
       }
-      if (uniquePaidContractorCount > 0) {
-        const { data: vendorTier } = await supabase
-          .from("pricing_tiers")
-          .select("*")
-          .eq("slug", "vendor_monthly_fee")
-          .maybeSingle();
-        const perContractorCents = vendorTier?.unit_price_cents ?? 3900; // $39 per paid contractor
-        lineItems.push({
-          description: `Contractor / 1099 fee × ${uniquePaidContractorCount} paid contractor${uniquePaidContractorCount === 1 ? '' : 's'}`,
-          tier_slug: "vendor_monthly_fee",
-          quantity: uniquePaidContractorCount,
-          unit_price_cents: perContractorCents,
-          total_cents: perContractorCents * uniquePaidContractorCount,
-          is_markup: false,
-        });
-        log("Added contractor monthly fee", {
-          company_id: company.id,
-          unique_contractors: uniquePaidContractorCount,
-          payments: activeVendorPaymentCount,
-          per_contractor_cents: perContractorCents,
+      if (uniqueVendors > 0) {
+        lines.push({
+          description: `Contractor Payments × ${uniqueVendors} paid contractor${uniqueVendors === 1 ? "" : "s"}`,
+          category: "addon", section_label: SEC.addons, tier_slug: "contractors",
+          quantity: uniqueVendors, unit_price_cents: CONTRACTOR_CENTS,
+          total_cents: CONTRACTOR_CENTS * uniqueVendors,
+          is_internal: false, included_in_total: true, is_markup: false,
         });
       }
 
-      const prevMonth = new Date(billingDate);
-      prevMonth.setMonth(prevMonth.getMonth() - 1);
-      const prevMonthStr = prevMonth.toISOString().slice(0, 10);
-
-      const { data: prevBilled } = await supabase
-        .from("monthly_employee_billing")
-        .select("employee_id")
-        .eq("company_id", company.id)
-        .eq("billing_month", prevMonthStr)
-        .eq("status", "billed");
-
-      const prevBilledIds = new Set((prevBilled || []).map(b => b.employee_id));
-      const catchUpEmployees = (employees || []).filter(e => {
-        // Only catch up if employee was active last month but not billed
-        const startDate = new Date(e.start_date);
-        const prevMonthEnd = new Date(prevMonth.getFullYear(), prevMonth.getMonth() + 1, 0);
-        return startDate <= prevMonthEnd && !prevBilledIds.has(e.id);
-      });
-
-      let catchUpCents = 0;
-      const catchUpCount = catchUpEmployees.length;
-
-      if (catchUpCount > 0 && plan?.pricing_tiers) {
-        const tier = plan.pricing_tiers;
-        if (tier.per_employee) {
-          catchUpCents = tier.unit_price_cents * catchUpCount;
-          lineItems.push({
-            description: `Catch-up employee charges (${catchUpCount} employees from prior month)`,
-            tier_slug: "catch_up",
-            quantity: catchUpCount,
-            unit_price_cents: tier.unit_price_cents,
-            total_cents: catchUpCents,
-            is_markup: false,
-          });
-        }
+      // 5. HR CONSULTING ADD-ON — $30 × paid employees if active
+      let hrAddonActive = false;
+      if (plan?.id) {
+        const { data: addons } = await supabase.from("company_addons")
+          .select("*, pricing_tiers(slug)").eq("company_plan_id", plan.id);
+        hrAddonActive = (addons ?? []).some((a: any) => a.pricing_tiers?.slug === "hr_consulting");
+      }
+      if (hrAddonActive && paidEeCount > 0) {
+        lines.push({
+          description: `Dedicated HR Consulting × ${paidEeCount} employee${paidEeCount === 1 ? "" : "s"}`,
+          category: "addon", section_label: SEC.addons, tier_slug: "hr_consulting",
+          quantity: paidEeCount, unit_price_cents: HR_CONSULTING_CENTS,
+          total_cents: HR_CONSULTING_CENTS * paidEeCount,
+          is_internal: false, included_in_total: true, is_markup: false,
+        });
       }
 
-      const totalCents = lineItems.reduce((s, li) => s + li.total_cents, 0);
+      // 6. CATCH-UP — employees paid in prior-prior month but missing from prior monthly_employee_billing
+      const prevPrev = new Date(Date.UTC(gy, gm - 3, 1)).toISOString().slice(0, 10);
+      const { data: prevBilled } = await supabase.from("monthly_employee_billing")
+        .select("employee_id").eq("company_id", company.id)
+        .eq("billing_month", prevPrev).eq("status", "billed");
+      const prevBilledSet = new Set((prevBilled ?? []).map((b: any) => b.employee_id));
+      // Catch-up = anyone paid this activity month who wasn't on the prior billing roster
+      // (signals new hire start where last month's invoice missed them)
+      const catchUpIds = [...paidEmployeeIds].filter(id => !prevBilledSet.has(id));
+      // Only catch up if they were actually active during prev-prev month — proxy: skip if zero prev billed
+      let catchUpCount = 0; let catchUpCents = 0;
+      if (prevBilledSet.size > 0 && catchUpIds.length > 0 && planRateCents > 0) {
+        catchUpCount = catchUpIds.length;
+        catchUpCents = planRateCents * catchUpCount;
+        lines.push({
+          description: `Catch-up: ${catchUpCount} employee${catchUpCount === 1 ? "" : "s"} from prior month`,
+          category: "catch_up", section_label: SEC.catchup, tier_slug: "catch_up",
+          quantity: catchUpCount, unit_price_cents: planRateCents, total_cents: catchUpCents,
+          is_internal: false, included_in_total: true, is_markup: false,
+        });
+      }
 
-      // Calculate period end (last day of billing month)
-      const periodEnd = new Date(
-        new Date(billingDate).getFullYear(),
-        new Date(billingDate).getMonth() + 1,
-        0
-      ).toISOString().slice(0, 10);
+      const totalCents = lines.filter(l => l.included_in_total).reduce((s, l) => s + l.total_cents, 0);
+      if (totalCents <= 0) { log("skip-zero", { company: company.name }); continue; }
 
-      // Generate invoice number
+      const periodEnd = new Date(Date.UTC(gy, gm, 0)).toISOString().slice(0, 10);
+      const invoiceNumber = `INV-M-${genMonth.replace("-", "")}-${company.id.slice(0, 8).toUpperCase()}-${Date.now().toString(36).toUpperCase()}`;
       const now = new Date();
-      const invoiceNumber = `INV-M-${billingMonth.replace("-", "")}-${company.id.slice(0, 8).toUpperCase()}-${Date.now().toString(36).toUpperCase()}`;
 
-      // Insert invoice
-      const { data: invoice, error: invErr } = await supabase
-        .from("invoices")
-        .insert({
-          company_id: company.id,
-          company_name: company.name,
-          invoice_number: invoiceNumber,
-          invoice_type: "monthly",
-          period_start: billingDate,
-          period_end: periodEnd,
-          subtotal_cents: totalCents,
-          markup_cents: 0,
-          total_cents: totalCents,
-          balance_due_cents: totalCents,
-          status: "sent",
-          due_date: billingDate,
-          delivery_status: "sent",
-          sent_at: now.toISOString(),
-          employee_count: empCount,
-          catch_up_count: catchUpCount,
-          catch_up_cents: catchUpCents,
-        })
-        .select()
-        .single();
+      const { data: invoice, error: invErr } = await supabase.from("invoices").insert({
+        company_id: company.id, company_name: company.name,
+        invoice_number: invoiceNumber, invoice_type: "monthly",
+        period_start: genDate, period_end: periodEnd,
+        billing_period_start: activityStart, billing_period_end: activityEnd,
+        subtotal_cents: totalCents, markup_cents: 0, total_cents: totalCents,
+        balance_due_cents: totalCents, status: "sent",
+        due_date: genDate, delivery_status: "sent", sent_at: now.toISOString(),
+        issued_at: now.toISOString(), employee_count: paidEeCount,
+        catch_up_count: catchUpCount, catch_up_cents: catchUpCents,
+      } as any).select().single();
+      if (invErr) { log("invErr", { company: company.name, err: invErr.message }); continue; }
 
-      if (invErr) {
-        log("Error creating invoice", { company_id: company.id, error: invErr.message });
-        continue;
-      }
+      await supabase.from("invoice_line_items")
+        .insert(lines.map(l => ({ ...l, invoice_id: invoice.id })) as any);
 
-      // Insert line items
-      await supabase
-        .from("invoice_line_items")
-        .insert(lineItems.map(li => ({ ...li, invoice_id: invoice.id })));
-
-      // Record monthly billing ledger for all current employees
-      const billingRecords = (employees || []).map(emp => ({
-        employee_id: emp.id,
-        company_id: company.id,
-        billing_month: billingDate,
-        tier_id: plan?.pricing_tiers?.id || null,
-        charge_cents: plan?.pricing_tiers?.per_employee ? plan.pricing_tiers.unit_price_cents : 0,
-        status: "billed",
-        catch_up_needed: false,
-        catch_up_billed: false,
+      // Update ledger
+      const ledger = [...paidEmployeeIds].map(eid => ({
+        employee_id: eid, company_id: company.id, billing_month: activityStart,
+        tier_id: plan?.pricing_tiers?.id || null, charge_cents: planRateCents,
+        status: "billed", catch_up_needed: false, catch_up_billed: false,
         invoice_id: invoice.id,
       }));
-
-      if (billingRecords.length > 0) {
-        await supabase.from("monthly_employee_billing").upsert(billingRecords, {
-          onConflict: "employee_id,billing_month",
-        });
+      if (ledger.length) {
+        await supabase.from("monthly_employee_billing")
+          .upsert(ledger as any, { onConflict: "employee_id,billing_month" });
       }
 
-      // Mark catch-up employees as caught up
-      if (catchUpCount > 0) {
-        for (const emp of catchUpEmployees) {
-          await supabase
-            .from("monthly_employee_billing")
-            .upsert({
-              employee_id: emp.id,
-              company_id: company.id,
-              billing_month: prevMonthStr,
-              charge_cents: plan?.pricing_tiers?.per_employee ? plan.pricing_tiers.unit_price_cents : 0,
-              status: "billed",
-              catch_up_needed: false,
-              catch_up_billed: true,
-              catch_up_invoice_id: invoice.id,
-            }, { onConflict: "employee_id,billing_month" });
-        }
+      if (bp) {
+        await supabase.from("billing_profiles").update({
+          current_ar_balance_cents: (bp.current_ar_balance_cents || 0) + totalCents,
+        } as any).eq("id", bp.id);
       }
 
-      // Update billing profile AR
-      if (billingProfile) {
-        await supabase
-          .from("billing_profiles")
-          .update({
-            current_ar_balance_cents: (billingProfile.current_ar_balance_cents || 0) + totalCents,
-          })
-          .eq("id", billingProfile.id);
+      await supabase.from("billing_activity_logs").insert({
+        company_id: company.id, invoice_id: invoice.id,
+        event_type: "invoice_generated",
+        payload: { invoice_type: "monthly", total_cents: totalCents, billing_month: genMonth },
+      } as any);
+
+      // Autopay
+      if (bp?.autopay_enabled && totalCents > 0) {
+        try { await supabase.functions.invoke("charge-invoice-autopay", { body: { invoice_id: invoice.id } }); }
+        catch (e) { log("autopay-fail", { err: String(e) }); }
       }
 
       results.push({ company_id: company.id, invoice_id: invoice.id, total_cents: totalCents });
-      log("Invoice created", { company: company.name, total: totalCents, employees: empCount, catchUp: catchUpCount });
+      log("ok", { company: company.name, total: totalCents, paid_ees: paidEeCount });
     }
 
-    return new Response(JSON.stringify({ invoices: results, count: results.length }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200,
-    });
+    return new Response(JSON.stringify({ invoices: results, count: results.length }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 });
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
     log("ERROR", { message: msg });
-    return new Response(JSON.stringify({ error: msg }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500,
-    });
+    return new Response(JSON.stringify({ error: msg }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 });
   }
 });

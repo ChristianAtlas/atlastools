@@ -629,10 +629,45 @@ export type Database = {
         }
         Relationships: []
       }
+      billing_activity_logs: {
+        Row: {
+          actor_role: string | null
+          actor_user_id: string | null
+          company_id: string | null
+          created_at: string
+          event_type: string
+          id: string
+          invoice_id: string | null
+          payload: Json | null
+        }
+        Insert: {
+          actor_role?: string | null
+          actor_user_id?: string | null
+          company_id?: string | null
+          created_at?: string
+          event_type: string
+          id?: string
+          invoice_id?: string | null
+          payload?: Json | null
+        }
+        Update: {
+          actor_role?: string | null
+          actor_user_id?: string | null
+          company_id?: string | null
+          created_at?: string
+          event_type?: string
+          id?: string
+          invoice_id?: string | null
+          payload?: Json | null
+        }
+        Relationships: []
+      }
       billing_profiles: {
         Row: {
           account_hold: boolean | null
           ach_authorization_status: string | null
+          autopay_enabled: boolean
+          autopay_payment_method_id: string | null
           backup_payment_method: string | null
           billing_contact_email: string | null
           billing_contact_name: string | null
@@ -649,6 +684,7 @@ export type Database = {
           monthly_service_charge_cents: number | null
           nsf_risk_status: string | null
           past_due_balance_cents: number | null
+          stripe_customer_id: string | null
           sui_billing_method: string | null
           sui_markup_rate: number | null
           updated_at: string
@@ -659,6 +695,8 @@ export type Database = {
         Insert: {
           account_hold?: boolean | null
           ach_authorization_status?: string | null
+          autopay_enabled?: boolean
+          autopay_payment_method_id?: string | null
           backup_payment_method?: string | null
           billing_contact_email?: string | null
           billing_contact_name?: string | null
@@ -675,6 +713,7 @@ export type Database = {
           monthly_service_charge_cents?: number | null
           nsf_risk_status?: string | null
           past_due_balance_cents?: number | null
+          stripe_customer_id?: string | null
           sui_billing_method?: string | null
           sui_markup_rate?: number | null
           updated_at?: string
@@ -685,6 +724,8 @@ export type Database = {
         Update: {
           account_hold?: boolean | null
           ach_authorization_status?: string | null
+          autopay_enabled?: boolean
+          autopay_payment_method_id?: string | null
           backup_payment_method?: string | null
           billing_contact_email?: string | null
           billing_contact_name?: string | null
@@ -701,6 +742,7 @@ export type Database = {
           monthly_service_charge_cents?: number | null
           nsf_risk_status?: string | null
           past_due_balance_cents?: number | null
+          stripe_customer_id?: string | null
           sui_billing_method?: string | null
           sui_markup_rate?: number | null
           updated_at?: string
@@ -2888,13 +2930,60 @@ export type Database = {
         }
         Relationships: []
       }
+      invoice_adjustments: {
+        Row: {
+          adjustment_type: string
+          amount_cents: number
+          company_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          invoice_id: string
+          notes: string | null
+          reason: string
+        }
+        Insert: {
+          adjustment_type: string
+          amount_cents: number
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          invoice_id: string
+          notes?: string | null
+          reason: string
+        }
+        Update: {
+          adjustment_type?: string
+          amount_cents?: number
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          invoice_id?: string
+          notes?: string | null
+          reason?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_adjustments_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invoice_line_items: {
         Row: {
+          category: string | null
           created_at: string
           description: string
           employee_id: string | null
           id: string
+          included_in_total: boolean
           invoice_id: string
+          is_internal: boolean
           is_markup: boolean
           line_type: string | null
           markup_rate: number | null
@@ -2903,16 +2992,20 @@ export type Database = {
           quantity: number
           reference_id: string | null
           reference_type: string | null
+          section_label: string | null
           tier_slug: string | null
           total_cents: number
           unit_price_cents: number
         }
         Insert: {
+          category?: string | null
           created_at?: string
           description: string
           employee_id?: string | null
           id?: string
+          included_in_total?: boolean
           invoice_id: string
+          is_internal?: boolean
           is_markup?: boolean
           line_type?: string | null
           markup_rate?: number | null
@@ -2921,16 +3014,20 @@ export type Database = {
           quantity?: number
           reference_id?: string | null
           reference_type?: string | null
+          section_label?: string | null
           tier_slug?: string | null
           total_cents: number
           unit_price_cents: number
         }
         Update: {
+          category?: string | null
           created_at?: string
           description?: string
           employee_id?: string | null
           id?: string
+          included_in_total?: boolean
           invoice_id?: string
+          is_internal?: boolean
           is_markup?: boolean
           line_type?: string | null
           markup_rate?: number | null
@@ -2939,6 +3036,7 @@ export type Database = {
           quantity?: number
           reference_id?: string | null
           reference_type?: string | null
+          section_label?: string | null
           tier_slug?: string | null
           total_cents?: number
           unit_price_cents?: number
@@ -3518,6 +3616,60 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      payment_methods: {
+        Row: {
+          bank_name: string | null
+          brand: string | null
+          company_id: string
+          created_at: string
+          created_by: string | null
+          exp_month: number | null
+          exp_year: number | null
+          id: string
+          is_default: boolean
+          last4: string | null
+          method_type: string
+          status: string
+          stripe_customer_id: string | null
+          stripe_payment_method_id: string
+          updated_at: string
+        }
+        Insert: {
+          bank_name?: string | null
+          brand?: string | null
+          company_id: string
+          created_at?: string
+          created_by?: string | null
+          exp_month?: number | null
+          exp_year?: number | null
+          id?: string
+          is_default?: boolean
+          last4?: string | null
+          method_type: string
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_payment_method_id: string
+          updated_at?: string
+        }
+        Update: {
+          bank_name?: string | null
+          brand?: string | null
+          company_id?: string
+          created_at?: string
+          created_by?: string | null
+          exp_month?: number | null
+          exp_year?: number | null
+          id?: string
+          is_default?: boolean
+          last4?: string | null
+          method_type?: string
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_payment_method_id?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       payroll_markups: {
         Row: {
