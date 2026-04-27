@@ -75,7 +75,15 @@ export default function ClientInvoiceDetail() {
 
   const { data: invoice, isLoading } = useInvoice(id);
   const { data: lineItems = [] } = useInvoiceLineItems(id);
+  const { data: paymentAttempts = [] } = usePaymentAttempts(id);
+  const { data: allNsfEvents = [] } = useNsfEvents(companyId);
   const payCheckout = usePayInvoiceCheckout();
+
+  const invoiceNsfEvents = useMemo(
+    () => allNsfEvents.filter((e) => e.invoice_id === id),
+    [allNsfEvents, id],
+  );
+  const openNsf = invoiceNsfEvents.find((e) => e.status === 'open');
 
   // Privacy: filter out any internal/markup line items before any rendering.
   const visibleItems = useMemo(
