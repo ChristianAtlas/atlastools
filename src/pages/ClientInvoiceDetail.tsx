@@ -175,6 +175,34 @@ export default function ClientInvoiceDetail() {
         </CardContent>
       </Card>
 
+      {/* NSF / failed payment alert */}
+      {openNsf && (
+        <Card className="border-destructive/50 bg-destructive/5">
+          <CardContent className="pt-6">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+              <div className="flex-1 space-y-1">
+                <p className="font-semibold text-destructive">Payment failed — action required</p>
+                <p className="text-sm text-muted-foreground">
+                  Your last payment of {centsToUSD(openNsf.amount_cents)} was returned
+                  {openNsf.failure_type ? ` (${openNsf.failure_type.toUpperCase()})` : ''}
+                  {openNsf.fee_cents ? ` and incurred a ${centsToUSD(openNsf.fee_cents)} returned-payment fee` : ''}.
+                  {openNsf.retry_eligible ? ' We will retry automatically, but you can pay now to resolve immediately.' : ' Please update your payment method and pay this invoice.'}
+                </p>
+                {openNsf.notes && (
+                  <p className="text-xs text-muted-foreground italic">{openNsf.notes}</p>
+                )}
+              </div>
+              {canPay && (
+                <Button onClick={handlePayNow} disabled={payCheckout.isPending} size="sm" variant="destructive">
+                  Pay Now
+                </Button>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* 5-section breakdown (only for payroll invoices) */}
       {invoice.invoice_type === 'payroll' || invoice.invoice_type === 'payroll_run' ? (
         <Card>
