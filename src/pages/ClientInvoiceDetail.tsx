@@ -13,7 +13,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
 import {
-  ArrowLeft, CheckCircle2, AlertCircle, Clock, Receipt, Info,
+  ArrowLeft, CheckCircle2, AlertCircle, Clock, Receipt, Info, AlertTriangle, History,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
@@ -21,6 +21,8 @@ import {
   useInvoice,
   useInvoiceLineItems,
   usePayInvoiceCheckout,
+  usePaymentAttempts,
+  useNsfEvents,
   centsToUSD,
 } from '@/hooks/useInvoices';
 
@@ -73,7 +75,15 @@ export default function ClientInvoiceDetail() {
 
   const { data: invoice, isLoading } = useInvoice(id);
   const { data: lineItems = [] } = useInvoiceLineItems(id);
+  const { data: paymentAttempts = [] } = usePaymentAttempts(id);
+  const { data: allNsfEvents = [] } = useNsfEvents(companyId);
   const payCheckout = usePayInvoiceCheckout();
+
+  const invoiceNsfEvents = useMemo(
+    () => allNsfEvents.filter((e) => e.invoice_id === id),
+    [allNsfEvents, id],
+  );
+  const openNsf = invoiceNsfEvents.find((e) => e.status === 'open');
 
   // Privacy: filter out any internal/markup line items before any rendering.
   const visibleItems = useMemo(
@@ -164,6 +174,34 @@ export default function ClientInvoiceDetail() {
           </div>
         </CardContent>
       </Card>
+
+      {/* NSF / failed payment alert */}
+      {openNsf && (
+        <Card className="border-destructive/50 bg-destructive/5">
+          <CardContent className="pt-6">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+              <div className="flex-1 space-y-1">
+                <p className="font-semibold text-destructive">Payment failed — action required</p>
+                <p className="text-sm text-muted-foreground">
+                  Your last payment of {centsToUSD(openNsf.amount_cents)} was returned
+                  {openNsf.failure_type ? ` (${openNsf.failure_type.toUpperCase()})` : ''}
+                  {openNsf.fee_cents ? ` and incurred a ${centsToUSD(openNsf.fee_cents)} returned-payment fee` : ''}.
+                  {openNsf.retry_eligible ? ' We will retry automatically, but you can pay now to resolve immediately.' : ' Please update your payment method and pay this invoice.'}
+                </p>
+                {openNsf.notes && (
+                  <p className="text-xs text-muted-foreground italic">{openNsf.notes}</p>
+                )}
+              </div>
+              {canPay && (
+                <Button onClick={handlePayNow} disabled={payCheckout.isPending} size="sm" variant="destructive">
+                  Pay Now
+                </Button>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* 5-section breakdown (only for payroll invoices) */}
       {invoice.invoice_type === 'payroll' || invoice.invoice_type === 'payroll_run' ? (
@@ -279,6 +317,65 @@ export default function ClientInvoiceDetail() {
           )}
         </CardContent>
       </Card>
+
+      {/* Payment history */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <History className="h-4 w-4" />
+            Payment History
+          </CardTitle>
+          <CardDescription>
+            All payment attempts and returns for this invoice.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {paymentAttempts.length === 0 && invoiceNsfEvents.length === 0 ? (
+            <p className="text-sm text-muted-foreground italic py-2">No payment activity yet.</p>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Method</TableHead>
+                  <TableHead className="text-right">Amount</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Notes</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {paymentAttempts.map((p) => (
+                  <TableRow key={p.id}>
+                    <TableCell className="text-sm whitespace-nowrap">{format(new Date(p.attempt_date), 'MMM d, yyyy')}</TableCell>
+                    <TableCell className="text-sm capitalize">{p.method.replace(/_/g, ' ')}</TableCell>
+                    <TableCell className="text-right tabular-nums whitespace-nowrap text-sm">{centsToUSD(p.amount_cents)}</TableCell>
+                    <TableCell><PaymentStatusPill status={p.status} /></TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {p.processor_response_message ?? p.notes ?? '—'}
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {invoiceNsfEvents.map((n) => (
+                  <TableRow key={n.id}>
+                    <TableCell className="text-sm whitespace-nowrap">{format(new Date(n.created_at), 'MMM d, yyyy')}</TableCell>
+                    <TableCell className="text-sm">Return</TableCell>
+                    <TableCell className="text-right tabular-nums whitespace-nowrap text-sm">{centsToUSD(n.amount_cents)}</TableCell>
+                    <TableCell>
+                      <Badge variant={n.status === 'open' ? 'destructive' : 'secondary'}>
+                        {n.status === 'open' ? 'Returned' : 'Resolved'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {n.failure_type ? n.failure_type.toUpperCase() : 'Returned'}
+                      {n.failure_code ? ` • ${n.failure_code}` : ''}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
@@ -308,4 +405,18 @@ function StatusPill({ status, pastDue }: { status: string; pastDue: boolean }) {
   if (status === 'failed') return <Badge variant="destructive">Failed</Badge>;
   if (pastDue || status === 'past_due') return <Badge variant="destructive"><AlertCircle className="h-3 w-3 mr-1" />Past Due</Badge>;
   return <Badge variant="outline">Open</Badge>;
+}
+
+function PaymentStatusPill({ status }: { status: string }) {
+  const s = status.toLowerCase();
+  if (s === 'succeeded' || s === 'success' || s === 'paid') {
+    return <Badge className="bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30"><CheckCircle2 className="h-3 w-3 mr-1" />Succeeded</Badge>;
+  }
+  if (s === 'failed' || s === 'returned' || s === 'nsf') {
+    return <Badge variant="destructive">Failed</Badge>;
+  }
+  if (s === 'processing' || s === 'pending') {
+    return <Badge variant="secondary"><Clock className="h-3 w-3 mr-1" />{status}</Badge>;
+  }
+  return <Badge variant="outline">{status}</Badge>;
 }
