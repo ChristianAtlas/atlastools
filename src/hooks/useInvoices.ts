@@ -39,6 +39,10 @@ export interface InvoiceLineItemRow {
   is_markup: boolean;
   markup_type: string | null;
   markup_rate: number | null;
+  category: string | null;
+  section_label: string | null;
+  is_internal: boolean;
+  included_in_total: boolean;
 }
 
 export interface PaymentAttemptRow {
