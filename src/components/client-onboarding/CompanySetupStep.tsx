@@ -106,7 +106,9 @@ export function CompanySetupStep({ data, onSave, isSaving }: Props) {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            {Object.entries(BILLING_TIERS).filter(([, t]) => !t.isAddon).map(([slug, tier]) => (
+            {Object.entries(BILLING_TIERS)
+              .filter(([slug, t]) => !t.isAddon && slug !== 'monthly_service')
+              .map(([slug, tier]) => (
               <button
                 key={slug}
                 onClick={() => setForm(p => ({ ...p, selected_tier: slug }))}
@@ -122,6 +124,13 @@ export function CompanySetupStep({ data, onSave, isSaving }: Props) {
                 </p>
               </button>
             ))}
+          </div>
+          <div className="rounded-lg border border-dashed border-border bg-muted/30 px-3 py-2.5 flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium">Monthly Service Charge</p>
+              <p className="text-xs text-muted-foreground">Standard fee — included for all clients</p>
+            </div>
+            <p className="text-sm font-semibold text-foreground">${BILLING_TIERS.monthly_service.pricePerEmployee}/mo</p>
           </div>
           <div className="space-y-2">
             <Label className="text-xs text-muted-foreground">Optional Add-ons</Label>
